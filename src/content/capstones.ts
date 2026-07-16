@@ -25,7 +25,7 @@ export const CAPSTONES: CapstoneTrack[] = [
     emoji: '🔧',
     pitch:
       'Build a minimal but real harness from scratch with the Claude Agent SDK (or raw API): the agent loop, tool execution, context management, a verification gate, budget tracking, and observability. Deepest technical payoff of the three.',
-    bestFor: 'Understanding every layer you normally take for granted — the fastest route to harness intuition.',
+    bestFor: 'Understanding every layer you normally take for granted. The fastest route to harness intuition.',
     requirements: [
       'A working loop: prompt → model → tool calls → results → repeat, with an explicit termination condition',
       'At least 3 tools (e.g. file read/write, shell, web fetch) with token-efficient outputs',

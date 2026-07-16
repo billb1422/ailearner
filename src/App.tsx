@@ -136,6 +136,7 @@ export default function App() {
             if (!m || !l) return null
             return (
               <LessonView
+                key={l.id}
                 lesson={l}
                 module={m}
                 modules={MODULES}

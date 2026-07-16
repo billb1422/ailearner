@@ -22,7 +22,7 @@ export const MODULES: Module[] = [
     boss: {
       title: 'Draw the Map',
       description:
-        'Teach it to prove you know it. Produce a one-page visual (hand-drawn, Excalidraw, or AI-assisted) that explains the full stack — model → harness → loop — plus a back-of-envelope cost model for one real AI workload you care about. Show it to one other person (or present it to Claude and ask for a brutal critique).',
+        'Teach it to prove you know it. Produce a one-page visual (hand-drawn, Excalidraw, or AI-assisted) that explains the full stack (model → harness → loop), plus a back-of-envelope cost model for one real AI workload you care about. Show it to one other person, or present it to Claude and ask for a brutal critique.',
       requirements: [
         'One-page visual exists covering model vs harness vs loop and where context engineering fits',
         'It includes a worked cost estimate for a real workload (model tier, input/output tokens, caching)',
@@ -37,13 +37,13 @@ export const MODULES: Module[] = [
     title: 'Claude Code Mastery',
     emoji: '⌨️',
     color: '#a78bfa',
-    tagline: 'CLAUDE.md, skills, hooks, subagents, MCP — configuration as leverage',
+    tagline: 'CLAUDE.md, skills, hooks, subagents, and MCP: configuration as leverage',
     days: 'Days 4–8',
     lessons: [...m1aLessons, ...m1bLessons],
     boss: {
       title: 'Rig Your Ride',
       description:
-        'Build the daily-driver setup you will actually use: a pruned CLAUDE.md, two custom skills for workflows you repeat, one verification hook, and one subagent — then run a real task end-to-end through it.',
+        'Build the daily-driver setup you will actually use: a pruned CLAUDE.md, two custom skills for workflows you repeat, one verification hook, and one subagent. Then run a real task end-to-end through it.',
       requirements: [
         'Project CLAUDE.md written and pruned (<200 lines, only rules that prevent real mistakes)',
         'Two custom skills created for recurring workflows, committed to version control',
@@ -66,10 +66,10 @@ export const MODULES: Module[] = [
     boss: {
       title: 'Build a Loop',
       description:
-        'Ship a working verification loop: write a task contract with acceptance criteria, then set up an agent that iterates until a real programmatic check passes — and cannot stop before it does.',
+        'Ship a working verification loop: write a task contract with acceptance criteria, then set up an agent that iterates until a real programmatic check passes, and cannot stop before it does.',
       requirements: [
         'A CONTRACT.md (or SPEC.md) exists with explicit acceptance criteria and testing requirements',
-        'The agent has a binary pass/fail check (tests, build, or screenshot diff) — not vibes',
+        'The agent has a real binary pass/fail check: tests, build, or screenshot diff',
         'A Stop hook (or equivalent gate) blocks completion until the check passes',
         'The loop ran end-to-end at least once: agent worked, failed the check, iterated, then passed',
         'You wrote down the loop’s stop condition and its cost guardrail (max turns or budget)',
@@ -89,7 +89,7 @@ export const MODULES: Module[] = [
     boss: {
       title: 'Ship a Screen',
       description:
-        'Design and build one genuinely polished screen (landing page, dashboard, or app screen) driven by a DESIGN.md and at least one design skill — with zero AI tells.',
+        'Design and build one genuinely polished screen (landing page, dashboard, or app screen) driven by a DESIGN.md and at least one design skill, with zero AI tells.',
       requirements: [
         'DESIGN.md written BEFORE building (palette, type scale, spacing, component rules)',
         'At least one design skill used (e.g. apple-design, a grid-system skill, or your own)',
@@ -106,7 +106,7 @@ export const MODULES: Module[] = [
     title: 'Local Models',
     emoji: '💻',
     color: '#34d399',
-    tagline: 'Run open models on your own hardware — and know when to',
+    tagline: 'Run open models on your own hardware, and know when to',
     days: 'Days 17–18',
     lessons: m4Lessons,
     boss: {
@@ -134,7 +134,7 @@ export const MODULES: Module[] = [
     boss: {
       title: 'Ask Your Docs',
       description:
-        'Build a small but real RAG system over your own notes or documents, with citations — then evaluate it honestly on ten real questions.',
+        'Build a small but real RAG system over your own notes or documents, with citations. Then evaluate it honestly on ten real questions.',
       requirements: [
         'Corpus ingested: chunked, embedded, and stored (Chroma/pgvector/or hosted)',
         'Queries return answers WITH citations to source chunks',
@@ -157,7 +157,7 @@ export const MODULES: Module[] = [
     boss: {
       title: 'Alchemy',
       description:
-        'Produce a credible fine-tuning plan for one style/format task — or actually run a small LoRA on your Mac with MLX. Either way, the eval set is the deliverable.',
+        'Produce a credible fine-tuning plan for one style/format task, or actually run a small LoRA on your Mac with MLX. Either way, the eval set is the deliverable.',
       requirements: [
         'A task chosen where fine-tuning is genuinely the right tool (behavior/format, not knowledge)',
         'An eval set of at least 20 input→expected-output examples',
@@ -180,7 +180,7 @@ export const MODULES: Module[] = [
     boss: {
       title: 'Launch Master',
       description:
-        'Write your personal AI-native operating doctrine: a one-pager covering how you will spec, delegate, verify, and budget agent work going forward — then start your capstone.',
+        'Write your personal AI-native operating doctrine: a one-pager covering how you will spec, delegate, verify, and budget agent work going forward. Then start your capstone.',
       requirements: [
         'A cost model spreadsheet (or doc) for your expected monthly agent usage, with the plan-vs-API call',
         'Your personal SDLC doctrine written: when you spec, when you delegate, how you verify, when you review',

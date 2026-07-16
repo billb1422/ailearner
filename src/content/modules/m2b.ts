@@ -2,19 +2,19 @@ import type { Lesson } from '../../types'
 
 export const lessons: Lesson[] = [
   // ───────────────────────────────────────────────────────────────
-  // m2-l6 — Agent Teams & Dynamic Workflows (Day 11)
+  // m2-l6 - Agent Teams & Dynamic Workflows (Day 11)
   // ───────────────────────────────────────────────────────────────
   {
     id: 'm2-l6',
     title: 'Agent Teams & Dynamic Workflows',
     day: 11,
-    minutes: 45,
+    minutes: 55,
     xp: 100,
     objectives: [
-      'Stand up a Claude Code agent team (lead + 3-5 teammates) with a shared task list and plan approval',
-      'Design task dependencies so teammates self-claim work without colliding on the same files',
-      'Trigger a dynamic workflow with ultracode and pick the right pattern for the job',
-      'Decide between teams, subagents, and dynamic workflows using a concrete decision table',
+      'Stand up a Claude Code agent team (one team lead plus 3-5 teammates) with a shared task list and plan approval turned on',
+      'Design task dependencies so teammates can claim work on their own without two agents touching the same files',
+      'Kick off a dynamic workflow with the ultracode keyword and pick the right orchestration pattern for the job',
+      'Choose between teams, subagents, and dynamic workflows using a plain decision table',
     ],
     skipQuiz: [
       {
@@ -27,7 +27,7 @@ export const lessons: Lesson[] = [
         ],
         answer: 1,
         explain:
-          'Teams are still experimental and gated behind the CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 environment variable.',
+          'Agent teams are still experimental, so Anthropic gates them behind an environment variable (a setting you export in your terminal before starting a program). Run export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1, then launch claude, and the team features switch on for that session.',
       },
       {
         q: 'In an agent team, how does work get distributed to teammates?',
@@ -39,7 +39,7 @@ export const lessons: Lesson[] = [
         ],
         answer: 1,
         explain:
-          'The lead maintains a shared task list with dependencies; teammates pull unblocked tasks themselves rather than waiting for assignment.',
+          'The team lead writes a shared task list where each task can declare dependencies (task C needs tasks A and B done first). Teammates watch that list and grab whichever unblocked task is free. Teammates pull work for themselves the moment they free up, which keeps everyone busy without the lead becoming a bottleneck.',
       },
       {
         q: 'Which hook pair is designed to act as quality gates for agent teams?',
@@ -51,7 +51,7 @@ export const lessons: Lesson[] = [
         ],
         answer: 2,
         explain:
-          'TeammateIdle fires when a teammate runs out of claimable work; TaskCompleted lets you run checks (lint, tests) before a task counts as done.',
+          'Hooks are small scripts Claude Code runs automatically when certain events fire. TeammateIdle fires when a teammate has nothing left to claim, so you can feed it more work or shut it down. TaskCompleted fires when a task is about to be marked done, so you can run lint or tests and reject the task if they fail.',
       },
       {
         q: 'What does the ultracode keyword do?',
@@ -63,19 +63,19 @@ export const lessons: Lesson[] = [
         ],
         answer: 2,
         explain:
-          'ultracode triggers a dynamic workflow: Claude authors an executable JS orchestration script — its own disposable harness — and runs it.',
+          'ultracode is a keyword you drop into a prompt. It tells Claude to write a small JavaScript program that coordinates other agents (spawning them, wiring their outputs together, looping until a check passes) and then execute that program. Claude builds its own throwaway coordination layer for the job.',
       },
       {
         q: 'How does token spend scale as you add teammates to a team?',
         options: [
-          'Roughly linearly — each teammate carries its own full context',
-          'Sub-linearly — teammates share the lead’s context window',
-          'Quadratically — every teammate reads every mailbox message',
-          'It is flat — teams are billed per task, not per context',
+          'Roughly linearly, because each teammate carries its own full context',
+          'Sub-linearly, because teammates share the lead’s context window',
+          'Quadratically, because every teammate reads every mailbox message',
+          'Flat: teams are billed per task no matter how many contexts run',
         ],
         answer: 0,
         explain:
-          'Each teammate is an independent context, so cost grows roughly linearly per teammate. Five teammates is around five sessions of spend.',
+          'Each teammate is a full, separate Claude session with its own context window, so each one costs about what a solo session costs. Five teammates means roughly five sessions of token spend running at once. That math only pays off when the teammates genuinely work in parallel.',
       },
     ],
     sections: [
@@ -84,13 +84,13 @@ export const lessons: Lesson[] = [
         blocks: [
           {
             type: 'text',
-            md: 'You already use subagents: fire-and-forget workers that return one report and die. That is RPC. Agent teams are peers. Each teammate keeps an **independent context**, works for hours, and coordinates through a **shared task list** and **inter-agent mailboxes**. The unlock is horizontal: a codebase review that took one context 4 compaction cycles becomes 3 teammates each holding one slice in full fidelity.',
+            md: 'You already use subagents. You hand one a job, it goes off alone, comes back with a single report, and disappears. Software folks call that shape RPC (remote procedure call: send a request, get one answer back, done). Agent teams behave more like coworkers. Each teammate is a full Claude session with its own **independent context** (its own private working memory), and it can keep working for hours.\n\nTeammates coordinate through two shared channels. The **shared task list** is a to-do board that every teammate can read and update. **Mailboxes** let one teammate send a message directly to another, like a tiny internal email system.\n\nWhy does this matter? Scale. Picture a codebase review so large that a single session had to compact (compress and partly forget) its context 4 separate times to get through it. Hand the same review to 3 teammates, give each one a third of the codebase, and every slice now fits comfortably in one context with nothing forgotten.',
           },
           {
             type: 'callout',
             variant: 'insight',
             title: 'The mental shift',
-            md: 'Subagent = function call. Teammate = colleague. You stop writing prompts and start writing **org charts**: who owns what, what blocks what, and what "done" means for each task.',
+            md: 'A subagent behaves like a function call: input goes in, one result comes out. A teammate behaves like a colleague who sticks around all day. Once you have colleagues, your job shifts to drawing the **org chart**. Who owns which files? Which tasks block which? What does "done" mean for each one?',
           },
         ],
       },
@@ -106,7 +106,7 @@ claude
 # "Create a team of 3 reviewers. Split src/ by area:
 #  api/, ui/, infra/. Require plan approval before
 #  any teammate edits a file."`,
-            caption: 'Teams are experimental — opt in via env var, then talk to the lead.',
+            caption: 'Teams are experimental. Turn them on with the environment variable, then describe the team you want to the lead in plain English.',
           },
           {
             type: 'diagram',
@@ -150,13 +150,53 @@ claude
           },
           {
             type: 'text',
-            md: 'Two control surfaces matter. **Plan approval**: the lead reviews each teammate’s plan before it touches files — your architectural checkpoint. **Quality-gate hooks**: wire `TaskCompleted` to run lint/tests so "done" is verified, not claimed, and `TeammateIdle` to feed the next task or shut the teammate down. Start with **3-5 teammates**. Below 3, coordination overhead beats the win; above 5, you are managing, not shipping.',
+            md: 'Two control surfaces give you real grip on a running team. The first is **plan approval**. Before a teammate touches any file, it writes a short plan and the lead reviews it. Think of it as an automatic design review that catches a teammate about to refactor the wrong module before any damage happens.\n\nThe second is **quality-gate hooks**. Wire the `TaskCompleted` hook to run your linter and tests, and a task can only be marked done when those checks actually pass. The hook verifies the work instead of trusting the teammate to grade itself. Wire `TeammateIdle` to hand an idle teammate the next task, or to shut it down so it stops burning tokens.\n\nHow big should a team be? Start with **3 to 5 teammates**. At 2, the time spent coordinating usually eats the benefit. Past 5, you spend the whole session supervising instead of shipping.',
           },
         ],
       },
       {
         heading: 'Failure modes and the token bill',
         blocks: [
+          {
+            type: 'text',
+            md: 'Teams fail in predictable ways, and almost all of them trace back to the shape of the task graph. Before you spin up a single teammate, sketch which tasks depend on which. If the sketch looks like a fan (many tasks that can run at once, merging at the end), a team will fly. If it looks like a chain (each task waiting on the one before it), a team will crawl and bill you for the privilege.',
+          },
+          {
+            type: 'diagram',
+            svg: `<svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect x="0" y="0" width="700" height="320" fill="#18181b" rx="8"/>
+  <text x="175" y="36" fill="#34d399" font-size="14" text-anchor="middle" font-weight="bold">Fan: pays for itself</text>
+  <rect x="40" y="70" width="120" height="46" fill="#27272a" stroke="#34d399" rx="6"/>
+  <text x="100" y="98" fill="#e4e4e7" font-size="12" text-anchor="middle">T1 review api/</text>
+  <rect x="40" y="132" width="120" height="46" fill="#27272a" stroke="#34d399" rx="6"/>
+  <text x="100" y="160" fill="#e4e4e7" font-size="12" text-anchor="middle">T2 review ui/</text>
+  <rect x="40" y="194" width="120" height="46" fill="#27272a" stroke="#34d399" rx="6"/>
+  <text x="100" y="222" fill="#e4e4e7" font-size="12" text-anchor="middle">T3 review infra/</text>
+  <rect x="220" y="132" width="120" height="46" fill="#27272a" stroke="#38bdf8" rx="6"/>
+  <text x="280" y="160" fill="#e4e4e7" font-size="12" text-anchor="middle">T4 synthesize</text>
+  <line x1="162" y1="93" x2="218" y2="148" stroke="#52525b" stroke-width="2"/>
+  <line x1="162" y1="155" x2="218" y2="155" stroke="#52525b" stroke-width="2"/>
+  <line x1="162" y1="217" x2="218" y2="162" stroke="#52525b" stroke-width="2"/>
+  <text x="175" y="272" fill="#a1a1aa" font-size="11" text-anchor="middle">3 teammates busy at once</text>
+  <text x="175" y="290" fill="#a1a1aa" font-size="11" text-anchor="middle">3x spend, close to 3x speed</text>
+  <line x1="350" y1="24" x2="350" y2="300" stroke="#52525b" stroke-width="1" stroke-dasharray="4 4"/>
+  <text x="525" y="36" fill="#f472b6" font-size="14" text-anchor="middle" font-weight="bold">Chain: secretly a queue</text>
+  <rect x="400" y="90" width="110" height="46" fill="#27272a" stroke="#f472b6" rx="6"/>
+  <text x="455" y="118" fill="#e4e4e7" font-size="12" text-anchor="middle">T1</text>
+  <rect x="400" y="152" width="110" height="46" fill="#27272a" stroke="#52525b" rx="6"/>
+  <text x="455" y="180" fill="#a1a1aa" font-size="12" text-anchor="middle">T2 waits on T1</text>
+  <rect x="400" y="214" width="110" height="46" fill="#27272a" stroke="#52525b" rx="6"/>
+  <text x="455" y="242" fill="#a1a1aa" font-size="12" text-anchor="middle">T3 waits on T2</text>
+  <line x1="455" y1="138" x2="455" y2="150" stroke="#52525b" stroke-width="2"/>
+  <line x1="455" y1="200" x2="455" y2="212" stroke="#52525b" stroke-width="2"/>
+  <text x="600" y="150" fill="#a1a1aa" font-size="11" text-anchor="middle">2 teammates idle</text>
+  <text x="600" y="168" fill="#a1a1aa" font-size="11" text-anchor="middle">at any moment</text>
+  <text x="600" y="200" fill="#f472b6" font-size="11" text-anchor="middle">3x spend,</text>
+  <text x="600" y="218" fill="#f472b6" font-size="11" text-anchor="middle">1x speed</text>
+</svg>`,
+            caption:
+              'The same three tasks, two shapes. The fan keeps every teammate working; the chain pays team prices for solo speed.',
+          },
           {
             type: 'compare',
             left: {
@@ -171,8 +211,8 @@ claude
             right: {
               title: 'Anti-patterns',
               items: [
-                'Sequential work: T2 needs T1, T3 needs T2 — a team that is secretly a queue',
-                'Two teammates editing the same file — merge chaos, no locking saves you',
+                'Sequential work where T2 needs T1 and T3 needs T2 (a team that is secretly a queue)',
+                'Two teammates editing the same file (merge chaos; no locking saves you)',
                 'Vague tasks that overlap ("improve quality")',
                 'Spawning 8 teammates for a 20-minute job',
               ],
@@ -182,7 +222,7 @@ claude
             type: 'callout',
             variant: 'warning',
             title: 'Linear burn',
-            md: 'Tokens scale **linearly per teammate** — each carries a full independent context. A 5-teammate team is ~5x a solo session. If the work is inherently sequential, you pay 5x to go the same speed. Parallelism is the only thing that pays the bill.',
+            md: 'Token spend scales **linearly per teammate**, because every teammate carries its own full, independent context. A 5-teammate team costs roughly 5 times what a solo session costs. If the work is inherently sequential, you pay that 5x to move at 1x speed. Parallel work is the only thing that earns the bill back.',
           },
         ],
       },
@@ -191,7 +231,7 @@ claude
         blocks: [
           {
             type: 'text',
-            md: 'Dynamic workflows went **GA in June 2026**: say `ultracode` and Claude authors its own multi-agent harness as **executable JS**, then runs it. Instead of you picking teams-vs-subagents, the model writes a disposable orchestration script — spawn agents, wire outputs, loop until a check passes. It exists because unattended models exhibit **agentic laziness** (stops early), **self-preferential bias** (approves its own work), and **goal drift** (forgets the brief). Code-shaped orchestration makes the checks external and mechanical.',
+            md: 'Dynamic workflows reached **GA** (general availability, the label a vendor puts on a feature once it graduates from beta) in **June 2026**. Here’s the mechanic. You drop the keyword `ultracode` into a prompt, and Claude writes a small [JavaScript](https://en.wikipedia.org/wiki/JavaScript) program that coordinates other agents: spawn three workers, wire their outputs into a judge, loop until a check passes. Then it executes that program. Claude picks the coordination shape itself, so you skip the whole teams-versus-subagents decision.\n\nWhy would anyone want the model writing its own coordinator? Because models left unsupervised misbehave in well-documented ways. **Agentic laziness** means the agent declares victory early, with tests still failing. **Self-preferential bias** shows up when it reviews its own output and, like anyone grading their own homework, goes easy. And **goal drift** creeps in on long runs, where the agent slowly forgets the brief and starts optimizing something adjacent.\n\nOrchestration written as code fights all of these, because the checks live outside the model. A loop condition in JavaScript can’t get bored. A separate skeptic agent gains nothing by flattering the builder. The goal sits in the script and gets re-read on every pass. Four generated patterns cover most jobs:',
           },
           {
             type: 'table',
@@ -230,7 +270,7 @@ claude
             rows: [
               ['Lifespan', 'One task, then gone', 'Hours, persistent peers', 'One script run'],
               ['Coordination', 'Report back to caller', 'Task list + mailboxes', 'JS data flow you can read'],
-              ['You control', 'The prompt', 'The org chart + gates', 'Almost nothing — Claude writes it'],
+              ['You control', 'The prompt', 'The org chart + gates', 'Almost nothing (Claude writes it)'],
               ['Cost profile', 'Cheap, isolated', 'Linear per teammate', 'Varies by generated pattern'],
               ['Best for', 'Fan-out reads, research', 'Long parallel builds/reviews', 'Novel one-off orchestration'],
             ],
@@ -238,7 +278,7 @@ claude
           {
             type: 'callout',
             variant: 'tip',
-            md: 'Default order of escalation: subagents first (cheapest), team when work is parallel **and** long-lived, `ultracode` when the orchestration shape is unusual enough that scripting it yourself is the bottleneck.',
+            md: 'Default order of escalation: start with subagents, since they’re the cheapest. Move up to a team when the work is genuinely parallel **and** long-lived. Reach for `ultracode` when the orchestration shape is so unusual that scripting it yourself would be the bottleneck.',
           },
         ],
       },
@@ -246,7 +286,7 @@ claude
     lab: {
       title: 'Parallel review, two ways',
       intro:
-        'Run a real multi-agent job on a repo you actually care about. Pick ONE path — a 3-teammate team review or an ultracode workflow — and measure it.',
+        'Run a real multi-agent job on a repo you actually care about. Pick ONE path (a 3-teammate team review, or an ultracode workflow) and measure what it costs.',
       steps: [
         'Pick a real repo with at least 3 distinct areas (e.g. api/, ui/, infra/). Note its size.',
         'Team path: run `export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` then `claude`, and ask the lead for a 3-teammate review split by area, with plan approval required.',
@@ -254,7 +294,7 @@ claude
         'Add (or sketch) a `TaskCompleted` hook that runs your linter, so a review task cannot complete with broken examples.',
         'Workflow path (alternative): in a normal session, prompt `ultracode: fan out 3 reviewers across api/, ui/, infra/, then synthesize one prioritized findings report` and read the JS harness Claude writes before approving it.',
         'Collect the merged findings into REVIEW.md and check `/cost` for total spend.',
-        'Compare: same review as a single solo session — estimate how many compactions it would have needed.',
+        'Compare against the solo baseline: estimate how many compactions a single session would have needed to do the same review.',
       ],
       checklist: [
         'Team or workflow ran with 3 parallel workers on disjoint slices',
@@ -268,14 +308,14 @@ claude
       {
         q: 'Your team has tasks T1→T2→T3, each blocked on the previous one. What is wrong?',
         options: [
-          'Nothing — dependencies are exactly what the task list is for',
+          'Nothing; dependencies are exactly what the task list is for',
           'It is sequential work: you pay linear per-teammate cost for zero parallelism',
           'Blocked tasks crash teammates that try to claim them',
           'The lead cannot approve plans for dependent tasks',
         ],
         answer: 1,
         explain:
-          'A fully sequential chain is the canonical team anti-pattern: multiple full contexts burning tokens while effectively one agent works at a time.',
+          'A chain where every task waits on the previous one means only one teammate can actually work at any moment. The other two sit idle while their full contexts keep costing tokens. You pay team prices for solo throughput, which is the classic team anti-pattern.',
       },
       {
         q: 'An agent keeps approving its own sloppy output. Which dynamic-workflow pattern targets this directly?',
@@ -287,19 +327,19 @@ claude
         ],
         answer: 2,
         explain:
-          'Adversarial verification pits a builder against a separate skeptic, attacking self-preferential bias with an agent whose incentive is to find faults.',
+          'Adversarial verification pairs the builder with a separate skeptic agent whose entire job is finding faults. Because the skeptic gains nothing by approving the work, it catches the sloppy output the builder keeps waving through. That attacks self-preferential bias head on.',
       },
       {
         q: 'You need 6 directories summarized once, with only a merged summary back. Best tool?',
         options: [
           'An agent team of 6 teammates with mailboxes',
-          'Parallel subagents — fire-and-forget workers returning reports',
+          'Parallel subagents: fire-and-forget workers that each return a report',
           'ultracode tournament across the directories',
           'One session reading all 6 directories with compaction',
         ],
         answer: 1,
         explain:
-          'One-shot fan-out with no peer coordination is exactly what subagents are for; a team adds persistent contexts and coordination you would never use.',
+          'Six independent summaries with one merged report at the end is a one-shot fan-out. Subagents do exactly that: each goes off alone, reads its directory, and returns a report. A team would add persistent contexts, mailboxes, and coordination overhead this job never touches.',
       },
       {
         q: 'Who reviews and approves a teammate’s plan before it edits files?',
@@ -307,36 +347,36 @@ claude
           'The user, via a permission prompt per file',
           'The team lead',
           'A randomly selected peer teammate via mailbox',
-          'No one — plans are advisory in teams',
+          'No one; plans are advisory in teams',
         ],
         answer: 1,
         explain:
-          'Plan approval is the lead’s job — it is the architectural checkpoint that keeps teammates aligned before edits happen.',
+          'Reviewing plans is the team lead’s job. Before a teammate edits anything, it writes a short plan and the lead checks it. That checkpoint is what keeps five parallel agents building toward one architecture instead of five different ones.',
       },
     ],
     resources: [
       {
-        label: 'Claude Code docs — Agent teams (experimental)',
+        label: 'Claude Code docs - Agent teams (experimental)',
         url: 'https://code.claude.com/docs/en/agent-teams',
         kind: 'docs',
       },
       {
-        label: 'Claude Code docs — Dynamic workflows & ultracode',
+        label: 'Claude Code docs - Dynamic workflows & ultracode',
         url: 'https://code.claude.com/docs/en/dynamic-workflows',
         kind: 'docs',
       },
       {
-        label: 'Anthropic — Building Effective Agents (workflows vs agents)',
+        label: 'Anthropic - Building Effective Agents (workflows vs agents)',
         url: 'https://www.anthropic.com/engineering/building-effective-agents',
         kind: 'article',
       },
       {
-        label: 'everything-claude-code — dense config reference incl. teams',
+        label: 'everything-claude-code - dense config reference incl. teams',
         url: 'https://github.com/affaanmustafa/everything-claude-code',
         kind: 'repo',
       },
       {
-        label: 'Anthropic — Effective Context Engineering for AI Agents',
+        label: 'Anthropic - Effective Context Engineering for AI Agents',
         url: 'https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents',
         kind: 'article',
       },
@@ -344,19 +384,19 @@ claude
   },
 
   // ───────────────────────────────────────────────────────────────
-  // m2-l7 — Agent Memory & State (Day 12)
+  // m2-l7 - Agent Memory & State (Day 12)
   // ───────────────────────────────────────────────────────────────
   {
     id: 'm2-l7',
     title: 'Agent Memory & State',
     day: 12,
-    minutes: 40,
+    minutes: 45,
     xp: 100,
     objectives: [
       'Explain the filesystem-as-state doctrine and why plain markdown beats databases for agent working memory',
       'Install and use the planning-with-files pattern (task_plan.md, findings.md, progress.md) to kill plan drift',
       'Wire a NOTES.md / LESSONS.md self-improvement loop into a real project',
-      'Place buffers, vector stores, knowledge graphs, and MemGPT-style systems on one map — and know what Claude Code auto-memory does and does not cover',
+      'Place buffers, vector stores, knowledge graphs, and MemGPT-style systems on one map, and know where Claude Code auto-memory hits its ceiling',
     ],
     skipQuiz: [
       {
@@ -369,7 +409,7 @@ claude
         ],
         answer: 1,
         explain:
-          'planning-with-files keeps a task_plan.md (the plan), findings.md (what was learned), and progress.md (what happened) — and re-reads them throughout.',
+          'The skill maintains three files. task_plan.md holds the plan itself, findings.md collects what the agent learns along the way, and progress.md records what actually got done. The agent re-reads all three throughout the task, and that re-reading habit is what keeps it on track.',
       },
       {
         q: 'Why does plain-markdown state beat a database for an agent’s working memory?',
@@ -381,31 +421,31 @@ claude
         ],
         answer: 1,
         explain:
-          'The point is legibility and durability: any model or human can read, grep, and diff the state, and it persists across sessions for free.',
+          'Markdown files win on legibility and durability. Any human or any model can open them, search them, and diff them (compare two versions line by line). And because they sit on disk, they survive a context reset or a brand new session with zero extra infrastructure. A database stores the same bytes but hides them behind a query layer nobody can casually read.',
       },
       {
         q: 'In the structured note-taking loop, when does the agent update LESSONS.md?',
         options: [
           'At session start, seeding context',
           'Only when the user explicitly asks for a retro',
-          'After every fix — appending the rule that would have prevented the bug',
+          'After every fix, appending the rule that would have prevented the bug',
           'On a nightly consolidation cron',
         ],
         answer: 2,
         explain:
-          'The self-improvement loop is per-fix: each resolved mistake becomes a written rule the agent re-reads next time, compounding across sessions.',
+          'The loop runs once per fix. Right after resolving a bug, the agent appends the rule that would have prevented it to LESSONS.md. Next session, it re-reads those rules before starting work. Each mistake gets paid for exactly once, and the file keeps compounding across sessions.',
       },
       {
         q: 'What is the key retrieval limitation of Claude Code’s auto-memory?',
         options: [
           'It only persists for 30 days',
-          'Retrieval is keyword-only — no embeddings, so paraphrased queries miss stored facts',
+          'Retrieval matches keywords only, with no embeddings, so paraphrased queries miss stored facts',
           'It stores memory in the system prompt, eating the attention budget',
           'It cannot store more than one topic file per project',
         ],
         answer: 1,
         explain:
-          'Auto-memory indexes topic files but matches by keywords, not semantics — the exact gap that vector/semantic add-ons fill.',
+          'Auto-memory writes real files, and that part works well. The ceiling is retrieval: it matches by keywords, with no [embeddings](https://en.wikipedia.org/wiki/Sentence_embedding) (numeric fingerprints of meaning that let software connect "login flow" to "auth pipeline"). Ask in different words than the memory was written in and the lookup misses. Vector stores exist to close exactly that gap.',
       },
       {
         q: 'You need "what did we decide about auth, and when did that change?" Which memory technique fits best?',
@@ -417,7 +457,7 @@ claude
         ],
         answer: 2,
         explain:
-          'Temporal knowledge graphs model entities, relations, and validity over time — decisions that change are exactly their sweet spot.',
+          'That question has two parts: what relates to what (auth connects to a decision), and when each fact was true (the decision changed at some point). Temporal knowledge graphs like Zep’s Graphiti model entities, relationships, and validity windows over time, so "what did we decide, and when did it change" is precisely the query shape they were built for.',
       },
     ],
     sections: [
@@ -427,12 +467,12 @@ claude
           {
             type: 'callout',
             variant: 'quote',
-            title: 'Eli Mernit — "Your Company is a Filesystem"',
-            md: 'Strip an agent to its essentials and two parts remain: the **filesystem as state**, and the **model as orchestrator**. Everything else — queues, DBs, dashboards — is accessory.',
+            title: 'Eli Mernit: "Your Company is a Filesystem"',
+            md: 'Strip an agent to its essentials and two parts remain: the **filesystem as state**, and the **model as orchestrator**. Everything else (queues, databases, dashboards) is accessory.',
           },
           {
             type: 'text',
-            md: 'This is why OpenClaw works: its entire operational context — identity, tasks, history, lessons — is a folder of markdown files the model reads and rewrites. No memory service, no vector DB. The model is stateless between turns; the **directory is the agent**. For an architect this should feel familiar: it is event sourcing with `git log` as the event store and markdown as the projection.',
+            md: 'Here’s the claim in plain terms. An agent needs somewhere to keep what it knows between turns, because the model itself is **stateless**: it carries no built-in memory from one run to the next, and forgets everything the moment a session ends. Mernit’s answer is to keep all of it in ordinary files.\n\nOpenClaw, the popular open-source personal agent, runs exactly this way. Its whole operational world (who it is, what it’s working on, what happened before, what it has learned) is a folder of markdown files that the model reads at the start of a turn and rewrites at the end. Kill the running process and nothing is lost. Start a fresh one pointed at the same folder and the agent picks up where it left off, with zero infrastructure beyond the folder itself. The **directory is the agent**.\n\nIf you’ve built systems before, this rhymes with [event sourcing](https://martinfowler.com/eaaDev/EventSourcing.html), the architecture where you store the full history of changes and rebuild current state from it. Here, `git log` plays the event store and the markdown files are the current-state snapshot.',
           },
         ],
       },
@@ -441,7 +481,7 @@ claude
         blocks: [
           {
             type: 'text',
-            md: 'Long tasks drift: by turn 40 the agent is optimizing something you never asked for. The fix is embarrassingly simple — externalize the plan and force re-reads. Install it: `npx skills add othmanadi/planning-with-files`. The agent writes the plan **before** acting, logs findings as it learns, checks off progress as it goes — and because it re-reads all three files throughout, **plan drift becomes almost nonexistent**. The plan lives in fresh tokens every turn instead of decaying attention.',
+            md: 'Long agent tasks drift. By turn 40 the agent is polishing something you never asked for, because the original plan was stated once, 39 turns ago, and old instructions carry less and less weight as new tokens pile on top of them. The fix costs almost nothing: move the plan out of the conversation and into files, then force re-reads.\n\nInstall the skill with `npx skills add othmanadi/planning-with-files`. From then on, the agent writes task_plan.md **before** touching any code, appends discoveries to findings.md as it learns, and checks off progress.md as steps complete. Because it re-reads all three files throughout the task, the plan keeps landing in fresh, recent tokens where the model actually pays attention to it. Plan drift nearly disappears.\n\nOne bonus you’ll feel immediately: a crashed or cleared session stops being a disaster. The next session reads the three files and resumes at the exact step where the last one died.',
           },
           {
             type: 'diagram',
@@ -452,7 +492,7 @@ claude
   <text x="135" y="168" fill="#a1a1aa" font-size="11" text-anchor="middle">stateless orchestrator</text>
   <rect x="430" y="30" width="220" height="66" fill="#27272a" stroke="#a78bfa" rx="6"/>
   <text x="540" y="56" fill="#e4e4e7" font-size="13" text-anchor="middle" font-weight="bold">task_plan.md</text>
-  <text x="540" y="76" fill="#a1a1aa" font-size="11" text-anchor="middle">the plan — written first</text>
+  <text x="540" y="76" fill="#a1a1aa" font-size="11" text-anchor="middle">the plan, written first</text>
   <rect x="430" y="126" width="220" height="66" fill="#27272a" stroke="#34d399" rx="6"/>
   <text x="540" y="152" fill="#e4e4e7" font-size="13" text-anchor="middle" font-weight="bold">findings.md</text>
   <text x="540" y="172" fill="#a1a1aa" font-size="11" text-anchor="middle">what was learned</text>
@@ -469,7 +509,7 @@ claude
   <text x="135" y="263" fill="#f472b6" font-size="12" text-anchor="middle">files survive.</text>
 </svg>`,
             caption:
-              'Filesystem-as-state: the plan lives on disk, not in decaying attention. A fresh session re-reads the files and resumes exactly where the last one died.',
+              'Filesystem-as-state: the plan lives on disk, where attention decay can’t touch it. A fresh session re-reads the files and resumes exactly where the last one died.',
           },
           {
             type: 'table',
@@ -487,21 +527,21 @@ claude
         blocks: [
           {
             type: 'text',
-            md: 'Planning files handle one task. **LESSONS.md** compounds across tasks: after every fix, the agent appends the rule that would have prevented the bug — "our ORM silently truncates strings over 255 chars; always check schema first." NOTES.md holds session-scoped observations; LESSONS.md holds durable rules. Same pattern as the Senior Engineer OS doctrine: the last step of every debug protocol is *update LESSONS.md*. Six weeks in, the agent stops repeating its greatest hits of failure.',
+            md: 'Planning files carry one task. **LESSONS.md** carries everything that comes after it. The loop is short: whenever the agent fixes a bug, it appends the rule that would have prevented that bug. A real entry looks like "our ORM silently truncates strings over 255 chars; always check schema first." (An [ORM](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping), or object-relational mapper, is the library that translates between code objects and database rows.)\n\nNOTES.md and LESSONS.md split the work by lifespan. NOTES.md holds observations that only matter this session, like "the staging server is down today." LESSONS.md holds durable rules that should shape every future session. The Senior Engineer OS doctrine bakes this in as the final step of every debug protocol: update LESSONS.md before you call the bug closed. Give it six weeks and the agent stops replaying its greatest hits of failure.',
           },
           {
             type: 'callout',
             variant: 'tip',
-            md: 'Make it mechanical, not aspirational: add one line to CLAUDE.md — "after fixing any bug, append the prevention rule to LESSONS.md" — and verify it happened in review. Unwritten lessons do not exist.',
+            md: 'Make the habit mechanical. Add one line to CLAUDE.md ("after fixing any bug, append the prevention rule to LESSONS.md") and check during review that the entry actually landed. An unwritten lesson may as well have never happened.',
           },
         ],
       },
       {
-        heading: 'The memory-techniques landscape',
+        heading: 'The memory-techniques map',
         blocks: [
           {
             type: 'text',
-            md: 'Files are the 80% answer, but know the whole map. Nir Diamant’s **Agent_Memory_Techniques** repo walks it in ~30 runnable notebooks — worth an afternoon when you outgrow markdown.',
+            md: 'Files cover about 80% of real agent memory needs, and they should stay your default. The other 20% shows up when history gets huge or the questions get subtle, and that’s where the fancier techniques below earn their keep. Nir Diamant’s **Agent_Memory_Techniques** repo walks the whole map in roughly 30 runnable [Jupyter notebooks](https://jupyter.org/) (interactive documents that mix code with explanations). Worth an afternoon when you outgrow markdown.\n\nA quick decoder for the table. A **vector store** saves embeddings (numeric fingerprints of meaning) so you can search past content by what it means instead of the exact words it used. A **knowledge graph** stores facts as entities and relationships (Bill works at Acme; Acme uses Postgres), which lets a question hop across several facts to reach an answer.',
           },
           {
             type: 'table',
@@ -512,7 +552,7 @@ claude
               ['Knowledge graphs', 'Entities + relations, queryable', 'Multi-hop questions across facts'],
               ['MemGPT pattern', 'Model pages its own memory tiers in/out of context', 'Long-lived agents that must self-manage'],
               ['Mem0 / Letta / Zep / Graphiti', 'Managed memory layers (Zep/Graphiti add time)', 'Production memory without building it yourself'],
-              ['Plain files (this lesson)', 'Markdown state the model reads/writes', 'Almost everything else — start here'],
+              ['Plain files (this lesson)', 'Markdown state the model reads/writes', 'Almost everything else. Start here'],
             ],
           },
         ],
@@ -522,12 +562,12 @@ claude
         blocks: [
           {
             type: 'text',
-            md: 'Claude Code ships this doctrine: auto-memory keeps `~/.claude/projects/<proj>/memory/MEMORY.md` as an index plus topic files, written and consolidated by the model itself. It is filesystem-as-state in production. But note the ceiling: retrieval is **keyword-only** — no embeddings. Ask about "login flow" when the memory says "auth pipeline" and it whiffs. That gap is exactly where the vector-store row of the table above earns its complexity.',
+            md: 'You’re already running this doctrine without installing anything. Claude Code’s auto-memory keeps a file at `~/.claude/projects/<proj>/memory/MEMORY.md` as an index, plus one file per topic, and the model itself writes and consolidates them between sessions. Filesystem-as-state, shipped in a real product.\n\nIt has a ceiling, though, and it’s worth knowing exactly where. Retrieval works by **keyword matching only**. Ask about the "login flow" when the memory file says "auth pipeline" and the lookup comes back empty, even though any human would see instantly that they’re the same thing. Matching by meaning requires embeddings, and that’s the vector-store row of the table above earning its extra complexity.',
           },
           {
             type: 'callout',
             variant: 'insight',
-            md: 'Architecture takeaway: memory is a **retrieval problem wearing a storage costume**. Storing is trivial — files win. The technique ladder above is really a ladder of retrieval sophistication: keywords → embeddings → graph traversal → time-aware graphs.',
+            md: 'Architecture takeaway: memory is a **retrieval problem wearing a storage costume**. Storing is the easy half, and files win it outright. The technique ladder above is really a ladder of retrieval sophistication: keywords, then embeddings, then graph traversal, then time-aware graphs.',
           },
         ],
       },
@@ -535,12 +575,12 @@ claude
     lab: {
       title: 'Watch drift disappear',
       intro:
-        'Take a real multi-step task you would normally babysit and run it with planning files. The point is to observe the re-read behavior, not just install a skill.',
+        'Take a real multi-step task you would normally babysit and run it with planning files. The point is to watch the re-read behavior with your own eyes; installing the skill is the easy part.',
       steps: [
-        'Install the skill: `npx skills add othmanadi/planning-with-files` — or hand-roll it by telling Claude to create task_plan.md, findings.md, and progress.md before doing anything.',
+        'Install the skill: `npx skills add othmanadi/planning-with-files`. Or hand-roll it by telling Claude to create task_plan.md, findings.md, and progress.md before doing anything.',
         'Pick a real 30-60 minute task in one of your repos (a refactor or a feature with 5+ steps).',
         'Start the task and confirm task_plan.md exists with numbered steps BEFORE any code is edited.',
-        'Mid-task, run /clear (or kill the session) — then start fresh and say "resume the task in task_plan.md".',
+        'Mid-task, run /clear (or kill the session entirely). Then start fresh and say "resume the task in task_plan.md".',
         'Verify the fresh session picks up at the correct step using progress.md, without re-doing finished work.',
         'When one step hits a surprise, check that findings.md records it and the plan was amended rather than abandoned.',
         'Add a LESSONS.md and instruct: after any fix, append the prevention rule. Confirm at least one entry lands.',
@@ -564,7 +604,7 @@ claude
         ],
         answer: 1,
         explain:
-          'The doctrine strips agents to durable file state and a stateless model that reads and rewrites it — everything else is accessory.',
+          'Mernit’s reduction keeps two parts: durable state living in ordinary files, and a stateless model that reads them, does the work, and writes them back. Queues, databases, and dashboards all count as accessories in this view. You can rebuild any of them; you can’t rebuild lost state.',
       },
       {
         q: 'Mechanically, why does planning-with-files nearly eliminate plan drift?',
@@ -576,7 +616,7 @@ claude
         ],
         answer: 1,
         explain:
-          'Drift is an attention-decay problem; repeatedly re-reading the externalized plan keeps it in recent, high-weight context every turn.',
+          'Plan drift is an attention problem. Instructions given 40 turns ago carry less and less weight as new tokens stack on top of them. Re-reading the plan files puts the plan back into recent, high-weight context on every turn, so it never gets the chance to fade.',
       },
       {
         q: 'What is the one-line install for the planning-with-files skill?',
@@ -588,7 +628,7 @@ claude
         ],
         answer: 1,
         explain:
-          'Skills distribute via the npx skills CLI against the author’s repo: npx skills add othmanadi/planning-with-files.',
+          'Skills distribute through the npx skills command-line tool pointed at the author’s GitHub repo, so the install is npx skills add othmanadi/planning-with-files. One command, and the skill is available in your sessions.',
       },
       {
         q: 'What is the core idea of the MemGPT pattern?',
@@ -600,7 +640,7 @@ claude
         ],
         answer: 2,
         explain:
-          'MemGPT treats the context window as RAM and external stores as disk, with the model itself issuing the page-in/page-out operations.',
+          'MemGPT borrows the memory hierarchy idea from operating systems. The context window plays the role of RAM (fast but small), external storage plays the disk (slow but huge), and the model itself decides what to page in and page out as it works.',
       },
     ],
     resources: [
@@ -610,22 +650,22 @@ claude
         kind: 'repo',
       },
       {
-        label: 'Agent_Memory_Techniques — 30 notebooks (Nir Diamant)',
+        label: 'Agent_Memory_Techniques - 30 notebooks (Nir Diamant)',
         url: 'https://github.com/NirDiamant/Agent_Memory_Techniques',
         kind: 'repo',
       },
       {
-        label: 'Claude Code docs — Memory (CLAUDE.md, rules, auto memory)',
+        label: 'Claude Code docs - Memory (CLAUDE.md, rules, auto memory)',
         url: 'https://code.claude.com/docs/en/memory',
         kind: 'docs',
       },
       {
-        label: 'Letta (MemGPT lineage) — self-managed agent memory',
+        label: 'Letta (MemGPT lineage) - self-managed agent memory',
         url: 'https://github.com/letta-ai/letta',
         kind: 'repo',
       },
       {
-        label: 'Graphiti — temporal knowledge graphs for agents (Zep)',
+        label: 'Graphiti - temporal knowledge graphs for agents (Zep)',
         url: 'https://github.com/getzep/graphiti',
         kind: 'repo',
       },
@@ -633,13 +673,13 @@ claude
   },
 
   // ───────────────────────────────────────────────────────────────
-  // m2-l8 — Building With the Agent SDK (Day 12)
+  // m2-l8 - Building With the Agent SDK (Day 12)
   // ───────────────────────────────────────────────────────────────
   {
     id: 'm2-l8',
     title: 'Building With the Agent SDK',
     day: 12,
-    minutes: 50,
+    minutes: 55,
     xp: 100,
     objectives: [
       'Decide when to graduate from interactive Claude Code to the Agent SDK, raw API, or Managed Agents',
@@ -658,7 +698,7 @@ claude
         ],
         answer: 1,
         explain:
-          'query(prompt, options) yields an async iterator — you for-await over messages and react to each as the agentic loop runs.',
+          'query() hands back an async iterator, a JavaScript object you loop over with for-await as values arrive over time. Each value is a message: the agent used a tool, produced some text, or finished with a result. You watch the agentic loop happen message by message rather than waiting blind for one final string.',
       },
       {
         q: 'What does the settingSources option control?',
@@ -670,7 +710,7 @@ claude
         ],
         answer: 1,
         explain:
-          'settingSources decides whether your programmatic agent inherits filesystem config like project CLAUDE.md and skills — by default you opt in explicitly.',
+          'settingSources controls which configuration your programmatic agent inherits from the filesystem: the project’s CLAUDE.md, installed skills, user settings. You opt in explicitly, so an SDK agent can run sealed off from all of it, or behave exactly like Claude Code does inside that repo. Your choice per agent.',
       },
       {
         q: 'How do you run Claude Code non-interactively in CI with machine-readable output?',
@@ -682,31 +722,31 @@ claude
         ],
         answer: 1,
         explain:
-          'Headless mode is claude -p (print) with --output-format json — the zero-code way to script Claude Code in pipelines.',
+          'Headless means running without the interactive interface. The -p flag (short for print) makes claude answer one prompt and exit, and --output-format json wraps the answer in JSON your pipeline can parse. That combination scripts Claude Code inside CI ([continuous integration](https://en.wikipedia.org/wiki/Continuous_integration), the automated checks that run when code is pushed) with zero SDK code.',
       },
       {
         q: 'In Karpathy’s Autoresearch, why is prepare.py locked (not editable by the agent)?',
         options: [
           'It contains credentials the agent must not read',
-          'It holds the evaluation — an editable eval invites reward hacking, so locking it closes that loophole',
+          'It holds the evaluation, and an editable eval invites reward hacking, so locking it closes that loophole',
           'Editing it would break the git-revert loop',
           'It is generated code that regenerates on every run',
         ],
         answer: 1,
         explain:
-          'The agent may only edit train.py; the eval in prepare.py is frozen so the only way to improve val_bpb is genuinely better training code.',
+          'The agent’s score comes from the evaluation code in prepare.py. If the agent could edit that file, the easiest way to "improve" would be to weaken the test itself, a failure mode called reward hacking. Locking the eval leaves exactly one path to a better score: writing genuinely better training code in train.py.',
       },
       {
         q: 'In CRISPY, why does the Reviewer run on a different model than the Coder?',
         options: [
           'The reviewer model is cheaper per token',
-          'To dodge self-preferential bias — a model grades its own style too kindly',
+          'To dodge self-preferential bias, since a model grades its own style too kindly',
           'Different models are required for parallel execution',
           'The Coder model cannot output review comments',
         ],
         answer: 1,
         explain:
-          'Cross-model review is CRISPY’s adversarial trick: a different model has no loyalty to the Coder’s choices and catches what it would excuse in itself.',
+          'A model reviewing its own output tends to approve it, the same way people grade their own essays kindly. CRISPY runs the Reviewer on a different model, which has no loyalty to the Coder’s choices and flags the things the Coder would quietly excuse in itself.',
       },
     ],
     sections: [
@@ -715,13 +755,13 @@ claude
         blocks: [
           {
             type: 'text',
-            md: 'Claude Code is a harness you rent. The Agent SDK is the same engine — the loop, tools, permissions, context management — exposed as a library: `@anthropic-ai/claude-agent-sdk` (TS) or `claude-agent-sdk` (Python). Graduate when the agent must run **inside something**: your product, a service, a scheduled job, multi-tenant infra. Stay in Claude Code while a human (you) is the orchestrator.',
+            md: 'First, the name. An **SDK** ([software development kit](https://en.wikipedia.org/wiki/Software_development_kit)) is a library you install so your own programs can drive someone else’s machinery. The Agent SDK is Claude Code’s machinery (the agentic loop, the tools, the permission system, context management) packaged exactly that way: `@anthropic-ai/claude-agent-sdk` for TypeScript, `claude-agent-sdk` for Python.\n\nSo when do you graduate from the interactive CLI to the SDK? The moment the agent has to run **inside something else**. Inside your product, where users trigger it. Inside a service that fires on a schedule with nobody watching. Inside infrastructure that serves many customers at once. In every one of those, the harness has to live in your code, because no human is sitting at a terminal steering it.\n\nWhile you personally are the orchestrator (typing prompts, reviewing diffs, correcting course), stay in Claude Code. The interactive harness already does that job better than anything you’d rebuild.',
           },
           {
             type: 'table',
             headers: ['', 'Claude Code (CLI)', 'Agent SDK', 'Raw Messages API'],
             rows: [
-              ['You get', 'Full interactive harness', 'The harness as a library', 'Model calls only — BYO loop'],
+              ['You get', 'Full interactive harness', 'The harness as a library', 'Model calls only; you build the loop'],
               ['Loop ownership', 'Anthropic’s, tuned', 'Anthropic’s, embeddable', 'Yours, all 15 harness jobs'],
               ['Best for', 'Dev work, you in the loop', 'Agents inside products/CI', 'Custom inference, thin wrappers'],
               ['Effort to first agent', 'Zero', 'An afternoon', 'Weeks to parity'],
@@ -755,7 +795,7 @@ for await (const message of query({
           },
           {
             type: 'text',
-            md: 'Four extension points cover most designs. **AgentDefinition**: declare subagents programmatically instead of `.claude/agents/*.md`. **In-process hooks**: the same PreToolUse/Stop events, but as functions in your process — a Stop hook can literally run your test suite. **mcpServers**: hand the agent your own tools. **settingSources**: choose whether it inherits the project’s CLAUDE.md and skills, or runs hermetic. For CI without any SDK code: `claude -p "fix the failing test" --output-format json` and parse the result.',
+            md: 'Four extension points cover most designs, and each one maps to something you already know from the CLI.\n\n**AgentDefinition** lets you declare subagents in code instead of as `.claude/agents/*.md` files, which matters when the agent ships inside a product. **In-process hooks** are the same PreToolUse and Stop events you’ve already met, except now they’re plain functions running in your own process. That means a Stop hook can literally call your test suite and refuse to let the agent finish until the tests pass. **mcpServers** hands the agent your own tools over [MCP](https://modelcontextprotocol.io/) (Model Context Protocol, the open standard for plugging tools into models). And **settingSources**, from the code above, decides whether the agent inherits the project’s CLAUDE.md and skills or runs sealed off from them.\n\nWant scripting with no SDK code at all? Use headless mode: `claude -p "fix the failing test" --output-format json` runs one prompt, prints machine-readable JSON, and exits. That single command covers most CI pipelines.',
           },
         ],
       },
@@ -764,7 +804,7 @@ for await (const message of query({
         blocks: [
           {
             type: 'text',
-            md: '**Managed Agents** are the third leg: Anthropic hosts the runtime — sandboxed execution, credential vaults so your agent holds tokens you never ship, scaling you do not operate. The 2026 pattern is explicit: **prototype locally with the SDK, productionize hosted**. Same agent definition, different substrate. If your security review chokes on "the agent has prod credentials on a box we patch," this is the answer.',
+            md: '**Managed Agents** are the third leg of the stool. With the SDK, your agent still runs on machines you operate, holding credentials you have to protect. Managed Agents move that runtime to Anthropic: execution happens in a hosted sandbox (an isolated environment that can’t reach anything you didn’t allow), secrets live in a credential vault so the agent uses tokens your code never even sees, and scaling becomes Anthropic’s problem.\n\nThe 2026 pattern is explicit: **prototype locally with the SDK, productionize hosted**. The agent definition stays the same; only the substrate underneath it changes. When your security review balks at "the agent holds prod credentials on a box we patch ourselves," this is the answer you reach for.',
           },
         ],
       },
@@ -773,7 +813,7 @@ for await (const message of query({
         blocks: [
           {
             type: 'text',
-            md: 'Karpathy’s Autoresearch is a masterclass in harness constraint. The agent improves a language model’s training run — but may **only edit train.py**. The eval in **prepare.py is locked**. The metric is one number, **val_bpb**. Every change is committed; if val_bpb regresses, the harness **git-reverts** automatically. A **simplicity criterion** breaks ties toward less code. Notice what the model is trusted with: nothing except the one file where genuine improvement can live.',
+            md: 'Andrej Karpathy’s Autoresearch shows how much work a harness can do when it trusts the model with almost nothing. The task: improve a small language model’s training run. The agent may edit exactly one file, **train.py**. The evaluation code lives in **prepare.py**, which is locked. Success is a single number, **val_bpb** (validation bits per byte, a compression-style score of how well the model predicts held-out text; lower is better).\n\nThe loop enforces itself. Every change gets committed to [git](https://git-scm.com/). If val_bpb gets worse, the harness runs git revert automatically and the agent tries again. When two changes score the same, a **simplicity criterion** picks the one with less code. Add it up and the agent controls one thing: the single file where genuine improvement can live.',
           },
           {
             type: 'diagram',
@@ -784,10 +824,10 @@ for await (const message of query({
   <text x="110" y="170" fill="#a1a1aa" font-size="11" text-anchor="middle">proposes change</text>
   <rect x="240" y="40" width="160" height="64" fill="#27272a" stroke="#34d399" rx="6"/>
   <text x="320" y="66" fill="#e4e4e7" font-size="13" text-anchor="middle" font-weight="bold">train.py</text>
-  <text x="320" y="86" fill="#34d399" font-size="11" text-anchor="middle">EDITABLE — only file</text>
+  <text x="320" y="86" fill="#34d399" font-size="11" text-anchor="middle">EDITABLE (the only file)</text>
   <rect x="240" y="226" width="160" height="64" fill="#27272a" stroke="#f472b6" rx="6"/>
   <text x="320" y="252" fill="#e4e4e7" font-size="13" text-anchor="middle" font-weight="bold">prepare.py (eval)</text>
-  <text x="320" y="272" fill="#f472b6" font-size="11" text-anchor="middle">LOCKED — no reward hacking</text>
+  <text x="320" y="272" fill="#f472b6" font-size="11" text-anchor="middle">LOCKED: eval frozen</text>
   <rect x="470" y="120" width="180" height="70" fill="#27272a" stroke="#fbbf24" rx="6"/>
   <text x="560" y="148" fill="#e4e4e7" font-size="13" text-anchor="middle" font-weight="bold">val_bpb check</text>
   <text x="560" y="168" fill="#a1a1aa" font-size="11" text-anchor="middle">one number decides</text>
@@ -814,28 +854,28 @@ for await (const message of query({
         blocks: [
           {
             type: 'text',
-            md: 'Tyler Folkman’s **CRISPY** cut a $200/mo agent bill to **$45/mo** with role separation — each role gets exactly the context its job needs, nothing more:',
+            md: 'Tyler Folkman’s **CRISPY** cut a $200/mo agent bill down to **$45/mo** using role separation. Five roles, and each one receives exactly the context its job needs. Since you pay for every token sent with every request, keeping the chatty roles lean is where the savings come from:',
           },
           {
             type: 'table',
             headers: ['Role', 'Job', 'Harness trick'],
             rows: [
               ['Architect', 'Decides what to build', 'Owns the spec; never writes code'],
-              ['Scout', 'Locates relevant code', 'Runs with NO prior context — cheap, unbiased search'],
+              ['Scout', 'Locates relevant code', 'Runs with NO prior context: cheap, unbiased search'],
               ['Coder', 'Implements', 'TDD-first: failing test before code'],
-              ['Reviewer', 'Critiques the diff', 'DIFFERENT model — kills self-preferential bias'],
+              ['Reviewer', 'Critiques the diff', 'DIFFERENT model, which kills self-preferential bias'],
               ['Verifier', 'Confirms done', 'Binary pass/fail against the spec'],
             ],
           },
           {
             type: 'text',
-            md: 'Composio’s **Agent Orchestrator** runs a meta-harness driving Claude Code, Codex, and Cursor in parallel (40k LOC in 8 days). Its sibling **Paperclip** goes full org-chart: a CEO-agent hires engineer agents, with **heartbeats** (prove-you’re-alive checks) and **per-agent budgets**. The common thread across all three case studies: the interesting engineering is never the model call — it is **what the harness forbids**.',
+            md: 'Composio’s **Agent Orchestrator** takes the same idea up a level: a meta-harness that drives Claude Code, Codex, and Cursor in parallel, which produced 40,000 lines of code in 8 days. Its sibling project **Paperclip** goes full org chart. A CEO-agent hires engineer agents, each engineer sends **heartbeats** (periodic prove-you’re-alive signals, so a stuck agent gets noticed and replaced), and every agent draws against its own **budget**.\n\nRead all three case studies side by side and one thread stands out: the interesting engineering lives in **what the harness forbids**. The model call itself is the boring part.',
           },
           {
             type: 'callout',
             variant: 'insight',
             title: 'The harness-design lesson',
-            md: 'Autoresearch forbids touching the eval. CRISPY forbids the Reviewer from sharing the Coder’s model. Paperclip forbids unbounded spend. Design your constraints first; the agent fills in the rest.',
+            md: 'Autoresearch forbids touching the eval. CRISPY keeps the Reviewer on a different model than the Coder. Paperclip caps what any single agent may spend. Design your constraints first; the agent fills in the rest.',
           },
         ],
       },
@@ -843,7 +883,7 @@ for await (const message of query({
     lab: {
       title: 'Your first 30-line SDK agent',
       intro:
-        'Ship one tool-using query end-to-end with the TypeScript Agent SDK. Small on purpose — the goal is to feel where Claude Code ends and your code begins.',
+        'Ship one tool-using query end-to-end with the TypeScript Agent SDK. Small on purpose: the goal is to feel where Claude Code ends and your code begins.',
       steps: [
         'Create a scratch project: `mkdir sdk-lab && cd sdk-lab && npm init -y && npm i @anthropic-ai/claude-agent-sdk`.',
         'Set "type": "module" in package.json and confirm your ANTHROPIC_API_KEY (or Claude Code auth) is available.',
@@ -855,7 +895,7 @@ for await (const message of query({
       ],
       checklist: [
         'Script is ~30 lines and runs end-to-end with node',
-        'You observed streamed tool-use messages, not just a final answer',
+        'You watched tool-use messages stream by before the final answer arrived',
         'A hook you wrote fired during the run',
         'The headless claude -p equivalent produced parseable JSON',
         'You can say in one sentence when you would pick SDK over CLI for your own work',
@@ -872,19 +912,19 @@ for await (const message of query({
         ],
         answer: 1,
         explain:
-          'The SDK exists for embedding the harness in your own software; interactive dev work stays in the CLI.',
+          'The SDK exists for embedding the harness inside your own software: your service, your schedule, your hooks and custom tools, potentially many tenants at once. For interactive development work with you at the keyboard, the CLI already does the job.',
       },
       {
         q: 'What do Managed Agents add over running the SDK on your own infrastructure?',
         options: [
           'Access to models unavailable through the API',
-          'Anthropic-hosted sandboxed runtime plus credential vaults — prototype locally, productionize hosted',
+          'Anthropic-hosted sandboxed runtime plus credential vaults: prototype locally, productionize hosted',
           'A visual workflow builder for non-engineers',
           'Free inference for agents under 10 turns',
         ],
         answer: 1,
         explain:
-          'Managed Agents move the runtime and secrets to Anthropic-operated sandboxes — same agent definition, production-grade substrate.',
+          'Managed Agents move the runtime and the secrets onto Anthropic-operated sandboxes. Your agent definition stays the same, and in exchange you stop operating servers, patching boxes, and shipping credentials alongside your code. Prototype locally, then deploy the identical agent hosted.',
       },
       {
         q: 'In Autoresearch, what happens when a change makes val_bpb worse?',
@@ -896,24 +936,24 @@ for await (const message of query({
         ],
         answer: 1,
         explain:
-          'Regression handling is mechanical: git revert, no negotiation — the loop only keeps changes that move the one metric.',
+          'Regression handling is fully mechanical. The harness commits every change, checks val_bpb, and runs git revert the moment the number gets worse. No negotiation, no explanation step. The loop keeps whatever moves the metric and discards the rest.',
       },
       {
         q: 'Which CRISPY design choice is primarily a COST lever (part of the $200→$45/mo drop)?',
         options: [
           'The Verifier’s binary pass/fail',
-          'The Scout running with no prior context — cheap searches instead of dragging full history into every call',
+          'The Scout running with no prior context, doing cheap searches instead of dragging full history into every call',
           'The Architect owning the spec',
           'The Coder writing failing tests first',
         ],
         answer: 1,
         explain:
-          'Role-scoped context is the money saver: the Scout does high-volume search work with a near-empty context instead of the whole session transcript.',
+          'The Scout is the cost lever. Search is high-volume work, and the Scout does it with a nearly empty context instead of dragging the full session transcript into every call. Because you pay per input token on every single request, a lean context on the chattiest role is where the savings pile up.',
       },
     ],
     resources: [
       {
-        label: 'Agent SDK overview — official docs',
+        label: 'Agent SDK overview - official docs',
         url: 'https://code.claude.com/docs/en/sdk/sdk-overview',
         kind: 'docs',
       },
@@ -928,17 +968,17 @@ for await (const message of query({
         kind: 'repo',
       },
       {
-        label: 'Karpathy — Autoresearch (harness-constrained research agent)',
+        label: 'Karpathy - Autoresearch (harness-constrained research agent)',
         url: 'https://github.com/karpathy/autoresearch',
         kind: 'repo',
       },
       {
-        label: 'Tyler Folkman — CRISPY: 5-role agent pipeline',
+        label: 'Tyler Folkman - CRISPY: 5-role agent pipeline',
         url: 'https://tylerfolkman.substack.com/p/crispy-agent-pipeline',
         kind: 'article',
       },
       {
-        label: 'Composio — Agent Orchestrator & Paperclip',
+        label: 'Composio - Agent Orchestrator & Paperclip',
         url: 'https://composio.dev/blog/agent-orchestrator',
         kind: 'article',
       },
@@ -946,13 +986,13 @@ for await (const message of query({
   },
 
   // ───────────────────────────────────────────────────────────────
-  // m2-l9 — Cost-Aware Agents & Guardrails (Day 13)
+  // m2-l9 - Cost-Aware Agents & Guardrails (Day 13)
   // ───────────────────────────────────────────────────────────────
   {
     id: 'm2-l9',
     title: 'Cost-Aware Agents & Guardrails',
     day: 13,
-    minutes: 45,
+    minutes: 50,
     xp: 100,
     objectives: [
       'Diagnose the cost drivers of a 24/7 agent (model choice, hosting, loop shape) before they bill you',
@@ -965,13 +1005,13 @@ for await (const message of query({
         q: 'What was the root cause of jordymaui’s $800/80-hour OpenClaw bill?',
         options: [
           'A prompt-injection attack that spawned extra agents',
-          'Wrong model choices and wrong hosting for a 24/7 agent — the two costs that dominate',
+          'Wrong model choices and wrong hosting for a 24/7 agent, the two costs that dominate',
           'Forgetting to enable prompt caching',
           'A misconfigured MCP server retrying in a tight loop',
         ],
         answer: 1,
         explain:
-          'His post-mortem is blunt: for an always-on agent, model selection and hosting decisions dominate everything else — he got both wrong.',
+          'His post-mortem is blunt about it. For an always-on agent, two standing decisions dominate the bill: which model answers by default, and where the loop runs. He got both wrong at the same time, and 80 hours later the meter read $800.',
       },
       {
         q: 'What operational habit did the OpenClaw post-mortem recommend before running a 24/7 agent?',
@@ -983,7 +1023,7 @@ for await (const message of query({
         ],
         answer: 0,
         explain:
-          'Pre-loading ~$250 in credits turns an unbounded liability into a bounded, observable budget — you find out about runaway loops at $250, not $800.',
+          'Pre-loading about $250 in credits converts an unbounded liability into a bounded, visible budget. If a loop runs away, it dies when the credits do, so you learn about the problem at $250 instead of on an $800 invoice.',
       },
       {
         q: 'What impact did the Ponytail skill measure?',
@@ -995,19 +1035,19 @@ for await (const message of query({
         ],
         answer: 0,
         explain:
-          'Ponytail’s measured wins: ~54% less generated code, ~20% lower cost, ~27% faster — over-engineering was the tax all along.',
+          'Ponytail measured its wins directly: about 54% less generated code, roughly 20% lower cost, and about 27% faster runs. All three trace to one source. Over-engineered output was quietly taxing every run, and deleting it paid off in tokens, dollars, and time at once.',
       },
       {
         q: 'A loop that "bills you in your sleep" is missing what, specifically?',
         options: [
           'Prompt caching on the system prompt',
-          'A stop condition — real completion criteria that terminate the loop',
+          'A stop condition: real completion criteria that terminate the loop',
           'A cheaper fallback model',
           'Subagent isolation for expensive steps',
         ],
         answer: 1,
         explain:
-          'The phrase is about termination: without a genuine done-check, an agent loop happily re-prompts forever at your expense.',
+          'The phrase points at termination. A loop without a genuine done-check (tests green, artifact exists, lint clean) will happily re-prompt forever, and every one of those pointless turns bills you, whether or not you’re awake to watch it happen.',
       },
       {
         q: 'What is the layer order of Eric Siu’s Company Brain?',
@@ -1019,7 +1059,7 @@ for await (const message of query({
         ],
         answer: 1,
         explain:
-          'Company Brain stacks capture, then retrieval, then a canonical source of truth, then permissions, then feedback — fronted by Slack, run by 90+ cron jobs.',
+          'Company Brain stacks five layers in order: capture feeds raw material in, retrieval finds it later, a canonical source of truth settles conflicts, permissions bound what agents may touch, and feedback catches drift. Slack sits in front as the interface, and more than 90 [cron](https://en.wikipedia.org/wiki/Cron) jobs (tasks scheduled to fire at set times) do the actual work.',
       },
     ],
     sections: [
@@ -1028,13 +1068,13 @@ for await (const message of query({
         blocks: [
           {
             type: 'text',
-            md: 'jordymaui ran an OpenClaw agent for 80 hours and got a **$800** bill — then wrote the post-mortem everyone should read before going 24/7. Root cause: **wrong models and wrong hosting**. Not prompts, not bugs. An always-on agent multiplies every per-turn choice by 8,760 hours a year, so the two standing decisions — which model answers by default, and where the loop runs — dominate total cost. His fixes: route by task difficulty, and **pre-load ~$250 in credits** so the worst case is bounded and visible.',
+            md: 'jordymaui ran an OpenClaw agent around the clock for 80 hours and got an **$800** bill. Then he wrote the post-mortem everyone should read before going 24/7. The root cause turned out to be mundane: **wrong models and wrong hosting**, the two standing decisions behind every always-on agent.\n\nHere’s why those two swamp everything else. An interactive session only runs while you’re at the desk. An always-on agent runs 8,760 hours a year, so whatever model answers by default, and wherever the loop physically executes, gets multiplied by every one of those hours. A per-turn cost that looks harmless in an afternoon session compounds into rent.\n\nHis fixes were equally unglamorous. Route requests by difficulty, so cheap models handle the cheap questions. And **pre-load about $250 in credits**, which gives the worst case a hard ceiling you chose in advance.',
           },
           {
             type: 'callout',
             variant: 'warning',
             title: 'The follow-up is worse',
-            md: 'His sequel logged **500 hours and $5,000** across experiments. 24/7 agents are a subscription you write yourself. Price the loop before you start it, not after the invoice.',
+            md: 'His sequel logged **500 hours and $5,000** across experiments. A 24/7 agent is a subscription you write yourself, so price the loop before you start it rather than after the invoice lands.',
           },
         ],
       },
@@ -1043,14 +1083,14 @@ for await (const message of query({
         blocks: [
           {
             type: 'text',
-            md: 'One guardrail is a single point of failure. Layer them, cheapest-to-trip first. The theme from Cherny’s loop doctrine: a loop with no stop condition **"bills you in your sleep"** — so the stop condition is a guardrail, not a nicety.',
+            md: 'A single guardrail is a single point of failure: the one day it’s misconfigured is the day you needed it. So you layer several, ordered so the cheapest one trips first. Think of the table below as a gauntlet that every turn of the loop has to survive.\n\nBoris Cherny’s loop doctrine supplies the theme. A loop with no stop condition **"bills you in your sleep."** Treat the done-check itself as a guardrail, and make it something a script can verify (tests green, file exists) rather than the model’s own opinion of its work.',
           },
           {
             type: 'table',
             headers: ['Layer', 'Mechanism', 'Catches'],
             rows: [
               ['Turn cap', 'maxTurns in SDK / --max-turns headless', 'Infinite retry-and-apologize loops'],
-              ['Spend cap', 'Pre-loaded credits; per-run token budget', 'Model/hosting mistakes at $250, not $5,000'],
+              ['Spend cap', 'Pre-loaded credits; per-run token budget', 'Model and hosting mistakes while the damage is still $250'],
               ['Budget workers', 'llm-budget worker meters each call against an allowance', 'Slow leaks across many small calls'],
               ['Per-agent budgets', 'Paperclip-style: each hired agent gets its own wallet', 'One rogue agent draining the fleet'],
               ['Stop condition', 'Real done-check (tests green, artifact exists)', 'Loops that never terminate "successfully"'],
@@ -1079,7 +1119,7 @@ for await (const message of query({
   <line x1="307" y1="150" x2="328" y2="150" stroke="#52525b" stroke-width="2"/>
   <line x1="432" y1="150" x2="453" y2="150" stroke="#52525b" stroke-width="2"/>
   <line x1="557" y1="150" x2="578" y2="150" stroke="#52525b" stroke-width="2"/>
-  <text x="350" y="50" fill="#e4e4e7" font-size="13" text-anchor="middle" font-weight="bold">Every turn passes through every gate — cheapest trips first</text>
+  <text x="350" y="50" fill="#e4e4e7" font-size="13" text-anchor="middle" font-weight="bold">Every turn passes through every gate; cheapest trips first</text>
   <line x1="630" y1="192" x2="630" y2="240" stroke="#f472b6" stroke-width="2"/>
   <line x1="630" y1="240" x2="95" y2="240" stroke="#f472b6" stroke-width="2" stroke-dasharray="5 4"/>
   <line x1="95" y1="240" x2="95" y2="192" stroke="#f472b6" stroke-width="2" stroke-dasharray="5 4"/>
@@ -1095,7 +1135,7 @@ for await (const message of query({
         blocks: [
           {
             type: 'text',
-            md: 'Cost is not only loop count — it is also **how much the agent writes**. The Ponytail skill (github.com/DietrichGebert/ponytail) encodes the **laziest-senior-dev principle**: the best engineer ships the smallest change that works. Its `/ponytail-review` pass produces **delete-lists** — code to remove, abstractions to collapse. Measured: **~54% less code, ~20% cheaper, ~27% faster**. Fewer output tokens, fewer files in future contexts, fewer bugs to loop on. One skill, three compounding wins.',
+            md: 'Loop count is only half the cost story. The other half is **how much the agent writes**, because you pay for every output token, and every extra file it creates rides along in future contexts. The [Ponytail skill](https://github.com/DietrichGebert/ponytail) attacks the writing side with the **laziest-senior-dev principle**: the best engineer on the team ships the smallest change that works.\n\nIts `/ponytail-review` pass produces **delete-lists**, concrete lists of code to remove and abstractions to collapse. The measured results: about **54% less code, 20% cheaper, 27% faster**. You generate fewer output tokens now, future contexts carry less bulk, and bugs get less surface area to loop on later. One skill, three compounding wins.',
           },
           {
             type: 'callout',
@@ -1110,7 +1150,7 @@ for await (const message of query({
         blocks: [
           {
             type: 'text',
-            md: 'Every enabled plugin, every MCP server, every CLAUDE.md line rides along on **every turn**. The cautionary artifact from the systematicls write-ups: a **26k-line CLAUDE.md** — paid for on each request while actively degrading attention (context rot). Bloat is the rare tax you pay twice: dollars now, quality always. The **harness-responsibilities checklist** (mfpiccolo’s 15 jobs: turn persistence, prompt assembly, tool policy, spend tracking, compaction...) doubles as an audit: walk it and ask what each loop carries per-turn, and who is watching spend.',
+            md: 'Everything you enable rides along on **every turn**: each plugin, each [MCP](https://modelcontextprotocol.io/) server, every line of CLAUDE.md gets re-sent with every single request. The cautionary artifact from the systematicls write-ups is a **26,000-line CLAUDE.md**. Its owner paid to transmit it on each request while it actively degraded the model’s attention, a failure known as **context rot** (important instructions drowning in noise). That makes bloat the rare tax you pay twice: dollars now, quality always.\n\nmfpiccolo’s **harness-responsibilities checklist** (the 15 jobs a real harness owns: turn persistence, prompt assembly, tool policy, spend tracking, compaction, and so on) doubles as an audit tool. Walk the list against any loop you run and ask two questions. What does this loop carry on every turn? And who is watching the spend meter?',
           },
           {
             type: 'compare',
@@ -1119,7 +1159,7 @@ for await (const message of query({
               items: [
                 'CLAUDE.md under 200 lines, rules split into .claude/rules/ with path scoping',
                 'Under 10 MCP servers enabled; tool search defers the rest',
-                'Skills load via progressive disclosure — metadata until needed',
+                'Skills load via progressive disclosure (metadata only until needed)',
                 'Spend tracking is a first-class harness job',
               ],
             },
@@ -1140,7 +1180,7 @@ for await (const message of query({
         blocks: [
           {
             type: 'text',
-            md: 'Zoom out and guardrails become architecture. Eric Siu’s **Company Brain** runs a business on five layers: **capture → retrieval → source of truth → permissions → feedback** — with **90+ cron jobs** doing the work and **Slack as the front door**. Note where cost discipline lives: permissions bound what agents may touch, feedback catches drift, and every job is scheduled (bounded) rather than looping free. It is the same guardrail stack you built today, promoted to org policy.',
+            md: 'Zoom all the way out and guardrails turn into architecture. Eric Siu’s **Company Brain** runs a real business on five layers: **capture, then retrieval, then a source of truth, then permissions, then feedback**. More than **90 cron jobs** ([cron](https://en.wikipedia.org/wiki/Cron) is the classic Unix scheduler that fires tasks at set times) do the day-to-day work, and **Slack is the front door** where humans talk to the whole thing.\n\nNotice where the cost discipline hides. Permissions bound what agents may touch. Feedback catches drift before it compounds. And every job runs on a schedule with a defined end, so nothing loops freely. That’s the same guardrail stack you built today, promoted to company policy.',
           },
         ],
       },
@@ -1160,7 +1200,7 @@ for await (const message of query({
       ],
       checklist: [
         'The loop now has an explicit turn cap',
-        'The stop condition is a verifiable check, not the model’s opinion',
+        'The stop condition is a check a script can verify, independent of the model’s opinion',
         'You recorded actual token spend and a dollar figure for one run',
         'You projected the 24/7 monthly cost and sanity-checked it against your plan/credits',
         'BUDGET.md exists with per-run and daily caps',
@@ -1177,7 +1217,7 @@ for await (const message of query({
         ],
         answer: 1,
         explain:
-          'Always-on agents multiply standing decisions by every hour of the year — the default model and where the loop runs swamp per-prompt tweaks.',
+          'An always-on agent multiplies its standing decisions by every hour of the year. The default model and the hosting under the loop are the two decisions that scale that way, so they swamp any per-prompt tweak like wording or temperature.',
       },
       {
         q: 'Why is context bloat described as a DOUBLE tax?',
@@ -1189,7 +1229,7 @@ for await (const message of query({
         ],
         answer: 1,
         explain:
-          'Bloat (plugin sprawl, a 26k-line CLAUDE.md) bills you per turn and simultaneously rots the context — cost now, quality always.',
+          'Bloat bills you twice. Every extra token (plugin schemas, a 26k-line CLAUDE.md) gets paid for on every single turn, and the same noise dilutes the model’s attention, so output quality drops too. You pay in dollars immediately and in quality forever.',
       },
       {
         q: 'What does /ponytail-review actually produce?',
@@ -1201,49 +1241,49 @@ for await (const message of query({
         ],
         answer: 1,
         explain:
-          'Ponytail attacks over-engineering by listing what to delete — the mechanism behind its ~54% code / ~20% cost / ~27% time reductions.',
+          'Ponytail’s review pass outputs delete-lists: specific code to remove and abstractions to collapse, following the laziest-senior-dev principle. That deletion mechanism is exactly where its measured 54% code, 20% cost, and 27% time reductions come from.',
       },
       {
         q: 'How does the harness-responsibilities checklist function as a cost audit?',
         options: [
           'It ranks models by price-performance for your workload',
-          'You walk its ~15 jobs (spend tracking, compaction, tool policy...) and ask which your loop actually implements — and who watches the meter',
+          'You walk its ~15 jobs (spend tracking, compaction, tool policy...) and ask which ones your loop actually implements, and who watches the meter',
           'It generates a monthly invoice forecast from your transcripts',
           'It disables any harness job that exceeds its token allowance',
         ],
         answer: 1,
         explain:
-          'The checklist enumerates what a real harness must own; gaps like "no spend tracking" or "no compaction policy" are exactly where runaway bills hide.',
+          'The checklist names the roughly 15 jobs a real harness must own, spend tracking and compaction among them. Walk it against your own loop and every gap you find is a place a runaway bill can hide. "Nobody tracks spend" is the audit finding that precedes most $800 surprises.',
       },
     ],
     resources: [
       {
-        label: 'Ponytail — anti-over-engineering skill',
+        label: 'Ponytail - anti-over-engineering skill',
         url: 'https://github.com/DietrichGebert/ponytail',
         kind: 'repo',
       },
       {
-        label: 'jordymaui — the $800 OpenClaw post-mortem',
+        label: 'jordymaui - the $800 OpenClaw post-mortem',
         url: 'https://x.com/jordymaui',
         kind: 'thread',
       },
       {
-        label: 'mfpiccolo — How to Build Your Own Agent Harness (the 15 jobs)',
+        label: 'mfpiccolo - How to Build Your Own Agent Harness (the 15 jobs)',
         url: 'https://iii.dev/blog/build-your-own-agent-harness',
         kind: 'article',
       },
       {
-        label: 'iii-hq/workers — llm-budget style harness workers',
+        label: 'iii-hq/workers - llm-budget style harness workers',
         url: 'https://github.com/iii-hq/workers',
         kind: 'repo',
       },
       {
-        label: 'Eric Siu — the Company Brain architecture',
+        label: 'Eric Siu - the Company Brain architecture',
         url: 'https://x.com/ericosiu',
         kind: 'thread',
       },
       {
-        label: 'Claude API pricing — price your loop before you run it',
+        label: 'Claude API pricing - price your loop before you run it',
         url: 'https://docs.claude.com/en/docs/about-claude/pricing',
         kind: 'docs',
       },

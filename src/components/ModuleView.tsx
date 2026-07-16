@@ -105,7 +105,7 @@ export function ModuleView({ module: m, modules, onOpenLesson, onBack, onBadges 
         </div>
         <p className="mt-3 text-zinc-300 text-sm leading-relaxed">{m.boss.description}</p>
         {!allLessonsDone && !bossDone && (
-          <p className="mt-2 text-xs text-zinc-500">Finish the lessons first — then come claim it.</p>
+          <p className="mt-2 text-xs text-zinc-500">Finish the lessons first, then come claim it.</p>
         )}
         <div className="mt-4 space-y-2">
           {m.boss.requirements.map((req, i) => (

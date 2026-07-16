@@ -19,7 +19,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
 
   const doImport = async (f: File) => {
     const text = await f.text()
-    setMsg(importProgress(text) ? 'Progress imported!' : 'Import failed — not a valid progress file.')
+    setMsg(importProgress(text) ? 'Progress imported!' : 'Import failed: that is not a valid progress file.')
   }
 
   return (

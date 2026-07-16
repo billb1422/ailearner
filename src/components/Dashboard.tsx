@@ -50,7 +50,7 @@ export function Dashboard({ modules, onOpenModule, onOpenLesson, onOpenBadges, o
         <div className="mt-5">
           <div className="flex items-baseline justify-between text-sm">
             <span className="font-semibold text-zinc-200">
-              Lv {level.level} — {level.title}
+              Lv {level.level}: {level.title}
             </span>
             <span className="text-zinc-500">
               {next ? `${next.minXp - p.xp} XP to Lv ${next.level} (${next.title})` : 'Max level!'}
@@ -70,7 +70,7 @@ export function Dashboard({ modules, onOpenModule, onOpenLesson, onOpenBadges, o
             onClick={() => onOpenLesson(nextUp.m.id, nextUp.l.id)}
             className="mt-5 w-full sm:w-auto rounded-xl bg-sky-500 hover:bg-sky-400 text-zinc-950 font-bold px-6 py-3 transition-colors"
           >
-            ▶ Continue: Day {nextUp.l.day} — {nextUp.l.title}
+            ▶ Continue: Day {nextUp.l.day}, {nextUp.l.title}
           </button>
         )}
         {!nextUp && (

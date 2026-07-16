@@ -18,6 +18,12 @@ Gamified 30-day "AI expert" learning site for Bill. React 19 + Vite 6 + TypeScri
 - `src/md.tsx` — mini-markdown renderer. Supported subset ONLY: **bold**, *italic*, `code`, [label](url), "- " bullets, blank-line paragraphs.
 - `docs/research-notes.md` — the research base all lesson content was authored from (July 2026 snapshot).
 
+## Content style (Bill's rules — mandatory for all lesson prose)
+- Explain, don't summarize. Every concept: plain-English statement → why it matters → a concrete walked example. Bill can't learn from terse, compressed text; target one-read comprehension with zero ML background assumed.
+- Define every acronym/term of art on first use, with a [label](url) link to an explainer where useful.
+- Apply Bill's anti-AI style guide (anthropic-skills:bills-anti-ai-style-guide): ZERO em dashes (verify with `grep -c '—'`), ZERO "not X, it's Y" variants, no triplet anaphora, no "There is/are" openers, no soft-tell words (leverage/robust/delve/ultimately/simply...), contractions on, varied rhythm, specificity over vagueness.
+- Prefer visuals: tables, compare blocks, and simple SVG diagrams for anything with a loop, pipeline, hierarchy, or quantity comparison.
+
 ## Rules
 - Lesson `md` strings must stay within the mini-markdown subset — the renderer supports nothing else.
 - Quiz invariants: skipQuiz = 5 questions, checkQuiz = 4, exactly 4 options each, `answer` is an index.

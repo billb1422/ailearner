@@ -16,7 +16,7 @@ export function CapstoneView({ modules, onBadges }: CapstoneViewProps) {
   if (!track) {
     return (
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-zinc-100">👑 Capstone — Day 22</h1>
+        <h1 className="text-2xl font-bold text-zinc-100">👑 Capstone: Day 22</h1>
         <p className="mt-1 text-zinc-400 text-sm">
           Pick ONE track. Each is a real build that proves you can operate as an agent engineer. {CAPSTONE_XP} XP +
           the Agent Architect badge on completion.
@@ -90,7 +90,7 @@ export function CapstoneView({ modules, onBadges }: CapstoneViewProps) {
           <div className="text-6xl">👑</div>
           <div className="mt-2 text-xl font-bold text-amber-300">Agent Architect</div>
           <p className="mt-1 text-sm text-zinc-300">
-            Capstone complete. You didn't just learn the material — you built with it. +{CAPSTONE_XP} XP
+            Capstone complete. You built with everything you learned. +{CAPSTONE_XP} XP
           </p>
         </div>
       )}

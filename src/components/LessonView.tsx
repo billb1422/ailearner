@@ -27,8 +27,10 @@ const KIND_ICON: Record<string, string> = {
 
 export function LessonView({ lesson: l, module: m, modules, onBack, onBadges }: LessonViewProps) {
   const p = useProgress()
-  const already = p.lessons[l.id]?.status === 'completed' || p.lessons[l.id]?.status === 'tested-out'
-  const [stage, setStage] = useState<Stage>(already ? 'content' : 'intro')
+  const status = p.lessons[l.id]?.status
+  const already = status === 'completed' || status === 'tested-out'
+  // Completed or in-progress lessons re-open straight into content (no intro/skip-quiz gate).
+  const [stage, setStage] = useState<Stage>(already || status === 'in-progress' ? 'content' : 'intro')
   const initialChecks = useMemo(
     () => l.lab?.checklist.map((_, i) => p.lessons[l.id]?.labChecks?.[i] ?? false) ?? [],
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -79,10 +81,13 @@ export function LessonView({ lesson: l, module: m, modules, onBack, onBadges }: 
               onClick={() => setStage('skip-quiz')}
               className="rounded-xl border border-sky-500/50 bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 font-semibold px-5 py-2.5 text-sm transition-colors"
             >
-              🧠 I might know this — take the skip quiz
+              🧠 I might know this: take the skip quiz
             </button>
             <button
-              onClick={() => setStage('content')}
+              onClick={() => {
+                setLessonProgress(l.id, { status: 'in-progress' })
+                setStage('content')
+              }}
               className="rounded-xl bg-sky-500 hover:bg-sky-400 text-zinc-950 font-bold px-5 py-2.5 text-sm transition-colors"
             >
               Start lesson →
@@ -122,7 +127,7 @@ export function LessonView({ lesson: l, module: m, modules, onBack, onBadges }: 
       <Celebration
         emoji="🧠"
         title="Tested out!"
-        body={`You already knew this one. +${l.xp} XP banked — on to the next lesson.`}
+        body={`You already knew this one. +${l.xp} XP banked. On to the next lesson.`}
         onBack={onBack}
       />
     )
@@ -145,7 +150,7 @@ export function LessonView({ lesson: l, module: m, modules, onBack, onBadges }: 
         {header}
         <Quiz
           title="Checkpoint quiz"
-          subtitle="Lock in what you learned. Any score completes the lesson — aim for 100%."
+          subtitle="Lock in what you learned. Any score completes the lesson; aim for 100%."
           questions={l.checkQuiz}
           submitLabel="Check my answers"
           onDone={(score) => {
