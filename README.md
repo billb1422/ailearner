@@ -9,6 +9,8 @@ npm install
 npm run dev
 ```
 
+Then open **http://localhost:5199** — the port is pinned in `vite.config.ts` on purpose. Your XP, badges, and streaks live in the browser's localStorage, which is tied to that exact address, so a different port would show an empty profile. If `npm run dev` fails with "port 5199 is already in use", a server is already running (maybe one Claude started) — just use the existing one or stop it first. For a safety net, export your progress now and then from Settings (⚙️).
+
 ## How to use it
 
 1. **Dashboard** shows your path: a skill-tree map of the 8 modules. Hit "Continue" to get today's lesson.
