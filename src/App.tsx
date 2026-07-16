@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { MODULES } from './content/curriculum'
+import { registerLessonNavigator } from './nav'
 import { useProgress } from './store'
 import { levelForXp } from './gamification'
 import { isLessonDone } from './awards'
@@ -26,6 +27,13 @@ export default function App() {
   const [toastBadges, setToastBadges] = useState<string[]>([])
   const p = useProgress()
   const level = levelForXp(p.xp)
+
+  useEffect(() => {
+    registerLessonNavigator((lessonId) => {
+      const m = MODULES.find((mod) => mod.lessons.some((l) => l.id === lessonId))
+      if (m) setNav({ view: 'lesson', moduleId: m.id, lessonId })
+    })
+  }, [])
 
   const showBadges = (ids: string[]) => setToastBadges((prev) => [...prev, ...ids])
 

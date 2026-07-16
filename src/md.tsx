@@ -1,28 +1,44 @@
 // Tiny markdown renderer for the lesson-content subset:
 // **bold**, *italic*, `code`, [label](url), '- ' bullet lists, paragraphs.
+// Links may also use lesson:<id> as the URL to jump to another lesson in-app.
 import React from 'react'
+import { goToLesson } from './nav'
 
 function renderInline(text: string, keyBase: string): React.ReactNode[] {
   const out: React.ReactNode[] = []
   // Tokenize: links, bold, italic, code
-  const re = /(\[([^\]]+)\]\((https?:\/\/[^\s)]+)\))|(\*\*([^*]+)\*\*)|(`([^`]+)`)|(\*([^*]+)\*)/g
+  const re = /(\[([^\]]+)\]\(((?:https?:\/\/|lesson:)[^\s)]+)\))|(\*\*([^*]+)\*\*)|(`([^`]+)`)|(\*([^*]+)\*)/g
   let last = 0
   let m: RegExpExecArray | null
   let i = 0
   while ((m = re.exec(text)) !== null) {
     if (m.index > last) out.push(text.slice(last, m.index))
     if (m[1]) {
-      out.push(
-        <a
-          key={`${keyBase}-a${i}`}
-          href={m[3]}
-          target="_blank"
-          rel="noreferrer"
-          className="text-sky-400 hover:text-sky-300 underline underline-offset-2"
-        >
-          {m[2]}
-        </a>,
-      )
+      if (m[3].startsWith('lesson:')) {
+        const lessonId = m[3].slice('lesson:'.length)
+        out.push(
+          <button
+            key={`${keyBase}-a${i}`}
+            onClick={() => goToLesson(lessonId)}
+            className="inline-flex items-baseline gap-1 rounded-md border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 px-1.5 py-0 text-sky-300 text-[0.92em] font-medium transition-colors align-baseline"
+          >
+            <span aria-hidden>📖</span>
+            {m[2]}
+          </button>,
+        )
+      } else {
+        out.push(
+          <a
+            key={`${keyBase}-a${i}`}
+            href={m[3]}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sky-400 hover:text-sky-300 underline underline-offset-2"
+          >
+            {m[2]}
+          </a>,
+        )
+      }
     } else if (m[4]) {
       out.push(
         <strong key={`${keyBase}-b${i}`} className="font-semibold text-zinc-100">

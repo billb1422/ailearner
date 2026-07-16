@@ -147,7 +147,7 @@ export const lessons: Lesson[] = [
             type: 'callout',
             variant: 'warning',
             title: 'Context rot',
-            md: "Adding context always costs attention, so add it deliberately. As the window fills, the share of attention on any single fact shrinks, and models are measurably worse at recalling facts buried in the middle of a long context than facts near the start or end. Chroma's [context-rot research](https://research.trychroma.com/context-rot) measured this across models. Lesson m0-l4 is entirely about engineering around it.",
+            md: "Adding context always costs attention, so add it deliberately. As the window fills, the share of attention on any single fact shrinks, and models are measurably worse at recalling facts buried in the middle of a long context than facts near the start or end. Chroma's [context-rot research](https://research.trychroma.com/context-rot) measured this across models. The lesson [Mental Models · Context Engineering](lesson:m0-l4) is entirely about engineering around it.",
           },
         ],
       },
@@ -281,7 +281,7 @@ export const lessons: Lesson[] = [
         ],
         answer: 1,
         explain:
-          'Every token in the window competes for a finite pool of attention, so low-signal filler actively degrades retrieval of what matters. Keeping context small and relevant is the core premise of context engineering, which gets its own lesson (m0-l4).',
+          'Every token in the window competes for a finite pool of attention, so low-signal filler actively degrades retrieval of what matters. Keeping context small and relevant is the core premise of context engineering, which gets its own lesson: [Mental Models · Context Engineering](lesson:m0-l4).',
       },
     ],
     resources: [
@@ -458,7 +458,7 @@ export const lessons: Lesson[] = [
         blocks: [
           {
             type: 'text',
-            md: "Anthropic's 2026 Agentic Coding Trends report surveyed how professional developers actually work with agents, and the numbers puncture both the hype and the doom. Developers fully delegate (hand a task off and never check the work) only **0-20%** of their tasks. They supervise **80-100%** of the work agents do. Read those two numbers together: agents took over enormous amounts of typing, and humans kept all of the judgment. The winning setup in the report is one orchestrating session plus specialized agents running in parallel contexts, with a human directing traffic. The report also names context engineering, the subject of lesson m0-l4, as the defining skill of the era.",
+            md: "Anthropic's 2026 Agentic Coding Trends report surveyed how professional developers actually work with agents, and the numbers puncture both the hype and the doom. Developers fully delegate (hand a task off and never check the work) only **0-20%** of their tasks. They supervise **80-100%** of the work agents do. Read those two numbers together: agents took over enormous amounts of typing, and humans kept all of the judgment. The winning setup in the report is one orchestrating session plus specialized agents running in parallel contexts, with a human directing traffic. The report also names context engineering as the defining skill of the era. That skill gets a full lesson of its own: [Mental Models · Context Engineering](lesson:m0-l4).",
           },
           {
             type: 'table',
@@ -995,7 +995,7 @@ the spec already answers.`,
         blocks: [
           {
             type: 'text',
-            md: "Recall the arithmetic from m0-l1: attention compares every token against every other token, so the model's ability to pinpoint any single fact gets diluted as the window fills. Treat the window as an **attention budget**. Every token you add taxes every retrieval that follows. Stale tool outputs, dead-end exploration threads, and yesterday's goals keep drawing attention long after they stop being useful. Long-context benchmarks confirm the damage: quality degrades well before the advertised token limit.",
+            md: "Recall the arithmetic from [Mental Models · How LLMs Actually Work](lesson:m0-l1): attention compares every token against every other token, so the model's ability to pinpoint any single fact gets diluted as the window fills. Treat the window as an **attention budget**. Every token you add taxes every retrieval that follows. Stale tool outputs, dead-end exploration threads, and yesterday's goals keep drawing attention long after they stop being useful. Long-context benchmarks confirm the damage: quality degrades well before the advertised token limit.",
           },
           {
             type: 'diagram',

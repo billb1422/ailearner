@@ -172,7 +172,7 @@ export const lessons: Lesson[] = [
           },
           {
             type: 'text',
-            md: 'A quick tour of the six entries, top to bottom. `CLAUDE.md` holds the project memory that loads every session. `skills/` holds packaged expertise, one folder per skill (lesson m1-l3). `agents/` holds definitions for subagents, helper agents you can spin up for specific jobs (module 2). `rules/` holds instructions that only load when certain files are involved (next lesson). `settings.json` holds shared configuration like permissions and hooks, while `settings.local.json` and `CLAUDE.local.md` are your personal, git-ignored versions of the settings and the memory file.',
+            md: 'A quick tour of the six entries, top to bottom. `CLAUDE.md` holds the project memory that loads every session. `skills/` holds packaged expertise, one folder per skill (covered in [Claude Code Mastery · Agent Skills Deep Dive](lesson:m1-l3)). `agents/` holds definitions for subagents, helper agents you can spin up for specific jobs (module 2). `rules/` holds instructions that only load when certain files are involved (next lesson). `settings.json` holds shared configuration like permissions and hooks, while `settings.local.json` and `CLAUDE.local.md` are your personal, git-ignored versions of the settings and the memory file.',
           },
           {
             type: 'callout',
@@ -329,7 +329,7 @@ export const lessons: Lesson[] = [
         ],
         answer: 1,
         explain:
-          'CLAUDE.md arrives in the context window as a user message. Claude treats it as strong guidance and follows it the vast majority of the time, but a user message can be outweighed by other context. When a rule must hold every single time, you want a hook (lesson m1-l5).',
+          'CLAUDE.md arrives in the context window as a user message. Claude treats it as strong guidance and follows it the vast majority of the time, but a user message can be outweighed by other context. When a rule must hold every single time, you want a hook (see [Claude Code Mastery · Hooks: Deterministic Control](lesson:m1-l5)).',
       },
     ],
     sections: [
@@ -347,7 +347,7 @@ export const lessons: Lesson[] = [
           },
           {
             type: 'text',
-            md: 'Walking the diagram left to right: the managed file is where a company sets policy for everyone. Your global `~/.claude/CLAUDE.md` carries preferences that follow you to every project ("I use fish shell, my editor is Neovim"). The project CLAUDE.md is committed to the repo and shared with the team. And `CLAUDE.local.md` holds your personal notes for this one project, kept out of git. Later files refine earlier ones, so when two layers disagree, the more specific one wins.\n\nOne detail matters more than it looks: all of this lands in the model\'s context as a **user message**. Claude treats it as strong guidance and follows it most of the time. For rules where "most of the time" would be a problem, say "never commit directly to main", you want a hook, which enforces the rule mechanically every time. Lesson m1-l5 covers those.',
+            md: 'Walking the diagram left to right: the managed file is where a company sets policy for everyone. Your global `~/.claude/CLAUDE.md` carries preferences that follow you to every project ("I use fish shell, my editor is Neovim"). The project CLAUDE.md is committed to the repo and shared with the team. And `CLAUDE.local.md` holds your personal notes for this one project, kept out of git. Later files refine earlier ones, so when two layers disagree, the more specific one wins.\n\nOne detail matters more than it looks: all of this lands in the model\'s context as a **user message**. Claude treats it as strong guidance and follows it most of the time. For rules where "most of the time" would be a problem, say "never commit directly to main", you want a hook, which enforces the rule mechanically every time. [Claude Code Mastery · Hooks: Deterministic Control](lesson:m1-l5) covers those.',
           },
         ],
       },
@@ -917,7 +917,7 @@ export const lessons: Lesson[] = [
     ],
     lab: {
       title: 'Harden yesterday\'s skill',
-      intro: 'Apply the doctrine to the skill you built in m1-l3: cut the obvious, add gotchas, bundle a script, and prove the lift with an eval.',
+      intro: 'Apply the doctrine to the skill you built in [Claude Code Mastery · Agent Skills Deep Dive](lesson:m1-l3): cut the obvious, add gotchas, bundle a script, and prove the lift with an eval.',
       steps: [
         'Open your skill\'s SKILL.md. Delete every line a competent senior hire would already know (tip 1).',
         'Add a Gotchas section with 2-3 real failure modes you have personally hit in this workflow (tip 2).',
@@ -1152,7 +1152,7 @@ export const lessons: Lesson[] = [
           },
           {
             type: 'text',
-            md: 'Notice the gradient as you read down the table. A command hook is fully deterministic: same input, same verdict, every time. By the time you reach the prompt and agent handlers, you\'ve placed **a model inside your control plane**, which buys you probabilistic checks for questions a regex could never answer, like "does this diff look risky?". Auto permission mode from lesson m1-l1 is exactly this pattern, shipped as a product feature.',
+            md: 'Notice the gradient as you read down the table. A command hook is fully deterministic: same input, same verdict, every time. By the time you reach the prompt and agent handlers, you\'ve placed **a model inside your control plane**, which buys you probabilistic checks for questions a regex could never answer, like "does this diff look risky?". Auto permission mode from [Claude Code Mastery · Claude Code Fundamentals & the .claude Folder](lesson:m1-l1) is exactly this pattern, shipped as a product feature.',
           },
         ],
       },

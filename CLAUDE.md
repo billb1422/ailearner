@@ -23,6 +23,7 @@ Gamified 30-day "AI expert" learning site for Bill. React 19 + Vite 6 + TypeScri
 - Define every acronym/term of art on first use, with a [label](url) link to an explainer where useful.
 - Apply Bill's anti-AI style guide (anthropic-skills:bills-anti-ai-style-guide): ZERO em dashes (verify with `grep -c '—'`), ZERO "not X, it's Y" variants, no triplet anaphora, no "There is/are" openers, no soft-tell words (leverage/robust/delve/ultimately/simply...), contractions on, varied rhythm, specificity over vagueness.
 - Prefer visuals: tables, compare blocks, and simple SVG diagrams for anything with a loop, pipeline, hierarchy, or quantity comparison.
+- Cross-reference other lessons as `[Module Name · Lesson Title](lesson:<id>)` (renders as a clickable in-app jump). NEVER put raw lesson ids like m0-l4 in prose, quiz text, or labs.
 
 ## Rules
 - Lesson `md` strings must stay within the mini-markdown subset — the renderer supports nothing else.
