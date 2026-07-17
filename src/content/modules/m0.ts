@@ -1092,10 +1092,53 @@ the spec already answers.`,
         heading: 'The master principle',
         blocks: [
           {
+            type: 'text',
+            md: 'Everything in this lesson compresses into one sentence, and the sentence is dense enough that it deserves to be taken apart word by word before you tape it anywhere.\n\n**High-signal tokens** are the ones that change the answer. Suppose Claude is fixing a bug for you: the failing test, the error message, and the function under test are high-signal. The other 400 files in the repo are low-signal. They\'re true, they\'re available, and they\'re useless for this task. Signal is always relative to the job in front of the model right now. The same file can be gold for one task and noise for the next.\n\n**Smallest set** is in there because every token carries two costs you now know well. It costs money, and it takes a slice of the model\'s attention away from every other token in the window (the squared-growth arithmetic from [Mental Models · How LLMs Actually Work](lesson:m0-l1)). So filler does damage beyond the price tag: it dilutes the model\'s focus on the tokens that actually matter.\n\n**Maximizes the likelihood of your desired outcome** is your tiebreaker for every include-or-cut decision. One question settles it: does adding this make a good result more likely? If yes, it earns the slot. If no, it goes, however true or interesting it is.',
+          },
+          {
+            type: 'text',
+            md: 'Watch the principle decide something real. Your test suite is failing and you want Claude to fix it. Option one: paste the whole repo, roughly 50,000 tokens, and ask \'why is this failing?\' Option two: paste the failing test, the error output, and the one function the test exercises (about 600 tokens), plus a sentence about what the code should do. Option two wins on quality and on price at the same time, because the model\'s attention lands on three relevant things instead of hunting through hundreds of irrelevant ones.\n\nIt\'s the same judgment you\'d use briefing a teammate before a meeting. You hand them a one-page summary and the two emails that matter. Forwarding your entire inbox would technically include the answer, and they\'d still walk in unprepared.',
+          },
+          {
             type: 'callout',
             variant: 'insight',
             title: 'Tape this to your monitor',
-            md: '**Find the smallest set of high-signal tokens that maximizes the likelihood of your desired outcome.** Every technique in this lesson (altitude, just-in-time retrieval, compaction, notes, subagents) is that one sentence applied at a different layer.',
+            md: '**Find the smallest set of high-signal tokens that maximizes the likelihood of your desired outcome.** Ruthless curation, every turn.',
+          },
+          {
+            type: 'table',
+            headers: ['Technique', 'Layer it works at', 'Same sentence, applied there'],
+            rows: [
+              [
+                'Altitude',
+                'System prompt',
+                'Say enough to steer behavior and no more. A rule the model never needs is noise it re-reads on every single turn',
+              ],
+              [
+                'Just-in-time retrieval',
+                'Working context',
+                'Fetch a file at the moment the task needs it, instead of preloading everything the task might need',
+              ],
+              [
+                'Compaction',
+                'Conversation history',
+                'When the window fills, keep the decisions and open questions; drop the dead ends and raw exploration',
+              ],
+              [
+                'Structured notes',
+                'Outside the window',
+                'Distill state into `NOTES.md` so a fresh session starts from pure signal instead of the whole messy transcript',
+              ],
+              [
+                'Subagents',
+                'Separate windows',
+                'Let the 50-file search happen in someone else\'s context; only the five-line conclusion comes back to yours',
+              ],
+            ],
+          },
+          {
+            type: 'text',
+            md: 'Five techniques, one move: keep the signal, shed the rest. When you meet a new context tool later in the course (skills, memory files, agent teams), test it against this sentence. Every good one turns out to be another way of doing the same thing.',
           },
         ],
       },
