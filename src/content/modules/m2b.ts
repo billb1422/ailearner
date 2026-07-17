@@ -282,6 +282,36 @@ claude
           },
         ],
       },
+      {
+        heading: 'The counterweight: one good generalist',
+        blocks: [
+          {
+            type: 'text',
+            md: "A whole lesson about teams needs an honest counterweight, because the loudest trend in agent engineering runs the other way. The move right now is toward **one generalist agent** that loads skills on demand, not a standing army of specialists. Google's 2026 playbook says it plainly: keep the agent a lightweight generalist and let it flex into a specialist role only when a task calls for it, through progressive disclosure. The agent sees a one-line description of each skill up front and pulls in the full instructions only when it actually reaches for that skill. One driver, many hats, wearing the hat that fits the moment.\n\nWhy the retreat from many specialists? Every extra agent is another full context to pay for, another handoff where information leaks, another thing to supervise. A generalist with good skills (this is what [Claude Code Mastery · Agent Skills Deep Dive](lesson:m1-l3) sets up) buys you most of the specialization at a fraction of the coordination cost. So reach for the machinery in this lesson when the work is genuinely parallel or genuinely long-running. For the rest, one capable driver beats a committee.",
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'One generalist + skills',
+              items: [
+                'One context, one token bill',
+                'Loads a skill\'s full instructions only when a task triggers it',
+                'Switches roles mid-session: reviewer now, planner next',
+                'Coordination cost: none',
+              ],
+            },
+            right: {
+              title: 'A team of specialists',
+              items: [
+                'One full context per teammate',
+                'Each role is fixed when you spin the team up',
+                'Roles run at the same time on separate slices',
+                'Coordination cost: task list, mailboxes, plan approvals',
+              ],
+            },
+          },
+        ],
+      },
     ],
     lab: {
       title: 'Parallel review, two ways',
@@ -533,6 +563,31 @@ claude
             type: 'callout',
             variant: 'tip',
             md: 'Make the habit mechanical. Add one line to CLAUDE.md ("after fixing any bug, append the prevention rule to LESSONS.md") and check during review that the entry actually landed. An unwritten lesson may as well have never happened.',
+          },
+        ],
+      },
+      {
+        heading: 'Four kinds of memory',
+        blocks: [
+          {
+            type: 'text',
+            md: 'Step back and name the kinds of memory an agent has. The techniques map in the next section sorts memory by **how you retrieve it**. Here’s the other axis: how long each kind lasts and how far it reaches. Four tiers, borrowed from the way people describe human memory, and you’ve already built three of them in this lesson.\n\n**Working memory** is the context window itself: the current prompt, the tool results, the last few turns. Fast, and gone when the session ends. **Short-term memory** is the scratchpad, meaning notes.md, findings.md, and task_plan.md. It survives a compaction or a crash and carries one task start to finish. **Long-term memory** is the durable rulebook: CLAUDE.md and LESSONS.md, the preferences and hard-won rules every future session should honor. **Episodic memory** is the tier this lesson hasn’t built yet: retrievable past experiences. Last month’s architecture decision record (ADR: a short note capturing a decision and why you made it), a ticket you solved that looks just like today’s, a prior session worth pulling back up. You fetch the one relevant episode, not the whole history.',
+          },
+          {
+            type: 'table',
+            headers: ['Tier', 'Lasts', 'In this lesson', 'How you reach it'],
+            rows: [
+              ['Working', 'One session', 'The context window', 'Already there, until it fills up'],
+              ['Short-term', 'One task', 'notes.md, findings.md, progress.md', 'Re-read the file every turn'],
+              ['Long-term', 'Every session', 'CLAUDE.md, LESSONS.md', 'Injected at the start of a session'],
+              ['Episodic', 'Across projects and months', 'Past sessions, ADRs, solved tickets', 'Search it: keywords, embeddings, or a graph'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'Episodic is where the next section comes in',
+            md: 'Working, short-term, and long-term memory all sit close at hand. Episodic memory is the tier you have to go **find**, which is exactly what the retrieval ladder below is for. The simplest episodic store is an ADR wiki: one index file linking out to a detail file per decision. That plain-files approach holds up to roughly 500 documents before keyword search starts missing and you graduate to embeddings.',
           },
         ],
       },

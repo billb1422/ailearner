@@ -803,6 +803,38 @@ git worktree list             # audit; remove with: git worktree remove ../myapp
           },
         ],
       },
+      {
+        heading: 'A few more commands worth knowing',
+        blocks: [
+          {
+            type: 'text',
+            md: "A grab-bag of commands that earn their keep once the basics are muscle memory. Two of them lean on the checkpoint trail you met in [Claude Code Mastery · Claude Code Fundamentals & the .claude Folder](lesson:m1-l1): every tool operation leaves a breadcrumb, and these walk it.",
+          },
+          {
+            type: 'table',
+            headers: ['Command', 'What it does', 'Reach for it when'],
+            rows: [
+              ['/simplify', 'Runs several review agents in parallel over your diff, then applies the cleanup they agree on', 'A feature just landed and you want dead code and duplication gone before committing'],
+              ['/code-review', 'Reviews the current branch for real bugs; add ultra for a deeper multi-agent pass in the cloud', 'Before you open a PR, or for a thorough pre-merge sweep'],
+              ['/rewind', 'Jumps the conversation and your code back to an earlier checkpoint', 'A run went sideways and you want out without git surgery'],
+              ['/copy', 'Copies the last response; press W to write it to a file instead', 'Grabbing output over SSH, where clipboard sharing is flaky'],
+            ],
+          },
+          {
+            type: 'code',
+            lang: 'bash',
+            caption: 'A few aliases worth adding to your shell profile. Launch fast, land in the right mode.',
+            code: `alias cc='claude'
+alias ccc='claude --continue'            # resume the last session
+alias ccr='claude --resume'              # pick a session to resume
+alias ccp='claude -p'                    # one-shot, prints and exits
+alias ccplan='claude --permission-mode plan'
+alias cco='claude --model opus'
+alias ccs='claude --model sonnet'
+alias cch='claude --model haiku'`,
+          },
+        ],
+      },
     ],
     lab: {
       title: 'Parallel sessions + one standing automation',
@@ -877,6 +909,253 @@ git worktree list             # audit; remove with: git worktree remove ../myapp
       { label: 'GitHub Actions integration - official docs', url: 'https://code.claude.com/docs/en/github-actions', kind: 'docs' },
       { label: 'claude-code-action (Anthropic)', url: 'https://github.com/anthropics/claude-code-action', kind: 'repo' },
       { label: 'Headless mode - official docs', url: 'https://code.claude.com/docs/en/headless', kind: 'docs' },
+    ],
+  },
+
+  // ------------------------------------------------------------------
+  // m1-l10 - The Ambient Awareness Layer
+  // ------------------------------------------------------------------
+  {
+    id: 'm1-l10',
+    title: 'The Ambient Awareness Layer',
+    day: 7,
+    minutes: 45,
+    xp: 100,
+    objectives: [
+      'Explain the supervision gap: running many agents needs an awareness layer, not just more spawning',
+      'Configure a status line that surfaces model, context percentage, and usage rate at a glance',
+      'Wire a Stop hook that pushes a completion signal to Slack, voice, and a desktop notification',
+      'Use /voice to answer a pinged agent without returning to the keyboard',
+    ],
+    skipQuiz: [
+      {
+        q: 'The supervision gap this lesson addresses:',
+        options: [
+          'Agents run too slowly to be worth parallelizing',
+          'You can spawn many agents but watch only one thing at a time, so parallelism outruns your attention',
+          'Worktrees corrupt each other\'s files under load',
+          'The model forgets the task when a session is backgrounded',
+        ],
+        answer: 1,
+        explain:
+          'Spawning parallelism is the easy half. You still have one pair of eyes. Once five sessions run at once, watching one lets the other four drift, and tabbing between all five means you get nothing done yourself. The awareness layer is what closes that gap.',
+      },
+      {
+        q: 'How you set up a Claude Code status line:',
+        options: [
+          'Hand-edit a YAML schema in settings.json',
+          'Run /statusline and describe what you want in plain English; Claude wires it up',
+          'Install a status-line plugin from the marketplace',
+          'It is fixed and not configurable',
+        ],
+        answer: 1,
+        explain:
+          '/statusline is interactive. You describe the readout you want in plain language and Claude generates the configuration, so there is no format to memorize.',
+      },
+      {
+        q: 'Besides blocking a premature "done" with exit 2, the Stop hook can also:',
+        options: [
+          'Roll back the last edit',
+          'Fire a notification when an agent finishes or stalls waiting on you',
+          'Compact the context automatically',
+          'Switch the active model',
+        ],
+        answer: 1,
+        explain:
+          'One hook, two jobs. The Stop event is where a verification gate blocks a false finish, and it is also the exact moment to announce a real finish. Same event, completely different purpose.',
+      },
+      {
+        q: 'A completion-notification cascade typically fans one Stop event out to:',
+        options: [
+          'A single email inbox',
+          'Several channels at once: Slack, voice, and a desktop banner',
+          'The model system prompt',
+          'A freshly spawned subagent',
+        ],
+        answer: 1,
+        explain:
+          'The point is to reach you wherever you are. One Stop hook can post to Slack, speak the message aloud, and raise an OS notification in the same run, so a signal lands whether you are at the desk or across the room.',
+      },
+      {
+        q: 'Why push signals beat tabbing between terminals:',
+        options: [
+          'Terminals cannot display token counts',
+          'Push pulls you in only on events that need you, so you stay in your own flow the rest of the time',
+          'Notifications cost fewer tokens than reading output',
+          'Terminal sessions time out after five minutes',
+        ],
+        answer: 1,
+        explain:
+          'Polling five terminals spends your attention continuously. A push signal spends it only at the moment an agent finishes, stalls, or fails, and leaves the rest of your time free for your own work.',
+      },
+    ],
+    sections: [
+      {
+        heading: 'The supervision gap',
+        blocks: [
+          {
+            type: 'text',
+            md: "You spent [Claude Code Mastery · Power Features](lesson:m1-l8) learning to run three to five sessions at once, and [Agents, Harnesses & Loops · Agent Teams & Dynamic Workflows](lesson:m2-l6) learning to stand up a team of peers. Both hit the same wall the first time you try them for real: you have one pair of eyes and five things running. Watch one terminal and the other four drift. Tab between all five and your own work stalls.\n\nSpawning parallelism is the easy half. Staying aware of it is the half almost nobody sets up, and it is why most people quietly slide back to a single session. The fix is an **ambient awareness layer**: a small set of passive and push signals that tell you what every agent is doing without you looking at it. A glance gives you state. A ping pulls you in exactly when an agent finishes or gets stuck. The rest of the time, you stay in your own flow.",
+          },
+          {
+            type: 'diagram',
+            caption: 'Spawning is the easy half. The awareness layer is the missing one: it lets you ignore five agents safely and get pulled in only when one needs you.',
+            svg: `<svg viewBox="0 0 700 380" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif"><rect width="700" height="380" fill="#18181b"/><text x="350" y="28" fill="#e4e4e7" font-size="15" font-weight="bold" text-anchor="middle">Five agents running, one pair of eyes</text><rect x="20" y="48" width="150" height="46" rx="6" fill="#27272a" stroke="#38bdf8"/><text x="95" y="76" fill="#e4e4e7" font-size="12" text-anchor="middle">agent &#183; auth</text><rect x="185" y="48" width="150" height="46" rx="6" fill="#27272a" stroke="#a78bfa"/><text x="260" y="76" fill="#e4e4e7" font-size="12" text-anchor="middle">agent &#183; tests</text><rect x="350" y="48" width="150" height="46" rx="6" fill="#27272a" stroke="#34d399"/><text x="425" y="76" fill="#e4e4e7" font-size="12" text-anchor="middle">agent &#183; docs</text><rect x="515" y="48" width="165" height="46" rx="6" fill="#27272a" stroke="#f472b6"/><text x="597" y="76" fill="#e4e4e7" font-size="12" text-anchor="middle">agent &#183; migration</text><line x1="95" y1="94" x2="180" y2="150" stroke="#52525b" stroke-width="1.5"/><line x1="260" y1="94" x2="300" y2="150" stroke="#52525b" stroke-width="1.5"/><line x1="425" y1="94" x2="400" y2="150" stroke="#52525b" stroke-width="1.5"/><line x1="597" y1="94" x2="520" y2="150" stroke="#52525b" stroke-width="1.5"/><rect x="60" y="152" width="580" height="86" rx="8" fill="#27272a" stroke="#fbbf24" stroke-width="2"/><text x="350" y="176" fill="#fbbf24" font-size="13" font-weight="bold" text-anchor="middle">Ambient awareness layer</text><text x="160" y="210" fill="#e4e4e7" font-size="11" text-anchor="middle">Status line</text><text x="160" y="225" fill="#a1a1aa" font-size="10" text-anchor="middle">glance</text><text x="310" y="210" fill="#e4e4e7" font-size="11" text-anchor="middle">Stop-hook ping</text><text x="310" y="225" fill="#a1a1aa" font-size="10" text-anchor="middle">push</text><text x="450" y="210" fill="#e4e4e7" font-size="11" text-anchor="middle">Voice</text><text x="450" y="225" fill="#a1a1aa" font-size="10" text-anchor="middle">reply</text><text x="560" y="210" fill="#e4e4e7" font-size="11" text-anchor="middle">Slack</text><text x="560" y="225" fill="#a1a1aa" font-size="10" text-anchor="middle">phone</text><line x1="350" y1="238" x2="350" y2="286" stroke="#52525b" stroke-width="2"/><polygon points="344,284 356,284 350,294" fill="#52525b"/><rect x="200" y="298" width="300" height="56" rx="8" fill="#27272a" stroke="#38bdf8" stroke-width="2"/><text x="350" y="322" fill="#38bdf8" font-size="13" font-weight="bold" text-anchor="middle">You: in flow</text><text x="350" y="340" fill="#a1a1aa" font-size="11" text-anchor="middle">pulled in only when an agent needs you</text></svg>`,
+          },
+          {
+            type: 'table',
+            headers: ['Channel', 'Type', 'Tells you'],
+            rows: [
+              ['Status line', 'Glance', 'Live state: model, context fullness, cost, usage rate'],
+              ['Stop-hook notification', 'Push', 'An agent just finished, or is waiting on you'],
+              ['Voice (/voice)', 'Reply', 'Answer a pinged agent without returning to the keyboard'],
+              ['Slack / phone', 'Push', 'The same completion signal, on your phone when you step away'],
+            ],
+          },
+        ],
+      },
+      {
+        heading: 'The status line: your always-on glance',
+        blocks: [
+          {
+            type: 'text',
+            md: "The strip at the bottom of a Claude Code session is the zero-effort channel, and it is yours to shape. Run `/statusline`, describe what you want in plain English, and Claude wires it up. No config format to learn.\n\nFor staying oriented across several sessions, three numbers earn their place: your **model**, your **context percentage** (how full the window is, the attention budget from [Mental Models · Context Engineering](lesson:m0-l4)), and your **usage rate** across the rolling 5-hour and 7-day windows (the spend you modeled in [Mental Models · Token Economics 101](lesson:m0-l6)). It refreshes on every prompt, so one look tells you whether you are about to hit a limit before you fire a big run.",
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'Keep it a glance, not a dashboard',
+            md: 'A status line works because you can read it in half a second. Pack in ten fields and you stop reading it at all. Pick the two or three numbers that would actually change your next move, and leave the rest for /context and /cost when you deliberately go looking.',
+          },
+        ],
+      },
+      {
+        heading: 'The notification cascade',
+        blocks: [
+          {
+            type: 'text',
+            md: "You already know the Stop hook as a verification gate from [Claude Code Mastery · Hooks: Deterministic Control](lesson:m1-l5) and [Agents, Harnesses & Loops · Verification: the #1 Quality Lever](lesson:m2-l4): exit 2 blocks a premature 'done'. The same hook does a second, unrelated job. When an agent genuinely finishes, or stalls waiting on you, the Stop event fires, and you can hang a notification off it. One hook, two purposes: it can block, and it can announce.\n\nThe move is to fan that announcement across whatever channel will reach you where you are. A single Stop hook can post to Slack, speak out loud, and raise a desktop banner, all in the same run.",
+          },
+          {
+            type: 'code',
+            lang: 'bash',
+            caption: 'A Stop hook wired to three channels at once. Register it on the Stop event in .claude/settings.json.',
+            code: `#!/bin/bash
+# .claude/hooks/notify.sh
+SESSION="$CLAUDE_SESSION_NAME"
+[ -z "$SESSION" ] && SESSION="claude"
+MSG="$SESSION finished and is waiting on you."
+
+# 1. Slack: post to your #dev channel
+curl -s -X POST "$SLACK_WEBHOOK_URL" \\
+  -H 'Content-type: application/json' \\
+  -d "{\\"text\\":\\"$MSG\\"}" >/dev/null
+
+# 2. Voice: say it out loud (macOS 'say', or swap in a TTS call)
+say "$MSG"
+
+# 3. Desktop banner (macOS)
+osascript -e "display notification \\"$MSG\\" with title \\"Claude Code\\""`,
+          },
+          {
+            type: 'diagram',
+            caption: 'One Stop event, three channels, fired together. A signal reaches you at the desk and across the room.',
+            svg: `<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif"><rect width="700" height="300" fill="#18181b"/><text x="350" y="28" fill="#e4e4e7" font-size="15" font-weight="bold" text-anchor="middle">The Stop-hook notification cascade</text><rect x="40" y="120" width="200" height="66" rx="8" fill="#27272a" stroke="#fbbf24" stroke-width="2"/><text x="140" y="148" fill="#fbbf24" font-size="13" font-weight="bold" text-anchor="middle">Stop event fires</text><text x="140" y="168" fill="#a1a1aa" font-size="11" text-anchor="middle">agent finished or stalled</text><line x1="240" y1="140" x2="300" y2="80" stroke="#52525b" stroke-width="2"/><line x1="240" y1="153" x2="300" y2="153" stroke="#52525b" stroke-width="2"/><line x1="240" y1="166" x2="300" y2="226" stroke="#52525b" stroke-width="2"/><rect x="300" y="54" width="360" height="52" rx="8" fill="#27272a" stroke="#38bdf8"/><text x="316" y="78" fill="#38bdf8" font-size="12" font-weight="bold">Slack webhook</text><text x="316" y="95" fill="#a1a1aa" font-size="10">posts to #dev with the session name</text><rect x="300" y="127" width="360" height="52" rx="8" fill="#a78bfa" fill-opacity="0.12" stroke="#a78bfa"/><text x="316" y="151" fill="#a78bfa" font-size="12" font-weight="bold">Voice (say / TTS)</text><text x="316" y="168" fill="#a1a1aa" font-size="10">speaks the message aloud at your desk</text><rect x="300" y="200" width="360" height="52" rx="8" fill="#27272a" stroke="#34d399"/><text x="316" y="224" fill="#34d399" font-size="12" font-weight="bold">Desktop banner (osascript)</text><text x="316" y="241" fill="#a1a1aa" font-size="10">native OS notification</text></svg>`,
+          },
+        ],
+      },
+      {
+        heading: 'Voice: the hands-free reply',
+        blocks: [
+          {
+            type: 'text',
+            md: "Notifications only help if you can answer without breaking flow. `/voice` is the reply channel: push to talk, give the agent its next instruction, and never touch the keyboard. Pair it with the notifications above and the whole loop closes hands-free. An agent finishes, your desk speaker says so, you glance at the diff on screen, and you talk your correction back to it. That is how one person supervises five agents from across the room.",
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'Instrument for signal, not noise',
+            md: 'The point of this layer is to let you ignore the agents safely, so do not build a firehose. Two channels usually do it: a status line you can glance at, and one push channel that reaches you where you are. Notify only on the events that actually need you (finished, blocked, failed), never on every tool call. A layer that pings constantly trains you to ignore it, which is the exact failure you were trying to prevent.',
+          },
+        ],
+      },
+    ],
+    lab: {
+      title: 'Wire your own awareness layer',
+      intro:
+        'Set up the minimum viable awareness layer on a real repo: a status line you can glance at, and a Stop hook that pings you when a session finishes. Then run two sessions and prove you get pulled in only when needed.',
+      steps: [
+        'In a real repo, run /statusline and ask for a line showing your model, context percentage, and usage rate. Confirm it appears at the bottom and updates each prompt.',
+        "Write .claude/hooks/notify.sh that raises a desktop notification (macOS: osascript -e 'display notification ...'; Linux: notify-send). Make it executable with chmod +x.",
+        'Register it on the Stop event in .claude/settings.json, then trigger a short task and confirm the banner fires when the session ends.',
+        'Optional second channel: add a Slack incoming webhook via curl, or a say/TTS line for voice.',
+        'Start two worktree sessions (from the Power Features lab) on two scoped tasks, then walk away from the terminals.',
+        'Confirm you get a notification when each session finishes, and that the status line told you where each stood at a glance.',
+        'Try /voice to hand one session its next instruction without typing.',
+      ],
+      checklist: [
+        'A status line shows model, context %, and usage rate, and refreshes each prompt',
+        'A Stop hook fires a real notification when a session ends',
+        'You ran two sessions and were pulled in by a ping, not by watching terminals',
+        'If wired, a second channel (Slack or voice) also fired',
+        'You can explain why notifying on every tool call would defeat the purpose',
+      ],
+    },
+    checkQuiz: [
+      {
+        q: 'One Stop hook, two jobs. Which pair?',
+        options: [
+          'Block a premature done, and announce a real done',
+          'Compact the context, and rewind the session',
+          'Format code, and run the tests',
+          'Spawn a teammate, and kill an idle one',
+        ],
+        answer: 0,
+        explain:
+          'The Stop event is both a verification gate (exit 2 blocks a false finish) and the natural place to announce a real finish. The same hook can block and can notify, depending on what you hang off it.',
+      },
+      {
+        q: 'Your status line should stay small because:',
+        options: [
+          'Long lines crash the terminal renderer',
+          'It is a glance channel: a few high-signal numbers beat a wall of text you stop reading',
+          'Each field costs extra tokens per turn',
+          'Claude can only track three metrics at once',
+        ],
+        answer: 1,
+        explain:
+          'A status line earns its keep only if you can read it in half a second. Overload it and you stop looking, which loses the whole benefit. Keep the two or three numbers that change your next move.',
+      },
+      {
+        q: 'You wire the Stop-style notification to also fire on every PreToolUse event. What goes wrong?',
+        options: [
+          'Nothing; more signal is always better',
+          'Constant pings train you to ignore the channel, defeating the awareness layer',
+          'The extra hook exit code blocks all tool calls',
+          'Slack bans your account for the traffic',
+        ],
+        answer: 1,
+        explain:
+          'A channel that fires on everything becomes noise, and you learn to tune it out. Then the one ping that mattered (a failure, a stall) gets ignored with the rest. Notify only on events that need a human.',
+      },
+      {
+        q: "/voice's role in the awareness loop:",
+        options: [
+          'It transcribes the agent output to a file',
+          'It is the hands-free reply channel: answer a pinged agent without returning to the keyboard',
+          'It reads your CLAUDE.md aloud at session start',
+          'It replaces the status line with spoken updates',
+        ],
+        answer: 1,
+        explain:
+          'Push signals get you notified; /voice gets you answering. Together they close the loop hands-free: the agent pings, you glance, and you talk the next instruction back without sitting down to type.',
+      },
+    ],
+    resources: [
+      { label: 'Claude Code docs: hooks (the Stop event)', url: 'https://code.claude.com/docs/en/hooks', kind: 'docs' },
+      { label: 'Claude Code docs: status line', url: 'https://code.claude.com/docs/en/statusline', kind: 'docs' },
+      { label: 'Slack incoming webhooks (for the push channel)', url: 'https://api.slack.com/messaging/webhooks', kind: 'docs' },
+      { label: 'everything-claude-code: community status lines & monitors', url: 'https://github.com/affaanmustafa/everything-claude-code', kind: 'repo' },
     ],
   },
 

@@ -170,10 +170,14 @@ export const lessons: Lesson[] = [
             md: 'Does the harness really matter more than the model? A 2026 paper nicknamed Life-Harness ([arxiv 2605.22166](https://arxiv.org/abs/2605.22166)) ran that experiment at scale. The setup: take 126 existing agent configurations built on 18 different backbone models (the backbone is the underlying LLM doing the reasoning), then patch only the harness. No fine-tuning and no model swaps of any kind. The result: **116 of the 126 setups got better**, with a **mean improvement of 88.5%**.\n\nThe sharpest single data point involves [GAIA](https://arxiv.org/abs/2311.12983), a benchmark of realistic assistant tasks that mix web lookup, multi-step reasoning, and file handling. The same Sonnet 4.5 model scored **31% on GAIA inside one harness and 75% inside another**. Same brain, different body, more than double the score.',
           },
           {
+            type: 'text',
+            md: "Google ran the same experiment from a different angle and landed in the same place. Their 2026 playbook 'The New AI SDLC' puts a number on the split: the model is about **10%** of what decides whether an agent succeeds, and the harness is the other **90%**. Their picture pairs well with the operating-system one. The model is the engine. The harness is the car, the road, and the traffic laws. A world-class engine with no chassis, no road, and no rules is just an expensive way to sit still.\n\nThe proof point they cite is Terminal-Bench 2.0, a benchmark that scores agents on real terminal work. One model sat outside the top 30. A team at LangChain left that model untouched and rebuilt the harness around it: better context delivery, better tools, tighter verification. The score climbed from **52.8% to 66.5%**, a jump of **13.7 points**, and the setup jumped into the top 5. For scale, 13.7 points is roughly the gap between Sonnet and Opus. A good harness made a mid-tier model perform like the frontier one, at mid-tier prices.",
+          },
+          {
             type: 'callout',
             variant: 'insight',
             title: 'Where the payoff lives',
-            md: 'If a benchmark score can more than double without touching the model, spend your effort where the numbers moved. Most teams still pour their tuning time into prompt wording and model choice, which the data says are the two smallest levers. The harness is the big one.',
+            md: 'Two independent studies ran the test and landed in the same spot. If a benchmark score can more than double without touching the model, spend your effort where the numbers moved. Most teams still pour their tuning time into prompt wording and model choice, the two smallest levers. The harness is the big one.',
           },
           {
             type: 'diagram',
@@ -305,6 +309,11 @@ export const lessons: Lesson[] = [
         label: 'mfpiccolo - How to Build Your Own Agent Harness (iii.dev)',
         url: 'https://iii.dev/blog/how-to-build-your-own-agent-harness',
         kind: 'article',
+      },
+      {
+        label: "Cole Medin - Google's masterclass on agentic engineering (model 10%, harness 90%)",
+        url: 'https://youtu.be/zbmuiaPuiNM',
+        kind: 'video',
       },
       {
         label: 'iii-hq/workers - reference harness implementation',
@@ -844,6 +853,12 @@ exit 1`,
             md: 'Claude Code ships a loop primitive natively: **/loop** re-runs a prompt or slash command on an interval, or self-paced until done. It fits polling jobs and babysitting CI (continuous integration) nicely. For build loops, the shell version above serves you better, because the guard, the check, and the memory file are explicit and under your control.\n\nAnd keep perspective: **human-in-the-loop is still the strongest known setup**. Run a batch of loop iterations, review the result, correct the spec, fire again. The automation grinds through the iterations while you supply the judgment between batches.',
           },
           {
+            type: 'callout',
+            variant: 'insight',
+            title: 'This pattern has a name: the Ralph loop',
+            md: "You'll hear the exact loop you just built called a **Ralph loop** in the wild. Same parts: a scratchpad for memory, a check that runs at the end, a re-prompt when the check fails. The name stuck because the failure it fixes is so common. Left alone, a model assumes its reading of the task matches yours and declares victory early, which is why you end up typing 'keep going' over and over. The end-of-loop check is what forces a match against the real criteria before the loop is allowed to stop. Anthropic ships a Ralph-loop skill you can crib from, and plenty of people write their own. A lighter cousin you'll also see is **PIV** (Plan, Implement, Verify), which comes back in [Token Economics & AI-Native SDLC · The AI-Native SDLC](lesson:m7-l2).",
+          },
+          {
             type: 'compare',
             left: {
               title: 'Prompting',
@@ -973,6 +988,7 @@ exit 1`,
       'Write a task contract with binary, machine-checkable acceptance criteria',
       "Wire a Stop hook that blocks a premature 'done'",
       'Demand and check evidence instead of accepting agent assertions',
+      'Verify the trajectory, not just the output, to catch a right-looking answer reached the wrong way',
     ],
     skipQuiz: [
       {
@@ -1113,6 +1129,44 @@ exit 1`,
           {
             type: 'text',
             md: 'Here\'s how the rungs feel in practice. Rung 1 is a sentence in your prompt: "run the tests before saying done". It works until the context gets long and the instruction fades from attention. Rung 2, the /goal evaluator, re-grades progress against your stated goal on every single turn, so the pressure never fades. The grader is still a model, though, and it inherits model optimism. Rung 3, the Stop hook, changes the game: when the agent tries to finish, a script you wrote runs the real checks, and if that script exits with code 2, the agent is forced to keep working. It literally cannot end the session while the tests are red. Rung 4 hires a second agent, with a fresh context, to review the first one\'s work the way a human reviewer would.',
+          },
+        ],
+      },
+      {
+        heading: 'Verify the output, then verify the path',
+        blocks: [
+          {
+            type: 'text',
+            md: "Everything so far verifies the **output**: did the tests pass, did the build compile, does the screenshot match the mock. Call that Output Eval. It catches a wrong answer cold. It misses a sneakier failure, where the agent reaches a right-looking answer through a path you'd never sign off on. It hard-codes the expected value so the test goes green. It deletes the assertion that was failing. It patches the symptom in the UI while the data layer stays broken underneath. The output passes every check, and the method is rotten.\n\nGoogle's 2026 SDLC playbook names the fix directly: verify what the agent built **and** how it got there. Trajectory Eval grades the path. You, or a reviewer agent with a fresh context, read what the agent actually did: which files it touched, which tools it called, what it changed to turn the check green. This is exactly how reward hacking gets caught, where a model games the metric instead of doing the work.",
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'Output Eval',
+              items: [
+                'Grades the final artifact',
+                'Tests pass, build exits 0, screenshot matches',
+                'Catches a plain wrong answer',
+                'Cheap, binary, runs in a hook',
+                'Blind to how the answer was reached',
+              ],
+            },
+            right: {
+              title: 'Trajectory Eval',
+              items: [
+                'Grades the steps the agent took to get there',
+                'Which files, which tools, which edits, in what order',
+                'Catches a right answer reached the wrong way: hard-coded values, deleted assertions, symptom patches',
+                'Needs a reader: you or a reviewer subagent',
+                'Sees anything the session log recorded',
+              ],
+            },
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'Why both, and in this order',
+            md: 'Output Eval is your first gate because it is cheap and it is binary. Run it on every task. Reach for Trajectory Eval when a passing check is not enough proof on its own: money moves, data gets deleted, security is in scope, or the agent ran unattended for a long stretch. The reviewer subagent from rung 4 of the ladder is already the tool for it. Point it at the diff and the tool log, not just the final state.',
           },
         ],
       },

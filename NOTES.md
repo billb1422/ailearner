@@ -23,9 +23,10 @@ A gamified, single-user learning website that takes **Bill** from "rusty archite
 
 ## Current status
 
-- **BUILT and working.** 9 modules, **41 lessons**, 22 weekday sessions, plus boss challenges and 3 capstone tracks.
+- **BUILT and working.** 9 modules, **44 lessons**, 22 weekday sessions, plus boss challenges and 3 capstone tracks.
 - Typechecks clean (`npm run typecheck`), production build works (`npm run build`).
 - Bill has started going through it and is giving feedback; several lessons have been rewritten/expanded in response (see git log).
+- **Source-enrichment pass done** (from 10 sources: Google agentic masterclass, two Michael workshops, Ambient Awareness note, six Claude Design sources). Enriched m0-l2/l4/l6, m1-l1/l5/l8, m2-l1/l3/l4/l6/l7, m3-l2/l4/l5. Added **3 new lessons**: m1-l10 (Ambient Awareness Layer), m3-l6 (Building with Claude Design), m7-l5 (The PRD Harness Pipeline). See "Enrichment decisions" below.
 - No known bugs open. Progress persistence and the in-progress-lesson resume are fixed.
 
 ## How to run / verify / commit
@@ -71,17 +72,17 @@ viewBox roughly `0 0 700 300` to `0 0 700 400`. Dark bg `fill="#18181b"`. Text `
 ### Quiz invariants
 `skipQuiz` = exactly 5 questions, `checkQuiz` = exactly 4. Every question has exactly 4 options; `answer` is the correct index. No overlap between the two quizzes. Skip-quiz should test the hard core so a real expert passes and a tourist fails.
 
-## Full lesson plan (41 lessons, 9 modules)
+## Full lesson plan (44 lessons, 9 modules)
 
-Accent color and boss in parens. Lesson ids are stable keys; **note the m7-l4 and m7-l3 ids now live in Module 8** (the AI Transformation Playbook was pulled into its own finale module; the ids were kept to preserve progress and cross-references, so id prefix no longer implies module). Array order = display order.
+Accent color and boss in parens. Lesson ids are stable keys; **note the m7-l4 and m7-l3 ids now live in Module 8** (the AI Transformation Playbook was pulled into its own finale module; the ids were kept to preserve progress and cross-references, so id prefix no longer implies module). Array order = display order. **Three lessons added in the enrichment pass carry non-sequential ids: m1-l10, m3-l6, m7-l5** (see below).
 
 **m0 Mental Models** (Days 1-3, #38bdf8, boss "Draw the Map"): l1 How LLMs Actually Work · l2 Vibe Coding → Agentic Engineering · l3 Prompting That Actually Works · l4 Context Engineering · l5 Workflows vs Agents · l6 Token Economics 101
 
-**m1 Claude Code Mastery** (Days 4-8, #a78bfa, boss "Rig Your Ride"): l1 Fundamentals & the .claude Folder · l2 CLAUDE.md & the Memory System · l3 Agent Skills Deep Dive · l4 Skill Authoring Doctrine · l5 Hooks: Deterministic Control · l6 Subagents & Context Isolation · l7 MCP & Plugins · l8 Power Features · l9 The Best-Practices Workflow
+**m1 Claude Code Mastery** (Days 4-8, #a78bfa, boss "Rig Your Ride"): l1 Fundamentals & the .claude Folder · l2 CLAUDE.md & the Memory System · l3 Agent Skills Deep Dive · l4 Skill Authoring Doctrine · l5 Hooks: Deterministic Control · l6 Subagents & Context Isolation · l7 MCP & Plugins · l8 Power Features · **l10 The Ambient Awareness Layer** (new; array order places it between l8 and l9) · l9 The Best-Practices Workflow
 
 **m2 Agents, Harnesses & Loops** (Days 9-13, #f472b6, boss "Build a Loop"): the priority module: l1 What Is a Harness? · l2 Anatomy of the Agent Loop · l3 Loop Engineering · l4 Verification: the #1 Quality Lever · l5 Multi-Agent Patterns · l6 Agent Teams & Dynamic Workflows · l7 Agent Memory & State · l8 Building With the Agent SDK · l9 Cost-Aware Agents & Guardrails
 
-**m3 AI-Assisted Design** (Days 14-16, #fb923c, boss "Ship a Screen"): l1 Design Context Engineering · l2 Vibe-Coding Beautiful UI · l3 Encoding Taste as Skills · l4 Claude Design, Figma & Direct Design · l5 Vision Loops & iOS
+**m3 AI-Assisted Design** (Days 14-16, #fb923c, boss "Ship a Screen"): l1 Design Context Engineering · l2 Vibe-Coding Beautiful UI · l3 Encoding Taste as Skills · l4 Claude Design, Figma & Direct Design · l5 Vision Loops & iOS · **l6 Building with Claude Design** (new; end-to-end product + ship-to-Vercel)
 
 **m4 Local Models** (Days 17-18, #34d399, boss "Homelab"): l1 The Open-Model Landscape 2026 · l2 Running Models on Your Mac · l3 Local Agents & the Hybrid Split
 
@@ -89,9 +90,21 @@ Accent color and boss in parens. Lesson ids are stable keys; **note the m7-l4 an
 
 **m6 Fine-Tuning** (Day 21, #f87171, boss "Alchemy"): l1 LoRA, QLoRA & When to Tune · l2 Fine-Tune on Your Mac
 
-**m7 Token Economics & AI-Native SDLC** (Day 22, #22d3ee, boss "Price the Loop"): l1 Modeling Agent Costs · l2 The AI-Native SDLC
+**m7 Token Economics & AI-Native SDLC** (Day 22, #22d3ee, boss "Price the Loop"): l1 Modeling Agent Costs · l2 The AI-Native SDLC · **l5 The PRD Harness Pipeline** (new; a third comparable SDLC beside PIV and Prompt-to-PR)
 
 **m8 The AI Transformation Playbook** (Day 22, #818cf8, 🏢, boss "Launch Master"): the finale module. l4 Where AI Belongs in a Business (Weinstein's transformation playbook; id m7-l4) · l3 Capstone Launch (id m7-l3)
+
+## Enrichment decisions (source pass, from 10 sources)
+
+Deliberate editorial calls made during the enrichment pass. Honor these in future design/SDLC edits.
+
+- **Claude Design model version: do NOT hard-pin.** Sources disagreed (announcement = Opus 4.7 Apr 2026; later videos = Opus 4.8 / Sonnet 5). We describe it as "Anthropic's vision model" + an in-product model picker whose tiers match the m0-l6 price sheet. Same call recorded in `docs/research-notes.md` §D.
+- **Claude Design usage model = shared plan pool.** The early *separate weekly design quota was deprecated* (official get-started doc); it now draws from the same pool as chat + Claude Code. m3-l4 and m3-l6 both state the shared-pool model.
+- **/design-sync and Figma are real, kept.** Official marketing pages don't foreground them, but the research base + the Griffin walkthrough (.fig upload, /design-sync) confirm both. Described accurately, not overstated.
+- **m3-l4 keeps its 3-mode framing** (Claude Design / Claude-in-Figma / Direct Design); the heavy Claude Design product mechanics went into the new **m3-l6**, not into l4.
+- **Multi-agent posture (m2-l6):** kept all existing team depth, ADDED a "prefer one generalist + skills; escalate to teams only under real parallelism" counterweight (Google/Medin trend). Did not gut the multi-agent content.
+- **Source-3 lag items kept at the app's July-2026 stance** (do not regress): auto permission mode is the default (not "in research"), the commands/skills merger is settled, CLAUDE.md precedence is managed→user→project→local (local wins).
+- **Skipped as low-value:** m1-l6 security-reviewer walkthrough and m1-l7 Chrome/Sentry demos (source agents rated them mere confirmations of content already present).
 
 ## Gotchas / conventions that bite
 
@@ -106,6 +119,8 @@ Accent color and boss in parens. Lesson ids are stable keys; **note the m7-l4 an
 - **Bulk content authoring:** fan out one subagent per module (or per split file), each given: read `types.ts` + the relevant `docs/research-notes.md` section + `CLAUDE.md`, write the file, then self-verify with a standalone `tsc --noEmit ... <file>` and em-dash grep. This built all 41 lessons in parallel.
 - **Video enrichment (proven with two YouTube links):** Bill sends URLs + which lesson each feeds. Pull transcripts with **yt-dlp** (`--write-auto-subs --sub-langs en --skip-download`) in a scratchpad venv: YouTube's own transcript panel chokes on long streams and WebFetch is blocked. Clean the VTT into timestamped text. For anything visual, have Bill export **slide screenshots as a PDF**; transcribe it slide-by-slide and treat the deck as the AUTHORITATIVE source (auto-captions garble names, numbers, and command names). Then run a fidelity pass that trues lesson facts and diagrams against the slides. This produced lesson m7-l4 and the PIV/prompt-to-PR sections of m7-l2.
 - **Big PDFs:** render thumbnails with `pdftoppm -gray -scale-to 64` first to map structure, then read targeted page ranges. `brew install poppler` provides pdftoppm/pdfinfo.
+- **Multi-source enrichment (proven with 10 sources):** one subagent per source, each grounded in `CLAUDE.md` + `NOTES.md` + `types.ts` + the specific lessons it overlaps, returning a fixed report shape (Source / Key Material / Overlap Map / Conflicts & Novel Approaches / Recommendation). The "Conflicts & Novel Approaches" section is what drives the interweaving decisions to bring back to Bill. Dedup overlapping sources (six Claude Design videos/docs) before authoring.
+- **Verify WITHOUT touching Bill's real profile:** localStorage is per-origin, so start a throwaway dev server on a different port (`npx vite --port 5200 --strictPort false`), which gives a fresh empty profile you can click through freely (start lessons, trip quizzes) with zero effect on his 5199 progress. The in-app Browser pane's screenshot/native-scroll can glitch to black frames after JS scrolling and its viewport sometimes reports 0x0 (call `resize_window` to reset). Reliable check: `javascript_tool` DOM queries (assert headings, table cells, `<code>` contents, SVG text/rect counts, cross-ref pills) plus a top-of-lesson screenshot. Kill the server with `lsof -ti :5200 | xargs kill` when done.
 
 ## Feedback patterns from Bill (internalize these)
 

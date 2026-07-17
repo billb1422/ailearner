@@ -721,4 +721,285 @@ export const lessons: Lesson[] = [
       { label: 'Prompt to PR: Rudy Garcia on an AI-orchestrated SDLC', url: 'https://www.youtube.com/watch?v=MzCy_6MjhCs', kind: 'video' },
     ],
   },
+
+  // ─────────────────────────────────────────────────────────────
+  // m7-l5 · The PRD Harness Pipeline · Day 22
+  // ─────────────────────────────────────────────────────────────
+  {
+    id: 'm7-l5',
+    title: 'The PRD Harness Pipeline',
+    day: 22,
+    minutes: 55,
+    xp: 100,
+    objectives: [
+      'Trace a full seven-stage PRD pipeline from fuzzy idea to merged, verified code',
+      'Explain fan-out for width versus fan-out for accuracy, and where each belongs',
+      'Place this pipeline against the PIV loop and Prompt to PR on the lightweight-to-heavyweight axis',
+      'Adapt the doctrine: build your own harness and evolve it to close the gaps you actually hit',
+    ],
+    skipQuiz: [
+      {
+        q: "Where this seven-stage PRD pipeline sits relative to the PIV loop and Prompt to PR:",
+        options: [
+          'It replaces both with a single universal method',
+          'Between them: one hands-on operator like PIV, but with the fan-out and hard gates of the heavier pipelines',
+          'It is lighter than the PIV loop, with no gates at all',
+          'It is a cloud-only method with no local execution',
+        ],
+        answer: 1,
+        explain:
+          'It keeps a single operator close to the work, the way the PIV loop does, and adds multi-agent fan-out and mandatory gates, the way the heavier pipelines do. Same spine as both, tuned for rigor without a full agent swarm.',
+      },
+      {
+        q: "The exit test for the /research stage:",
+        options: [
+          'The research doc is over a certain length',
+          'You can describe the problem, the solution, and every trade-off without hand-waving',
+          'Three agents agreed on the findings',
+          'All the tests pass',
+        ],
+        answer: 1,
+        explain:
+          'Research is done when you can state the problem, the chosen solution, and each trade-off plainly. Feeding a still-fuzzy research doc straight into the PRD is vibe coding with extra steps.',
+      },
+      {
+        q: "How the /prd create stage produces its draft:",
+        options: [
+          'One agent writes the whole PRD in a single pass',
+          'Three agents each draft the entire PRD from a different lens (product, technical, QA), then a synthesis step merges them by majority',
+          'The human writes it and an agent formats it',
+          'It copies a template and fills blanks',
+        ],
+        answer: 1,
+        explain:
+          'Three lenses draft the whole PRD in parallel, then fan back in. Where all three agree, the point is adopted; where two agree, the majority wins and the dissent gets logged; where all three differ, it goes back to you.',
+      },
+      {
+        q: "What the three /prd evaluate gates check:",
+        options: [
+          'Spelling, grammar, and formatting',
+          'Feasibility (no HIGH risks), constraints (zero ADR/NFR violations), and intent alignment (a score of 8 out of 10 or better)',
+          'Token budget, latency, and model choice',
+          'Git history, branch names, and commit messages',
+        ],
+        answer: 1,
+        explain:
+          'All three gates must pass: nothing rated HIGH risk, no violations of the architecture or non-functional constraints, and an intent-alignment score of at least 8/10. Any failure kicks the PRD back to redraft.',
+      },
+      {
+        q: "Which stage is the Ralph loop:",
+        options: [
+          '/research',
+          '/prd create',
+          '/prd execute',
+          '/prd retrospective',
+        ],
+        answer: 2,
+        explain:
+          'Stage 6, /prd execute, is the Ralph loop: one story at a time, a fresh context per loop, a verification check, and a human reading every diff before merge. The other stages plan, gate, or reflect.',
+      },
+    ],
+    sections: [
+      {
+        heading: 'A third method on the same axis',
+        blocks: [
+          {
+            type: 'text',
+            md: "The last lesson put two full methods on one axis: the lightweight [Token Economics & AI-Native SDLC · The AI-Native SDLC](lesson:m7-l2) PIV loop on the cheap, hands-on end, and Rudy Garcia's Prompt to PR pipeline on the heavyweight, self-reviewing end. Here is a third, from a consultant who trains teams to build their own AI harness (call him Michael). It sits between the two: one operator staying close to the work like PIV, plus the multi-agent fan-out and the hard gates of the heavier pipelines.\n\nIt is worth studying in full, because it shows what a mature personal harness actually looks like after someone has rebuilt it four times. His north star is blunt: generating code is cheap now, and good code is not; the scarce resource is your **attention**. Every one of the seven stages exists to spend as little of your attention as possible while stripping assumptions out before any code gets written.",
+          },
+        ],
+      },
+      {
+        heading: 'The seven stages',
+        blocks: [
+          {
+            type: 'text',
+            md: "Each stage is a slash command he wrote, and the work flows top to bottom: research the problem, shape the intent, draft and gate the PRD, slice it into tiny stories, build them one at a time, and reflect. The output of the last stage feeds the first stage of the next PRD, so the codebase gets more legible with every pass.",
+          },
+          {
+            type: 'diagram',
+            caption: 'The seven-stage pipeline. Fan-out happens at create and evaluate; the Ralph loop does the building at execute; the retrospective feeds the next PRD.',
+            svg: `<svg viewBox="0 0 700 480" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif"><rect width="700" height="480" fill="#18181b" rx="8"/><rect x="90" y="40" width="430" height="48" rx="8" fill="#27272a" stroke="#38bdf8"/><text x="305" y="61" fill="#38bdf8" font-size="13" font-weight="bold" text-anchor="middle">1 &#183; /research</text><text x="305" y="79" fill="#a1a1aa" font-size="10" text-anchor="middle">surface every unknown; output is a doc for you to read</text><rect x="90" y="100" width="430" height="48" rx="8" fill="#27272a" stroke="#22d3ee"/><text x="305" y="121" fill="#22d3ee" font-size="13" font-weight="bold" text-anchor="middle">2 &#183; draft intent</text><text x="305" y="139" fill="#a1a1aa" font-size="10" text-anchor="middle">problem &#183; users &#183; success &#183; scope (in and out)</text><rect x="90" y="160" width="430" height="48" rx="8" fill="#27272a" stroke="#a78bfa"/><text x="305" y="181" fill="#a78bfa" font-size="13" font-weight="bold" text-anchor="middle">3 &#183; /prd create</text><text x="305" y="199" fill="#a1a1aa" font-size="10" text-anchor="middle">3 lenses draft in parallel, merge by majority</text><rect x="90" y="220" width="430" height="48" rx="8" fill="#27272a" stroke="#fbbf24"/><text x="305" y="241" fill="#fbbf24" font-size="13" font-weight="bold" text-anchor="middle">4 &#183; /prd evaluate</text><text x="305" y="259" fill="#a1a1aa" font-size="10" text-anchor="middle">3 gates, all must pass, or redraft</text><rect x="90" y="280" width="430" height="48" rx="8" fill="#27272a" stroke="#34d399"/><text x="305" y="301" fill="#34d399" font-size="13" font-weight="bold" text-anchor="middle">5 &#183; /prd breakdown</text><text x="305" y="319" fill="#a1a1aa" font-size="10" text-anchor="middle">slice by layer into 1-point stories</text><rect x="90" y="340" width="430" height="48" rx="8" fill="#27272a" stroke="#f472b6"/><text x="305" y="361" fill="#f472b6" font-size="13" font-weight="bold" text-anchor="middle">6 &#183; /prd execute</text><text x="305" y="379" fill="#a1a1aa" font-size="10" text-anchor="middle">Ralph loop: one story, fresh context, human reads each diff</text><rect x="90" y="400" width="430" height="48" rx="8" fill="#27272a" stroke="#38bdf8"/><text x="305" y="421" fill="#38bdf8" font-size="13" font-weight="bold" text-anchor="middle">7 &#183; /prd retrospective</text><text x="305" y="439" fill="#a1a1aa" font-size="10" text-anchor="middle">capture ADRs + metrics, seed the next backlog</text><line x1="305" y1="88" x2="305" y2="98" stroke="#52525b" stroke-width="2"/><line x1="305" y1="148" x2="305" y2="158" stroke="#52525b" stroke-width="2"/><line x1="305" y1="208" x2="305" y2="218" stroke="#52525b" stroke-width="2"/><line x1="305" y1="268" x2="305" y2="278" stroke="#52525b" stroke-width="2"/><line x1="305" y1="328" x2="305" y2="338" stroke="#52525b" stroke-width="2"/><line x1="305" y1="388" x2="305" y2="398" stroke="#52525b" stroke-width="2"/><path d="M90 424 L50 424 L50 64 L90 64" fill="none" stroke="#52525b" stroke-width="1.5" stroke-dasharray="5 4"/><polygon points="84,58 84,70 92,64" fill="#52525b"/><text x="536" y="182" fill="#a78bfa" font-size="10">fan-out /</text><text x="536" y="195" fill="#a78bfa" font-size="10">fan-in</text><text x="536" y="242" fill="#fbbf24" font-size="10">feasibility</text><text x="536" y="255" fill="#fbbf24" font-size="10">constraints</text><text x="536" y="268" fill="#fbbf24" font-size="10">intent 8+/10</text><text x="536" y="362" fill="#f472b6" font-size="10">verify each,</text><text x="536" y="375" fill="#f472b6" font-size="10">then merge</text></svg>`,
+          },
+          {
+            type: 'table',
+            headers: ['Stage', 'What it does', 'Output'],
+            rows: [
+              ['1. /research', 'Explore the problem space: read docs, poke the codebase, talk to stakeholders. Surface every unknown. Takes as long as it takes, and it is the most expensive stage', 'A research doc for you to read (not the PRD)'],
+              ['2. Draft intent', 'You turn the research into a tight intent: the problem in a sentence, the users, measurable success, and what is in scope and out', 'A seed brief for the next stage'],
+              ['3. /prd create', 'Three agents draft the whole PRD in parallel from a product lens, a technical lens, and a QA lens, then a synthesis step merges them by majority', 'A complete PRD, with any dissent flagged'],
+              ['4. /prd evaluate', 'Three gates run on the draft, all must pass: feasibility (no HIGH risks), constraints (zero ADR or NFR violations), intent alignment (8/10 or better)', 'A PASS, or a kickback to redraft'],
+              ['5. /prd breakdown', 'Slice the PRD by layer (data, API, UI, tests), order it by dependency, and cut it into 1-point stories, each with its own acceptance criteria', 'A task graph, shipped to a board like Linear'],
+              ['6. /prd execute', 'The Ralph loop: one story at a time, a fresh context each loop, a review pass, and a human reading every diff before merge', 'Verified, merged code, story by story'],
+              ['7. /prd retrospective', 'Capture what was learned into ADRs and metrics, and seed the next backlog', 'ADRs, cycle-time metrics, a more legible codebase'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'The research stage is where the time goes',
+            md: "Most of the value is bought up front. His exit test for stage 1: you can describe the problem, the solution, and every trade-off without hand-waving. If you cannot, you are not done researching. The research doc is written for you, the human, to read and turn into intent, not to be shoved straight into the PRD generator. Skip that judgment and you are back to vibe coding, just with more machinery around it.",
+          },
+        ],
+      },
+      {
+        heading: 'Fan-out for width, fan-out for accuracy',
+        blocks: [
+          {
+            type: 'text',
+            md: "Two stages spin up multiple agents, and the reason differs each time. This is the [Agents, Harnesses & Loops · Multi-Agent Patterns](lesson:m2-l5) fan-out you met, applied with intent. He frames it as product design's double diamond: open up wide, then narrow down.\n\nAt **/prd create**, the three agents get *different lenses* (product, technical, QA) because he is optimizing for **width**: he wants the PRD seen from angles a single pass would miss. The synthesis rule is majority: where all three agree, adopt it; where two agree, take the majority and log the dissent; where all three differ, surface it to you to decide. A participant in his workshop noticed this is exactly Behavior-Driven Development's Three Amigos meeting, product plus engineering plus QA hashing out a story together, and he liked the comparison enough to keep it.\n\nAt **/prd evaluate**, the agents get the *same task* run in parallel, because now he is optimizing for **accuracy**, not exploration. Three independent gate-checks, all required to pass, catch the misses a single reviewer would wave through.",
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'Fan-out for width (/prd create)',
+              items: [
+                'Each agent gets a different lens: product, technical, QA',
+                'Goal: surface angles one pass would miss',
+                'Merged by majority, dissent logged',
+                'The double diamond opening up',
+              ],
+            },
+            right: {
+              title: 'Fan-out for accuracy (/prd evaluate)',
+              items: [
+                'Each agent runs the same gate check',
+                'Goal: catch misses a lone reviewer waves through',
+                'All gates must pass, or the PRD redrafts',
+                'The double diamond narrowing down',
+              ],
+            },
+          },
+        ],
+      },
+      {
+        heading: 'The Ralph loop does the building',
+        blocks: [
+          {
+            type: 'text',
+            md: "Stage 6 is the [Agents, Harnesses & Loops · Loop Engineering](lesson:m2-l3) Ralph loop, and the breakdown stage set it up perfectly. Because each story is a 1-point spec with its own acceptance criteria, the loop can take one story, spin up a **fresh context** with a clean CLAUDE.md, build just that, verify it, and stop. Fresh context per story is the whole trick: no accumulated chatter from the last nineteen stories bleeds into this one.\n\nVerification runs inside the loop (typecheck and tests, the [Agents, Harnesses & Loops · Verification: the #1 Quality Lever](lesson:m2-l4) discipline), then a review sub-step reads the change through a senior-engineer and a security-engineer lens before the card moves. Only then does a human read the diff. And the diffs are small, because the stories are small, which is the entire reason the review stays fast enough to keep up.",
+          },
+        ],
+      },
+      {
+        heading: 'Build your own, and let it evolve',
+        blocks: [
+          {
+            type: 'text',
+            md: "The most important thing he says about the pipeline is not to copy it. This is his **fourth** harness. He did not start with the three-lens fan-out at /prd create; he added it after noticing the single-pass PRDs kept missing things, which is how every part of it got there. A harness is personal, and you tighten it in two ways: with deterministic steps (shell scripts, linters, tests) and with LLM checks that grade themselves, added exactly where your own experience says the gaps are.\n\nTwo honest caveats. The retrospective stage feeds ADRs, which is the **episodic memory** from [Agents, Harnesses & Loops · Agent Memory & State](lesson:m2-l7): a wiki of decisions the next PRD reads before it starts, so the codebase compounds in legibility rather than entropy. And the whole pipeline assumes a reasonably clean codebase. Point it at a legacy mess and you mostly get a faster mess, so it fits greenfield and modernization work far better than a tangled brownfield.",
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'The dark factory, and why he does not believe in it',
+            md: "His stated dream is the dark factory: a user files a bug and nobody touches it, because it gets triaged, fixed, tested, and shipped automatically. He is quick to say he does not believe in it. What he believes in is the harness as the bridge that gets you closer: fewer moments where you type 'continue' or 'you're absolutely right, keep going', more of your attention spent on the decisions only you can make. Off-the-shelf frameworks like BMAD exist, but he finds them too heavy; the point is to encode your own experience into rules, so a good idea you have once becomes a check that runs on every commit.",
+          },
+        ],
+      },
+      {
+        heading: 'Where it fits beside the other two',
+        blocks: [
+          {
+            type: 'text',
+            md: "Three methods now sit on the same axis, and they share the same spine you named last lesson: think as documents before code, gate the work before it reaches a human, bottle expertise so it compounds, and keep the human on the merge decision. What separates them is how much machinery you aim at one ticket, and how far back you step.",
+          },
+          {
+            type: 'table',
+            headers: ['', 'PIV loop', 'PRD pipeline', 'Prompt to PR'],
+            rows: [
+              ['Operator', 'One, hands-on', 'One, hands-on', 'Orchestrated swarm'],
+              ['Multi-agent', 'Subagents for research', 'Fan-out at create and evaluate', 'Full specialist bench'],
+              ['Gates', 'validate + code-review', 'Three hard PRD gates, plus a review pass', 'QA + security + browser agents'],
+              ['Setup cost', 'Low: a few commands', 'High: seven staged commands', 'High: an agent file per role'],
+              ['Token cost', 'Lean', 'Moderate', 'Millions per run'],
+              ['Sweet spot', 'A steady stream of tickets', 'One serious feature that deserves real rigor', 'A team encoding its senior standards'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'For a fractional CTO',
+            md: "The three nest cleanly. Run the PIV loop day to day, when you are hands-on and the work is routine. Reach for this PRD pipeline when a single feature matters enough to justify a research pass and three gates, but you still want to be the one operator watching it land. Save the full Prompt to PR swarm for when you are encoding a whole team's standards or moving several features in parallel. And before you commit to any of them on real work, price the run against [Token Economics & AI-Native SDLC · Modeling Agent Costs](lesson:m7-l1); the cheap method and the expensive one differ by orders of magnitude on the same ticket.",
+          },
+        ],
+      },
+    ],
+    lab: {
+      title: 'Run a two-stage slice of the pipeline',
+      intro:
+        'You do not need all seven commands to feel the method. Run the two stages that carry the most weight (research and a fan-out PRD draft) on a real feature you have been putting off, and judge the output.',
+      steps: [
+        'Pick one real feature you have avoided because the requirements are fuzzy. Fuzzy is the point.',
+        'Stage 1: in a fresh session, tell the agent to research it: read the relevant code, list open questions, and surface trade-offs. Insist it ask you clarifying questions one at a time before writing anything.',
+        'Apply the exit test: can you now describe the problem, the solution, and every trade-off without hand-waving? If not, keep going.',
+        'Write a one-page intent from the research: problem, users, measurable success, and scope in and out.',
+        'Stage 3: spin up three subagents to each draft the PRD from a different lens (product, technical, QA), then have a synthesis pass merge them and flag where they disagreed.',
+        'Read the merged PRD and the flagged disagreements. Note at least one issue the fan-out caught that a single pass would have missed.',
+        'Decide honestly: for this feature, was the research-plus-fan-out overhead worth it, or would the PIV loop have been enough? Write down which and why.',
+      ],
+      checklist: [
+        'A research doc exists and you passed its exit test before drafting anything',
+        'A one-page intent (problem, users, success, scope) exists',
+        'Three lens-specific PRD drafts were produced and merged, with disagreements surfaced',
+        'You named at least one issue the fan-out caught that a single draft would have missed',
+        'You made a reasoned call on whether this method or the PIV loop fit this feature',
+      ],
+    },
+    checkQuiz: [
+      {
+        q: "When is the /research stage actually finished?",
+        options: [
+          'When the research doc passes a word count',
+          'When you can describe the problem, the solution, and every trade-off without hand-waving',
+          'As soon as the codebase has been read once',
+          'When three agents sign off on it',
+        ],
+        answer: 1,
+        explain:
+          'The exit test is about your understanding, not the document length. If you still cannot state the trade-offs plainly, more research is cheaper than the misaligned code that a fuzzy start produces.',
+      },
+      {
+        q: "Why does /prd create use different lenses while /prd evaluate uses the same task three times?",
+        options: [
+          'To use up more of the token budget deliberately',
+          'Create optimizes for width (surface missed angles); evaluate optimizes for accuracy (catch misses a lone reviewer waves through)',
+          'There is no reason; it is an arbitrary choice',
+          'Different lenses are cheaper than identical tasks',
+        ],
+        answer: 1,
+        explain:
+          'Different lenses widen coverage during drafting; identical parallel gate-checks tighten accuracy during evaluation. The double diamond: open up, then narrow down.',
+      },
+      {
+        q: "Why does the execute stage start each story in a fresh context?",
+        options: [
+          'To reset the token bill to zero each time',
+          'So no accumulated chatter from earlier stories bleeds into this one; each story is a clean, single task',
+          'Because the model forgets CLAUDE.md otherwise',
+          'To force a new model version per story',
+        ],
+        answer: 1,
+        explain:
+          'A fresh context per story means the loop works on exactly one task with only its relevant files, no leftover state from the previous nineteen. Small, clean tasks produce small diffs that stay fast to review.',
+      },
+      {
+        q: "What does the retrospective stage produce, and which kind of memory is it?",
+        options: [
+          'A billing report; working memory',
+          'ADRs and metrics that the next PRD reads first; episodic memory',
+          'A new model fine-tune; long-term weights',
+          'A compressed transcript; short-term memory',
+        ],
+        answer: 1,
+        explain:
+          'The retrospective writes architecture decision records and cycle metrics, which the next PRD reads before it starts. That is episodic memory: retrievable past experience that makes each pass more legible than the last.',
+      },
+    ],
+    resources: [
+      { label: 'mfpiccolo: How to Build Your Own Agent Harness', url: 'https://iii.dev/blog/how-to-build-your-own-agent-harness', kind: 'article' },
+      { label: 'Behavior-Driven Development: the Three Amigos', url: 'https://en.wikipedia.org/wiki/Behavior-driven_development', kind: 'article' },
+      { label: 'Architecture Decision Records (ADRs)', url: 'https://adr.github.io', kind: 'article' },
+      { label: 'Linear: issue tracking the pipeline ships stories to', url: 'https://linear.app', kind: 'docs' },
+    ],
+  },
 ]

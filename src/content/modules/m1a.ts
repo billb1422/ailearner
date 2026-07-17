@@ -15,6 +15,7 @@ export const lessons: Lesson[] = [
       'Can choose the correct permission mode (including auto mode and /sandbox) and explain why --dangerously-skip-permissions is obsolete',
       'Can bootstrap a project with /init and explain the purpose of every entry in .claude/',
       'Can diagnose install and config problems with /doctor',
+      'Can name the six built-in tools and explain how each operation leaves a checkpoint /rewind can use',
     ],
     skipQuiz: [
       {
@@ -128,6 +129,31 @@ export const lessons: Lesson[] = [
         ],
       },
       {
+        heading: 'The six tools, and the checkpoint trail',
+        blocks: [
+          {
+            type: 'text',
+            md: "Under all the surfaces and modes, Claude Code gets its work done with just **six built-in tools**. Everything you watch it do is some combination of these. Worth knowing by name, because your permission rules and your hooks both hang off them.",
+          },
+          {
+            type: 'table',
+            headers: ['Tool', 'What it does'],
+            rows: [
+              ['Read', 'Pulls a file into context, including large ones'],
+              ['Edit', 'Replaces a specific string inside a file'],
+              ['Write', 'Creates a file, or overwrites one whole'],
+              ['Glob', 'Finds files by a name pattern, like src/**/*.ts'],
+              ['Grep', 'Searches file contents with a regular expression'],
+              ['Bash', "Runs a shell command: everything the other five don't cover"],
+            ],
+          },
+          {
+            type: 'text',
+            md: "Here is the part that matters beyond trivia. After every one of these operations, Claude Code writes a **checkpoint** to the session log. It is not a full snapshot of your files, more like a bookmark that says 'here is where the agent stood after this step'. That trail is what lets `/rewind` jump the conversation and your code back to an earlier point when a run goes sideways, without you spelunking through git reflog by hand. Six tools, and a breadcrumb after each one.",
+          },
+        ],
+      },
+      {
         heading: 'Permission modes: the trust dial',
         blocks: [
           {
@@ -155,6 +181,12 @@ export const lessons: Lesson[] = [
             variant: 'warning',
             title: 'Old habit to break: --dangerously-skip-permissions',
             md: 'Most 2025 tutorials told you to alias this flag, because back then the constant prompts really were annoying. That advice has expired. Auto mode gives you the same smooth flow while a classifier still catches the dangerous moments (the accidental `rm -rf`, the force push to main). And `/sandbox` goes further: it runs commands inside isolation enforced by the operating system itself, so a command cannot write outside your project folder or reach the network without approval, even after being allowed. Skipping permissions now gives up real safety and gains you nothing.',
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'Permissions are more porous than they look',
+            md: "One sharp edge, and it matters most with your security hat on. A rule that denies **Read** on `secrets.env` does not stop `cat secrets.env` from running through **Bash**. Different tool, no rule against it, and the file contents come right back. A file-level rule guards the tool you named, not the file itself. Real enforcement needs `/sandbox` (operating-system isolation) or an explicit Bash deny for the risky command. Only managed enterprise policies are genuinely strict; the rest are guardrails you can talk your way around with slightly different phrasing. Worth knowing before you trust a deny rule to protect a secret.",
           },
         ],
       },
@@ -1129,6 +1161,12 @@ export const lessons: Lesson[] = [
               ['PreCompact', 'Before context compaction', 'Persist progress notes to files'],
               ['TeammateIdle', 'An agent-team member goes idle', 'Assign the next task from the queue'],
             ],
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'Hooks announce, not just block',
+            md: "Every event here is a place to notify, not only to gate. The Stop event you use to block a premature finish is the same event you use to ping yourself when an agent is genuinely done. Wire it to Slack, a spoken message, or a desktop banner and you can walk away from five parallel sessions safely. That is the whole subject of [Claude Code Mastery · The Ambient Awareness Layer](lesson:m1-l10).",
           },
         ],
       },

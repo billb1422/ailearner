@@ -415,6 +415,12 @@ Rule: no new colors without updating this file first.
             title: 'Screenshots are the API',
             md: 'Structure goes in as a sketch, style goes in as reference screenshots, and the build\'s current state comes back to you as a screenshot. Treat images as the primary channel for visual work; save prose for behavior and data.',
           },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'Steal the prompt, not just the picture',
+            md: "Some galleries hand you the exact prompt behind an effect, which beats a screenshot. Sites like Motion Sites and 21st.dev publish copyable prompts and components; paste one in with 'use our design system' and you get the effect already on-brand. Others, like godly.website and awwwards, are pure inspiration you screenshot from. And if the agent has a connector for a reference library (a Mobbin MCP, for instance), it can browse the good examples itself before it builds, so you skip fetching screenshots by hand entirely.",
+          },
         ],
       },
       {
@@ -925,6 +931,12 @@ Rule: no new colors without updating this file first.
             type: 'text',
             md: '[Figma](https://www.figma.com) is the collaborative tool where most product design teams draw and organize their screens; picture a shared infinite canvas covered in screen designs, comments, and component libraries. **Claude in Figma** puts the model inside that canvas.\n\nIts sweet spot is mechanical breadth. Need 15 variations of a card component, [wireframes](https://www.nngroup.com/articles/wireflows/) (rough structural drafts of a screen, boxes and labels without styling) for six pages, or a component library assembled from scattered frames? It does that at a speed no human matches. Practitioners keep reporting the same gap, though: **brand nuance and micro-interactions**. Micro-interactions are the small moments of feedback and motion, like how a button responds to a press or how a list item settles into place after a drag. That last mile of feel still needs a human, or running code you can actually poke at.',
           },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'The practical facts',
+            md: "How you actually reach it: **claude.ai/design** on the web, or the **Design** button in the Claude app sidebar. It is in **beta** on the paid plans (Pro, Max, Team, Enterprise; Enterprise admins switch it on). It no longer bills from a separate design quota, that early version burned people out fast; it now draws from your **shared plan usage**, the same pool as chat and Claude Code. A model picker lets you choose the tier per project: a heavier model for the first build, a lighter one for small tweaks. The hands-on side, building a brand system and shipping a real site with it, gets its own lesson: [AI-Assisted Design · Building with Claude Design](lesson:m3-l6).",
+          },
         ],
       },
       {
@@ -998,7 +1010,7 @@ Rule: no new colors without updating this file first.
             type: 'table',
             headers: ['Mode', 'Wins when', 'Weak at', 'Output'],
             rows: [
-              ['Claude Design', 'Fast stakeholder-ready prototypes and decks that must match your existing design system', 'Deep product logic; long-lived production code', 'Live clickable HTML, slides, one-pagers'],
+              ['Claude Design', 'Fast stakeholder-ready prototypes and decks that must match your existing design system', 'Deep product logic; long-lived production code', 'Live clickable HTML, slides, docs, wireframes, short animations'],
               ['Claude in Figma', 'Mechanical breadth: variations, wireframes, component libraries inside a design-org workflow', 'Brand nuance, micro-interactions', 'Figma frames and components'],
               ['Direct Design (in code)', 'Solo/small-team product work; flows judged by feel; DESIGN.md already pins the system', 'Multi-stakeholder sign-off before build; print/brand artwork', 'The running product itself'],
             ],
@@ -1222,6 +1234,12 @@ Rule: no new colors without updating this file first.
             md: 'The loop needs a different "eye" for each platform. For web work, the [Claude Code Chrome extension](https://code.claude.com/docs/en/chrome) lets the agent drive your actual browser: it screenshots the page, reads the console, watches network requests, and clicks around like a user would. For native macOS apps, [computer use](https://docs.claude.com/en/docs/agents-and-tools/computer-use) (still a research preview) hands the agent the whole desktop, so it can compile an app, launch it, click through it, and fix what it sees. iOS gets its own tooling, covered in the next section.',
           },
           {
+            type: 'callout',
+            variant: 'insight',
+            title: 'You may already run this loop without wiring it',
+            md: "If you have used Claude Design, you have watched this loop run on autopilot. Its built-in **verify agent** screenshots each slide or screen it builds, looks at the result with vision, and fixes what came out wrong, with no setup from you. Same screenshot-analyze-fix cycle, shipped as a default. See [AI-Assisted Design · Building with Claude Design](lesson:m3-l6) for where it sits in that workflow.",
+          },
+          {
             type: 'table',
             headers: ['Platform', 'Loop closer', 'How it sees and acts'],
             rows: [
@@ -1341,6 +1359,259 @@ Rule: no new colors without updating this file first.
         url: 'https://docs.github.com/en/actions',
         kind: 'docs',
       },
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // m3-l6 · Building with Claude Design · Day 16
+  // ─────────────────────────────────────────────────────────────
+  {
+    id: 'm3-l6',
+    title: 'Building with Claude Design',
+    day: 16,
+    minutes: 55,
+    xp: 100,
+    objectives: [
+      'Set up a design system in Claude Design and reuse it across every artifact',
+      'Iterate with Edit, Draw, and Tweaks instead of burning a model round on every change',
+      'Ship a Claude Design build to a real URL through Claude Code, GitHub, and Vercel',
+      'Manage the shared usage limit so a single site does not eat your whole week',
+    ],
+    skipQuiz: [
+      {
+        q: 'In Claude Design, the first thing to build before any artifact:',
+        options: [
+          'The pitch deck, so you have something to show',
+          'The design system: your brand colors, fonts, logo, and components, reused by everything after',
+          'The Vercel project that will host it',
+          'A wireframe of every page you plan to make',
+        ],
+        answer: 1,
+        explain:
+          'The design system is the context layer. Build it once and every deck, page, and prototype you generate afterward comes out on-brand automatically. Skip it and each artifact looks like a different company made it.',
+      },
+      {
+        q: 'Why Edit, Draw, and Tweaks matter beyond convenience:',
+        options: [
+          'They unlock premium templates',
+          'They change the design without spending a model round, which is where the tokens go',
+          'They export straight to Figma',
+          'They are the only way to run the verify agent',
+        ],
+        answer: 1,
+        explain:
+          'Every natural-language prompt spends tokens and often triggers a rebuild. Direct manipulation (drag it, recolor it, toggle a variant) changes the design with no model call, which is the single biggest lever on your usage.',
+      },
+      {
+        q: 'Claude Design has no native web hosting. To put a build on a real URL you:',
+        options: [
+          'Click the built-in Publish button',
+          'Hand off to Claude Code, push to GitHub, and deploy on a host like Vercel',
+          'Email the exported ZIP to Anthropic',
+          'It cannot be hosted anywhere',
+        ],
+        answer: 1,
+        explain:
+          'Claude Design builds and exports; it does not host. The path to a live URL runs through Claude Code (to iterate and wire up hosting), a GitHub repo, and a host like Vercel that redeploys on every push.',
+      },
+      {
+        q: 'The verify agent built into Claude Design does what:',
+        options: [
+          'Checks your billing before each build',
+          'Uses vision to look at what it just built and fix what is off, on its own',
+          'Reviews your git history for regressions',
+          'Blocks exports until a test suite passes',
+        ],
+        answer: 1,
+        explain:
+          'After it builds slides or screens, Claude Design screenshots its own output, looks at it, and repairs the things that came out wrong. It is the vision loop from the previous lesson, shipped as a default product behavior.',
+      },
+      {
+        q: 'The single biggest way to blow through your Claude Design usage:',
+        options: [
+          'Setting up a design system at the start',
+          'Iterating in long chat threads with vague, multi-change prompts instead of front-loading a spec and using Edit and Tweaks',
+          'Choosing the Haiku tier for small edits',
+          'Exporting a page as standalone HTML',
+        ],
+        answer: 1,
+        explain:
+          'Iteration is where the quota dies: long polluted threads, prompts that ask for five changes at once, and letting the model rebuild when a drag would have done it. Front-load the brief, then steer with direct manipulation.',
+      },
+    ],
+    sections: [
+      {
+        heading: 'A studio, not a chat tab',
+        blocks: [
+          {
+            type: 'text',
+            md: "Claude Design is its own app, sitting alongside Claude chat and Claude Code rather than hiding inside them. The layout is two panes: your conversation on the left, a live canvas on the right. When you ask for a page, Claude writes real HTML and CSS and renders it live in that canvas, which is why the prototypes actually click and the decks come out looking sharp instead of like slideware.\n\nYou reach it the way [AI-Assisted Design · Claude Design, Figma & Direct Design](lesson:m3-l4) covered: claude.ai/design, or the Design button in the Claude app sidebar. This lesson is the hands-on half. You are going to build a brand, make something with it, and put it on a real URL, all while keeping an eye on the usage meter.",
+          },
+        ],
+      },
+      {
+        heading: 'The design system is your DESIGN.md, shipped',
+        blocks: [
+          {
+            type: 'text',
+            md: "You met the [AI-Assisted Design · Design Context Engineering](lesson:m3-l1) idea already: one written design system that every build reads from, so nothing comes out generic. Claude Design turns that pattern into a product feature, and it calls it a **design system**. Build it first, before any deck or page, because everything you make afterward inherits it.\n\nCreating one is a short interview. You give it a **company name**, a **sentence or two** of what the business is, and optionally a bundle of real assets: a logo, font files, a GitHub repo, or a Figma file to pull from. Give it just the name and a sentence and it invents a coherent brand from scratch. Point it at a real codebase or a `.fig` file and it extracts the system you already have. If you built the system over in Claude Code, the `/design-sync` command brings it across. Generation takes several minutes, and it is one of the more expensive things you will do, so do it once and refine that one system over time.",
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'What it hands back',
+            md: "A generated design system is a small site, not a single file. You get a README of brand details, a brand section with logo treatments and voice, the full color palette, a component set, effects (radii, shadows), spacing values, a type scale, and even a sample dashboard invented from the brand so you can see the system in use. Treat it as a strong first draft. Review each piece, correct what feels off, then publish it and set it as the default your other projects pull from.",
+          },
+        ],
+      },
+      {
+        heading: 'Iterate without burning tokens',
+        blocks: [
+          {
+            type: 'text',
+            md: "Here is the mental shift that makes Claude Design affordable. A natural-language prompt is expensive: it spends tokens and usually rebuilds part of the canvas. Three on-canvas tools let you change the design with **no model round at all**, and reaching for them first is the whole game.",
+          },
+          {
+            type: 'table',
+            headers: ['Tool', 'What it does', 'Best for'],
+            rows: [
+              ['Edit', 'Click an exact element and change it directly: text, size, color, spacing, even raw CSS', 'A precise change to one thing you can point at'],
+              ['Draw', 'Circle a region on the canvas and type a note; the screenshot plus note goes to Claude', 'Something with no clean element to click, like "lighten this whole gradient band"'],
+              ['Tweaks', 'Generates live sliders and toggles (palette, fonts, spacing, hero variants) you play with in real time', 'Comparing near-identical options without re-prompting for each one'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'Two gotchas worth knowing up front',
+            md: "Edits are not instant. After you change something by hand you hit **Save**, and Claude reprocesses the change through a prompt, so there is a short wait rather than a live nudge. And there is **no undo** across a project (only Tweaks has a reset), so save deliberately. Both are rough edges of a beta product; neither is a reason to avoid the tools, just to expect them.",
+          },
+          {
+            type: 'text',
+            md: "One more thing happens on its own: the **verify agent**. After a build, Claude Design screenshots its own output, looks at it with vision, and fixes what came out wrong (a misaligned slide, a broken card). That is the exact screenshot-analyze-fix loop from [AI-Assisted Design · Vision Loops & iOS](lesson:m3-l5), except you did not have to wire it up. It runs as a default.",
+          },
+        ],
+      },
+      {
+        heading: 'Ship it: Design to Code to Vercel',
+        blocks: [
+          {
+            type: 'text',
+            md: "Claude Design builds and exports; it does not host. So the last mile is a handoff. From the Export menu you can pull the work out as **PDF, PNG, PPTX, a video, a ZIP, or standalone HTML**, or send it straight to **Claude Code** or **Canva**. For a real website, the route is Claude Design to Claude Code to a host.",
+          },
+          {
+            type: 'diagram',
+            caption: 'Claude Design builds and exports. Claude Code, GitHub, and a host take it live. Vercel redeploys on every push, so you get a clean localhost-versus-live split.',
+            svg: `<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif"><rect width="700" height="260" fill="#18181b"/><text x="350" y="30" fill="#e4e4e7" font-size="15" font-weight="bold" text-anchor="middle">From studio to a real URL</text><rect x="20" y="70" width="150" height="60" rx="8" fill="#27272a" stroke="#f472b6" stroke-width="2"/><text x="95" y="96" fill="#f472b6" font-size="13" font-weight="bold" text-anchor="middle">Claude Design</text><text x="95" y="114" fill="#a1a1aa" font-size="10" text-anchor="middle">build on your system</text><rect x="192" y="70" width="150" height="60" rx="8" fill="#27272a" stroke="#38bdf8" stroke-width="2"/><text x="267" y="96" fill="#38bdf8" font-size="13" font-weight="bold" text-anchor="middle">Claude Code</text><text x="267" y="114" fill="#a1a1aa" font-size="10" text-anchor="middle">export ZIP/HTML, iterate</text><rect x="364" y="70" width="150" height="60" rx="8" fill="#27272a" stroke="#a78bfa" stroke-width="2"/><text x="439" y="96" fill="#a78bfa" font-size="13" font-weight="bold" text-anchor="middle">GitHub</text><text x="439" y="114" fill="#a1a1aa" font-size="10" text-anchor="middle">push to a repo</text><rect x="536" y="70" width="150" height="60" rx="8" fill="#27272a" stroke="#34d399" stroke-width="2"/><text x="611" y="96" fill="#34d399" font-size="13" font-weight="bold" text-anchor="middle">Vercel</text><text x="611" y="114" fill="#a1a1aa" font-size="10" text-anchor="middle">deploy, auto-redeploy</text><line x1="170" y1="100" x2="190" y2="100" stroke="#71717a" stroke-width="2"/><polygon points="190,96 190,104 198,100" fill="#71717a"/><line x1="342" y1="100" x2="362" y2="100" stroke="#71717a" stroke-width="2"/><polygon points="362,96 362,104 370,100" fill="#71717a"/><line x1="514" y1="100" x2="534" y2="100" stroke="#71717a" stroke-width="2"/><polygon points="534,96 534,104 542,100" fill="#71717a"/><rect x="120" y="170" width="460" height="60" rx="8" fill="#27272a" stroke="#fbbf24"/><text x="350" y="194" fill="#fbbf24" font-size="12" font-weight="bold" text-anchor="middle">Two gotchas on the way out</text><text x="350" y="213" fill="#a1a1aa" font-size="11" text-anchor="middle">rename the entry file to index.html (or you get a 404)</text><text x="350" y="226" fill="#a1a1aa" font-size="11" text-anchor="middle">check mobile with F12 device view; neither tool auto-optimizes it</text></svg>`,
+          },
+        ],
+      },
+      {
+        heading: 'Do not torch your session limit',
+        blocks: [
+          {
+            type: 'text',
+            md: "This is the part nobody warns you about until the meter is empty. Claude Design draws from your **shared plan usage**, the same pool as chat and Claude Code (the cost model you learned to reason about in [Mental Models · Token Economics 101](lesson:m0-l6)). It also spends that pool fast: a single involved page or one design-system iteration can eat a serious slice of a week. So a handful of habits are the difference between a productive afternoon and a locked-out one.",
+          },
+          {
+            type: 'table',
+            headers: ['Habit', 'Why it saves'],
+            rows: [
+              ['Brainstorm in regular Claude, not in Design', 'Ideation is cheap in chat; Design charges premium tokens for every turn'],
+              ['Build one design system and iterate it', 'Each system generation is expensive, so five brands means five bills'],
+              ['Front-load a full brief, then let it one-shot', 'Iteration is where tokens die; a detailed spec avoids round after round of corrections'],
+              ['One visual change per prompt', 'Ask for five changes and it lands one or two, so you re-prompt for the rest anyway'],
+              ['Reach for Edit, Draw, and Tweaks before prompting', 'Direct manipulation changes the design with no model round at all'],
+              ['Model-by-stage: heavier tier to plan, lighter to tweak', 'Reserve the expensive model for the first build; drop down for small edits'],
+              ['Watch it build, and stop it early if it wanders', 'A wrong path builds real output and burns quota before you catch it'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'When not to use Claude Design at all',
+            md: "It is not the answer to everything. A static poster, a one-off logo fix, a quick PDF: those are faster and cheaper in Canva or by hand. And when your design quota is spent, export to Claude Code and keep iterating on that separate budget, then come back to Design after the weekly reset. The tool is a strong first-draft engine, not a full replacement for Figma or Claude Code.",
+          },
+        ],
+      },
+    ],
+    lab: {
+      title: 'Brand, build, and ship one page',
+      intro:
+        'Take one small brand from nothing to a live URL, and watch the usage meter the whole way so you learn where the tokens actually go.',
+      steps: [
+        'In regular Claude chat (not Design), invent a tiny fictional brand: name, one-sentence mission, a palette and type direction. Keep it to a short markdown brief.',
+        'In Claude Design, create ONE design system from that brief. Review the generated palette, type, and components; correct anything that feels off; publish it.',
+        'Start a landing page on that system with a single detailed prompt (attach a reference screenshot or two for layout). Let it build; stop it early if it heads the wrong way.',
+        'Iterate using Edit, Draw, and Tweaks only, one visual change at a time. Notice how much you can change without sending a prompt.',
+        'Export the page as standalone HTML (or send it to Claude Code).',
+        'Deploy it: open the export in Claude Code, rename the entry file to index.html, push to a private GitHub repo, and import it to Vercel. Confirm the live URL loads.',
+        'Open the live site on a phone or in F12 device view; if it breaks, ask for a mobile pass, redeploy, and confirm.',
+        'Check your usage before and after. Write down what the design system cost versus the page versus the iteration.',
+      ],
+      checklist: [
+        'One design system was created, reviewed, and published (not five)',
+        'The landing page was iterated mostly with Edit/Draw/Tweaks, not re-prompts',
+        'The page is live on a real Vercel URL and loads',
+        'You fixed or confirmed the mobile layout deliberately',
+        'You can state, in rough numbers, where your usage went',
+      ],
+    },
+    checkQuiz: [
+      {
+        q: "Claude Design's guided design-system setup needs, at minimum:",
+        options: [
+          'A complete Figma file',
+          'A company name and a sentence of context; assets like a logo or fonts are optional',
+          'A connected GitHub repo',
+          'A finished pitch deck to derive the brand from',
+        ],
+        answer: 1,
+        explain:
+          'Name plus a sentence is enough for it to invent a coherent brand. Real assets (logo, fonts, a codebase, a .fig file) sharpen the result, but none of them are required to start.',
+      },
+      {
+        q: 'After you manually Edit an element in Claude Design, what happens:',
+        options: [
+          'The change is instant and costs nothing',
+          'You hit Save, and Claude reprocesses the change through a prompt, so there is a short wait',
+          'It exports the project automatically',
+          'It reverts as soon as you refresh',
+        ],
+        answer: 1,
+        explain:
+          'Edits are not live nudges. You Save, and Claude runs the change through a prompt to apply it, which means a brief wait. Knowing that keeps you from spamming Save and stacking rebuilds.',
+      },
+      {
+        q: 'A common gotcha when deploying a Claude Design export to Vercel:',
+        options: [
+          'You must first convert the HTML to React',
+          'Rename the entry file to index.html, or the deploy 404s',
+          'Vercel refuses Claude Design output',
+          'You need a paid Vercel plan for static HTML',
+        ],
+        answer: 1,
+        explain:
+          'The exported entry file often is not named index.html, and a static host looks for exactly that. Rename it and the 404 disappears. Also check mobile, since neither Claude Design nor Claude Code auto-optimizes for it.',
+      },
+      {
+        q: 'The cost-smart model-by-stage split in Claude Design:',
+        options: [
+          'Use the heaviest model for absolutely everything',
+          'A heavier tier for the first build and planning, a lighter tier for small tweaks',
+          'Use the lightest model for everything to save tokens',
+          'Never change the model once a project starts',
+        ],
+        answer: 1,
+        explain:
+          'The first build and any big structural change earn the expensive tier. Small edits and iteration do not, so drop to a lighter model there. Matching the tier to the task is one of the larger levers on your bill.',
+      },
+    ],
+    resources: [
+      { label: 'Get started with Claude Design (official)', url: 'https://support.claude.com/en/articles/14604416-get-started-with-claude-design', kind: 'docs' },
+      { label: 'Anthropic: Claude Design announcement', url: 'https://www.anthropic.com/news/claude-design-anthropic-labs', kind: 'article' },
+      { label: 'Claude Design product page', url: 'https://claude.com/product/design', kind: 'docs' },
+      { label: 'Vercel: deploy static sites', url: 'https://vercel.com/docs/deployments', kind: 'docs' },
     ],
   },
 ]

@@ -454,6 +454,29 @@ export const lessons: Lesson[] = [
         ],
       },
       {
+        heading: 'Three settings on the dial',
+        blocks: [
+          {
+            type: 'text',
+            md: "The binary above is the fast gut-check. Google's 2026 agentic-engineering playbook draws a finer ruler with three points on it, and the middle one is where a lot of real work actually lives. Same tools across all three. What changes is how much scaffolding surrounds the agent and how the output gets checked.",
+          },
+          {
+            type: 'table',
+            headers: ['Dimension', 'Vibe coding', 'Structured AI-assisted', 'Agentic engineering'],
+            rows: [
+              ['Intent', 'Casual prompts', 'Detailed prompts with examples and constraints', 'Formal specs, architecture docs, memory files'],
+              ['Verification', '"Does it seem to work?"', 'Manual testing and spot-checks', 'Automated suites, CI gates, model judges'],
+              ['Best for', 'Prototypes, scripts, hackathons', 'Features inside an existing codebase', 'Production systems, team-scale work'],
+              ['Risk', 'High, and fine for throwaway code', 'Moderate, human checks at key points', 'Low, systematic checks at every stage'],
+            ],
+          },
+          {
+            type: 'text',
+            md: "The move is to pick the right column for the job in front of you, not to climb to the right and camp there. A throwaway script genuinely belongs in the vibe column. A change to the payments flow belongs in the agentic one. Across all three, one thing separates them, and it is the same thing this whole module keeps circling: how the output gets verified.",
+          },
+        ],
+      },
+      {
         heading: 'The 2026 reality',
         blocks: [
           {
@@ -895,6 +918,8 @@ the spec already answers.`,
       'Explain why context engineering is a superset of prompt engineering and what changes when work spans many turns',
       'Diagnose context rot and manage the attention budget deliberately',
       'Choose correctly among compaction, structured notes, and subagent isolation for work that outlives one context window',
+      'Sort context into static (always loaded) and dynamic (fetched on demand), and keep the static set lean',
+      'Structure the window with tags where it pays, and order it objective-first, constraints-last',
       'Apply the master principle: the smallest set of high-signal tokens, every turn',
     ],
     skipQuiz: [
@@ -1042,6 +1067,12 @@ the spec already answers.`,
             type: 'text',
             md: 'The same logic governs your `CLAUDE.md`, the standing-instructions file Claude Code reads at the start of every session. The notorious anti-pattern is the 26,000-line rulebook that neither human nor model can attend to. Keep yours under about 200 lines of signals rather than scripts.',
           },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'Why CLAUDE.md "forgets" its own rules',
+            md: "Here is the part that trips people up. CLAUDE.md is injected once, at the **start of the session**, and it is not a system prompt. So its rules sit at the very top of a window that keeps growing, and the same attention decay taxes them like everything else. Two hours in, that 'always run the tests' rule is buried under a mountain of newer tokens, and the model quietly stops honoring it. People treat CLAUDE.md as scripture and then wonder why a rule got dropped. Running /clear reloads CLAUDE.md into a fresh window, which is one more reason the clear-between-tasks habit pays off. When a rule absolutely must hold this turn, restate it in the prompt instead of trusting a file the model read an hour ago.",
+          },
         ],
       },
       {
@@ -1050,6 +1081,42 @@ the spec already answers.`,
           {
             type: 'text',
             md: "One more habit, borrowed from how good agents already work. Rather than pre-loading every file that might matter, hold **lightweight identifiers** (file paths, search queries, links) and fetch the content at the moment it becomes relevant. Engineers call this progressive disclosure: each retrieval's result informs what to retrieve next. Claude Code operates exactly this way. It greps for a symbol first, reads the two files that matched, and never 'loads the repo'. The window stays lean because content enters only when it earns its place.",
+          },
+        ],
+      },
+      {
+        heading: 'Static vs dynamic context',
+        blocks: [
+          {
+            type: 'text',
+            md: "Just-in-time retrieval points at a bigger distinction worth naming, one Google's 2026 agentic-engineering playbook makes explicit. Every token in the window is either static or dynamic. **Static context** loads on every turn no matter what: the system prompt, CLAUDE.md, global rules, a persona definition. It is reliable, because the model never forgets it, and it is expensive, because you pay for it in attention and dollars on every call whether this turn needs it or not. **Dynamic context** loads only when a task reaches for it: a skill's instructions, a file you grep and read, a tool result, a doc pulled from search. It is efficient, because you pay for it only when it earns its place, and it is riskier, because the agent has to actually go fetch it at the right moment.\n\nThe design decision is which bucket each thing belongs in, and the rule is short: keep static lean, push everything else to dynamic. Google sorts agent context into six kinds and asks the static-or-dynamic question of each one.",
+          },
+          {
+            type: 'table',
+            headers: ['Context type', 'What it holds', 'Usually'],
+            rows: [
+              ['Instructions', 'Roles, goals, boundaries', 'Static'],
+              ['Guardrails', 'Hard limits and safety rules', 'Static'],
+              ['Knowledge', 'Docs, diagrams, domain data', 'Dynamic'],
+              ['Examples', 'Few-shot demos, reference patterns', 'Dynamic (static only if tiny and always relevant)'],
+              ['Tools', 'The tool definitions the model can call', 'Dynamic: expose the ones this task needs'],
+              ['Memory', 'Session logs, prior state', 'Dynamic'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'Prune before you retrieve',
+            md: "One cheap lever sits upstream of all of this: decide what the agent is even allowed to see. An **.aiignore** or **.claudeignore** file (same idea as .gitignore) walls off node_modules, build artifacts, vendored code, or that folder of throwaway test repos, so none of it leaks into the window by accident. It might match your .gitignore or not. The rule of thumb: if a file would never help and might distract, keep it off the menu entirely.",
+          },
+        ],
+      },
+      {
+        heading: 'Structure and order what stays',
+        blocks: [
+          {
+            type: 'text',
+            md: "Two smaller levers decide how the tokens you keep are arranged. Both are cheap, and both move results.\n\n**Structure** means wrapping parts of the prompt in tags so the model doesn't have to guess where the role ends and the task begins. Anthropic's own guidance leans on XML tags, and their models are tuned to respond well to them: a `<role>` block, an `<instructions>` block, a `<context>` block. Tags can even carry attributes, like a path to a reference doc. The catch is human readability, since XML is a pain for teammates to skim. Most teams settle on a middle path: keep instruction files in Markdown, which people and models both read fine, and reach for XML only when squeezing the last few points out of a high-volume prompt. Decide it by testing, not by dogma. (This course, and Claude Code's CLAUDE.md, sit on the Markdown side of that line.)\n\n**Order** matters more than the math says it should. Attention reads every token at once, so position should be neutral in theory. In practice you get better results with the objective and high-level instructions at the **top**, hard constraints at the **bottom**, and anything that can afford to be skimmed in the **middle**. The likely reason: models learned from human writing, where the intro and the conclusion carry the most weight and the middle is where things get lost. It is the same lost-in-the-middle effect that makes long windows rot ([Mental Models · How LLMs Actually Work](lesson:m0-l1)).",
           },
         ],
       },
@@ -1674,6 +1741,26 @@ the spec already answers.`,
 anchors: median Claude Code dev ~ $6/day
          90% of devs < $12/day`,
             caption: "The back-of-envelope model. You'll use it in the lab.",
+          },
+        ],
+      },
+      {
+        heading: 'CapEx vs OpEx: the adoption curve',
+        blocks: [
+          {
+            type: 'text',
+            md: "One more lens, this one for the architect in you. Borrow the finance split: **CapEx** is money you invest up front to build an asset; **OpEx** is what you spend to run the thing day to day. Google's 2026 playbook maps the two ways of working straight onto it.\n\n**Vibe coding is low CapEx, high OpEx.** Barely any setup, so you start fast. Then you pay and pay: tokens burned iterating on sloppy code, plus the rework, the maintenance, and the security cleanup that trail code nobody specced. **Agentic engineering is high CapEx, low OpEx.** You invest up front to build the harness (rules, tools, tests, guardrails), which is real work, and after that each feature comes out cheaper and more reliable.",
+          },
+          {
+            type: 'diagram',
+            svg: `<svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif"><text x="350" y="26" fill="#e4e4e7" font-size="16" font-weight="bold" text-anchor="middle">Total cost of ownership: vibe vs agentic</text><line x1="70" y1="270" x2="660" y2="270" stroke="#52525b" stroke-width="2"/><line x1="70" y1="270" x2="70" y2="50" stroke="#52525b" stroke-width="2"/><text x="365" y="302" fill="#a1a1aa" font-size="13" text-anchor="middle">features shipped over time &#8594;</text><text x="34" y="165" fill="#a1a1aa" font-size="13" transform="rotate(-90 34 165)" text-anchor="middle">cumulative cost</text><line x1="70" y1="250" x2="660" y2="90" stroke="#f472b6" stroke-width="3"/><text x="560" y="80" fill="#f472b6" font-size="13" font-weight="bold" text-anchor="middle">vibe</text><text x="565" y="98" fill="#a1a1aa" font-size="11" text-anchor="middle">low setup, steep upkeep</text><line x1="70" y1="190" x2="660" y2="150" stroke="#34d399" stroke-width="3"/><text x="600" y="172" fill="#34d399" font-size="13" font-weight="bold" text-anchor="middle">agentic</text><text x="560" y="190" fill="#a1a1aa" font-size="11" text-anchor="middle">harness costs up front, cheap after</text><line x1="365" y1="270" x2="365" y2="150" stroke="#fbbf24" stroke-width="1" stroke-dasharray="5 5"/><circle cx="365" cy="170" r="5" fill="#fbbf24"/><text x="365" y="140" fill="#fbbf24" font-size="12" text-anchor="middle">crossover</text><text x="510" y="250" fill="#a1a1aa" font-size="12" text-anchor="middle">after here: ~3-10x cheaper per feature</text></svg>`,
+            caption: 'Before the crossover, vibe is cheaper. After it, agentic pulls ahead and keeps widening the gap. The crossover arrives sooner than most people expect.',
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'The fractional-CTO read',
+            md: 'For anything you plan to maintain, pay the CapEx early. The harness is an engineered asset that lives in version control right next to the code, and it keeps paying out on every feature after the crossover. For genuine throwaway work, skip the setup and vibe it. The mistake is paying agentic setup costs on a prototype, or paying vibe upkeep costs on a system you have to live with.',
           },
         ],
       },
