@@ -67,7 +67,7 @@ export interface BossChallenge {
 }
 
 export interface Module {
-  id: string // 'm0'..'m7'
+  id: string // 'm0'..'m8'
   title: string
   emoji: string
   color: string // hex accent, e.g. '#8b5cf6'

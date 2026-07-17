@@ -9,6 +9,7 @@ import { lessons as m4Lessons } from './modules/m4'
 import { lessons as m5Lessons } from './modules/m5'
 import { lessons as m6Lessons } from './modules/m6'
 import { lessons as m7Lessons } from './modules/m7'
+import { lessons as m8Lessons } from './modules/m8'
 
 export const MODULES: Module[] = [
   {
@@ -174,20 +175,42 @@ export const MODULES: Module[] = [
     title: 'Token Economics & AI-Native SDLC',
     emoji: '📐',
     color: '#22d3ee',
-    tagline: 'Price the loop, restructure the workflow, launch the capstone',
+    tagline: 'Price the loop, then restructure how software gets built',
     days: 'Day 22',
     lessons: m7Lessons,
     boss: {
-      title: 'Launch Master',
+      title: 'Price the Loop',
       description:
-        'Write your personal AI-native operating doctrine: a one-pager covering how you will spec, delegate, verify, and budget agent work going forward. Then start your capstone.',
+        'Turn agent spend from a mystery into a number, then write the operating doctrine that governs how you spec, delegate, verify, and review agent work.',
       requirements: [
-        'A cost model spreadsheet (or doc) for your expected monthly agent usage, with the plan-vs-API call',
-        'Your personal SDLC doctrine written: when you spec, when you delegate, how you verify, when you review',
-        'Capstone track chosen on the Capstone page and first requirement started',
+        'A cost model (spreadsheet or doc) for your expected monthly agent usage, with the plan-vs-API call and the daily number that justifies it',
+        'Your personal AI-native SDLC doctrine written down: when you spec, when you delegate, how you verify, and what you always review by hand',
+        'One workflow you repeat converted into a reusable command or skill, committed to version control (the "prompt it three times, then make it a command" rule)',
       ],
       xp: 250,
       badgeId: 'boss-m7',
+    },
+  },
+  {
+    id: 'm8',
+    title: 'The AI Transformation Playbook',
+    emoji: '🏢',
+    color: '#818cf8',
+    tagline: 'Where AI belongs in a business, and launching the capstone you keep',
+    days: 'Day 22',
+    lessons: m8Lessons,
+    boss: {
+      title: 'Launch Master',
+      description:
+        'Run the transformation playbook on one real role or business, then start the capstone you will actually keep running after the course ends.',
+      requirements: [
+        'One real role or business split into front stage and back stage, with its back-stage tasks listed',
+        'At least five of those tasks sorted into the AAA layers (automation, augmentation, autonomy), with any no-go zones flagged and defended',
+        'One digital employee spec written as brain plus skills plus tools, with a success metric attached',
+        'Capstone track chosen on the Capstone page and its first requirement started',
+      ],
+      xp: 250,
+      badgeId: 'boss-m8',
     },
   },
 ]

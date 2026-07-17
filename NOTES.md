@@ -23,7 +23,7 @@ A gamified, single-user learning website that takes **Bill** from "rusty archite
 
 ## Current status
 
-- **BUILT and working.** 8 modules, **41 lessons**, 22 weekday sessions, plus boss challenges and 3 capstone tracks.
+- **BUILT and working.** 9 modules, **41 lessons**, 22 weekday sessions, plus boss challenges and 3 capstone tracks.
 - Typechecks clean (`npm run typecheck`), production build works (`npm run build`).
 - Bill has started going through it and is giving feedback; several lessons have been rewritten/expanded in response (see git log).
 - No known bugs open. Progress persistence and the in-progress-lesson resume are fixed.
@@ -71,9 +71,9 @@ viewBox roughly `0 0 700 300` to `0 0 700 400`. Dark bg `fill="#18181b"`. Text `
 ### Quiz invariants
 `skipQuiz` = exactly 5 questions, `checkQuiz` = exactly 4. Every question has exactly 4 options; `answer` is the correct index. No overlap between the two quizzes. Skip-quiz should test the hard core so a real expert passes and a tourist fails.
 
-## Full lesson plan (41 lessons, 8 modules)
+## Full lesson plan (41 lessons, 9 modules)
 
-Accent color and boss in parens. Lesson ids are stable keys; **note m7's array order is m7-l1, m7-l2, m7-l4, m7-l3** (m7-l4 was inserted later and kept its id; array order = display order).
+Accent color and boss in parens. Lesson ids are stable keys; **note the m7-l4 and m7-l3 ids now live in Module 8** (the AI Transformation Playbook was pulled into its own finale module; the ids were kept to preserve progress and cross-references, so id prefix no longer implies module). Array order = display order.
 
 **m0 Mental Models** (Days 1-3, #38bdf8, boss "Draw the Map"): l1 How LLMs Actually Work · l2 Vibe Coding → Agentic Engineering · l3 Prompting That Actually Works · l4 Context Engineering · l5 Workflows vs Agents · l6 Token Economics 101
 
@@ -89,7 +89,9 @@ Accent color and boss in parens. Lesson ids are stable keys; **note m7's array o
 
 **m6 Fine-Tuning** (Day 21, #f87171, boss "Alchemy"): l1 LoRA, QLoRA & When to Tune · l2 Fine-Tune on Your Mac
 
-**m7 Token Economics & AI-Native SDLC** (Day 22, #22d3ee, boss "Launch Master"): l1 Modeling Agent Costs · l2 The AI-Native SDLC · l4 The AI Transformation Playbook · l3 Capstone Launch
+**m7 Token Economics & AI-Native SDLC** (Day 22, #22d3ee, boss "Price the Loop"): l1 Modeling Agent Costs · l2 The AI-Native SDLC
+
+**m8 The AI Transformation Playbook** (Day 22, #818cf8, 🏢, boss "Launch Master"): the finale module. l4 Where AI Belongs in a Business (Weinstein's transformation playbook; id m7-l4) · l3 Capstone Launch (id m7-l3)
 
 ## Gotchas / conventions that bite
 
