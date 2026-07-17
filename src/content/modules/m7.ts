@@ -302,13 +302,14 @@ export const lessons: Lesson[] = [
     id: 'm7-l2',
     title: 'The AI-Native SDLC',
     day: 22,
-    minutes: 50,
+    minutes: 60,
     xp: 100,
     objectives: [
       'Can describe the shift from AI autocompleting your code to you orchestrating agents that write it, with the 2026 survey numbers to back it up',
       'Can walk the spec-driven workflow end to end: a written spec expands into a plan, the plan breaks into small tasks, and agents turn tasks into verified code',
       'Can explain why reviewing code became the bottleneck once generating it got cheap, and what vibe engineering says to do about it',
       'Can write a personal doctrine covering when you spec, when you delegate, how you verify, and what you review by hand',
+      'Can run the PIV loop (plan, implement, validate) on a real ticket with a versioned AI layer of rules, commands, and skills, and sketch a prompt-to-PR pipeline of specialist agent gates for a team',
     ],
     skipQuiz: [
       {
@@ -397,7 +398,7 @@ export const lessons: Lesson[] = [
         blocks: [
           {
             type: 'text',
-            md: '**Spec-driven development** is the workflow that fell out of this shift. A spec (short for specification) is a written description of what the software should do, precise enough that someone, or something, could build from it. The old-world version was a ticket in a project tracker that everyone stopped reading after kickoff. The new version is a first-class file: it lives in the repository, it gets version-controlled in [git](https://git-scm.com/) like source code, and everything else derives from it.\n\nThe flow runs in four steps. You write the spec. The spec expands into a plan, meaning the technical approach. The plan breaks down into **atomic tasks**, where atomic means each task is small enough for an agent to finish in one go and small enough for a human to review without dread. Agents then turn those tasks into code.\n\nTooling made this concrete in 2025-2026. [GitHub Spec Kit](https://github.com/github/spec-kit) and [Amazon Kiro](https://kiro.dev) both treat the spec as the thing you write, diff, and review, with code as a derived artifact downstream of it. You already practiced the shape in Module 3 with the interview-to-SPEC.md pattern.',
+            md: '**Spec-driven development** is the workflow that fell out of this shift. A spec (short for specification) is a written description of what the software should do, precise enough that someone, or something, could build from it. The old-world version was a ticket in a project tracker that everyone stopped reading after kickoff. The new version is a first-class file: it lives in the repository, it gets version-controlled in [git](https://git-scm.com/) like source code, and everything else derives from it.\n\nThe flow runs in four steps. You write the spec. The spec expands into a plan, meaning the technical approach. The plan breaks down into **atomic tasks**, where atomic means each task is small enough for an agent to finish in one go and small enough for a human to review without dread. Agents then turn those tasks into code.\n\nTooling made this concrete in 2025-2026. [GitHub Spec Kit](https://github.com/github/spec-kit) and [Amazon Kiro](https://kiro.dev) both treat the spec as the thing you write, diff, and review, with code as a derived artifact downstream of it, and [BMAD](https://github.com/bmad-code-org/BMAD-METHOD) runs the same playbook with a whole cast of specialized planning agents. You already practiced the shape in Module 3 with the interview-to-SPEC.md pattern.',
           },
           {
             type: 'diagram',
@@ -409,6 +410,102 @@ export const lessons: Lesson[] = [
             variant: 'insight',
             title: 'Why specs beat prompts',
             md: 'A prompt evaporates when the session ends. A spec sticks around: any agent, in any session, on any model tier, can pick it up and produce consistent work from it. And when the output is wrong, you fix the spec and regenerate, which is the same move as fixing source code instead of patching the compiled binary.',
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'Make the frameworks yours',
+            md: 'Heavyweight kits like BMAD and Spec Kit arrive with strong opinions baked in, while lighter setups like Cole Medin\'s PIV commands (next section) bend to whatever stack you already run. A trick worth keeping from the workshop notes: point Claude at those repos and ask it to study them, then fold whatever fits into your own commands and skills.',
+          },
+        ],
+      },
+      {
+        heading: 'The PIV loop: plan, implement, validate',
+        blocks: [
+          {
+            type: 'text',
+            md: 'The spec-driven flow answers *what* to build. **Cole Medin\'s PIV loop** (short for Plan, Implement, Validate) answers how a working developer runs that flow ticket after ticket and gets repeatable quality out of a nondeterministic tool. Medin is an AI educator and consultant who trains enterprise teams on adopting a shared standard for AI coding; he taught this method during an April 2026 workshop whose business-strategy half, by Lior Weinstein, gets its own lesson: [Token Economics & AI-Native SDLC · The AI Transformation Playbook](lesson:m7-l4). His diagnosis of why coding agents disappoint deserves memorizing: when the output is bad, the code usually runs fine. It solves the wrong problem, built on assumptions you never surfaced. So every phase of his method exists to strip assumptions out before code gets written, mostly by making the agent ask *you* the questions.\n\nThe machinery lives in what he calls the **AI layer**: a second layer of the repo alongside the source code, made of global rules (conventions the agent always follows: coding style, testing strategy, logging), plus commands and skills, the reusable workflows you met in [Claude Code Mastery · Agent Skills Deep Dive](lesson:m1-l3). His growth rule: anything you find yourself prompting more than about three times becomes a command. The layer is committed to git, so a command improvement reaches every teammate\'s agent, and changes to commands go through pull-request review exactly like changes to source. That last part is how a team standardizes AI results instead of everyone freelancing their own prompts.',
+          },
+          {
+            type: 'text',
+            md: 'The workflow, front to back. Sprint planning starts with a **brain dump** conversation about what to build next (Medin talks his out with speech-to-text), followed by the instruction that does the heavy lifting: *before you write anything, ask me clarifying questions, one at a time*. Thirty minutes or so of answering the agent\'s questions is cheap insurance against a week of misaligned code, because every question answered is an assumption removed. A `/create-prd` command then turns the conversation into a structured **PRD** (product requirements document) with the exact sections his teams always use. He reviews that artifact by hand, because a wrong PRD poisons everything downstream. Then `/create-stories` splits it into tickets, complete with acceptance criteria and dependency links, and files them in Jira through an **MCP** server (Model Context Protocol, the tool-connection standard from [Claude Code Mastery · MCP & Plugins](lesson:m1-l7)). From the brain dump onward he barely types: he runs commands, answers questions, and reviews artifacts. Each ticket then goes through the three-phase loop below.',
+          },
+          {
+            type: 'table',
+            headers: ['PIV phase', 'What happens', 'The artifact'],
+            rows: [
+              [
+                'Plan',
+                'New session. A /prime command loads the codebase through the lens of one ticket, plus recent git history (his phrase: git is the agent\'s long-term memory). Research fans out to subagents so the main context stays lean. Planning has two layers: project planning (tech stack, architecture patterns, conventions), done once and updated rarely, and task planning (codebase and docs analysis for this ticket), done every time. Then /plan-feature turns the exploration into a structured plan',
+                'plan.md, built from what he calls the components of context engineering (RAG, task management, memory, prompt engineering): goals, success criteria, docs to reference, the task list, and the validation strategy',
+              ],
+              [
+                'Implement',
+                'Another fresh session, on purpose: the planning conversation built up bias, and implementation deserves fresh eyes. /execute takes the plan path as its argument and works through the task list. His stance is trust but verify: watch that the agent uses the right tools, edits the right files, manages its task list, and shows in its thinking that it understood the plan',
+                'Code on a branch, with the agent running its own checks as it goes',
+              ],
+              [
+                'Validate',
+                'Validation splits two ways. The AI side (/validate) runs the unit and integration tests plus type checks and lint, and can drive a real browser through the feature. The human side performs the code review and any manual tests, helped by a /code-review pass. Only after all of that does a human read the diff',
+                'A verified change ready for human review, a PR, and an updated ticket',
+              ],
+            ],
+          },
+          {
+            type: 'diagram',
+            caption: 'The PIV loop plus its outer loop. Tickets flow through plan, implement, validate; failures flow into system evolution, which upgrades the rules and commands that every future ticket benefits from.',
+            svg: `<svg viewBox="0 0 700 330" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif"><rect width="700" height="330" fill="#18181b" rx="8"/><text x="350" y="30" fill="#e4e4e7" font-size="15" font-weight="bold" text-anchor="middle">THE PIV LOOP: EVERY TICKET, SAME SHAPE</text><rect x="35" y="55" width="185" height="80" fill="#27272a" stroke="#38bdf8" rx="8"/><text x="127" y="80" fill="#38bdf8" font-size="14" text-anchor="middle" font-weight="bold">1. PLAN</text><text x="127" y="100" fill="#a1a1aa" font-size="11" text-anchor="middle">/prime + subagent research</text><text x="127" y="117" fill="#a1a1aa" font-size="11" text-anchor="middle">/plan-feature &#8594; plan.md</text><line x1="220" y1="95" x2="248" y2="95" stroke="#52525b" stroke-width="2"/><polygon points="248,89 248,101 258,95" fill="#52525b"/><rect x="258" y="55" width="185" height="80" fill="#27272a" stroke="#fbbf24" rx="8"/><text x="350" y="80" fill="#fbbf24" font-size="14" text-anchor="middle" font-weight="bold">2. IMPLEMENT</text><text x="350" y="100" fill="#a1a1aa" font-size="11" text-anchor="middle">fresh session, fresh eyes</text><text x="350" y="117" fill="#a1a1aa" font-size="11" text-anchor="middle">/execute plan.md</text><line x1="443" y1="95" x2="471" y2="95" stroke="#52525b" stroke-width="2"/><polygon points="471,89 471,101 481,95" fill="#52525b"/><rect x="481" y="55" width="185" height="80" fill="#27272a" stroke="#34d399" rx="8"/><text x="573" y="80" fill="#34d399" font-size="14" text-anchor="middle" font-weight="bold">3. VALIDATE</text><text x="573" y="100" fill="#a1a1aa" font-size="11" text-anchor="middle">/validate: tests, browser</text><text x="573" y="117" fill="#a1a1aa" font-size="11" text-anchor="middle">/code-review, then human</text><path d="M540 135 L540 168 L127 168 L127 148" fill="none" stroke="#52525b" stroke-width="2"/><polygon points="121,148 133,148 127,138" fill="#52525b"/><text x="350" y="160" fill="#a1a1aa" font-size="12" text-anchor="middle">clean pass? pick the next ticket (inner loop)</text><rect x="140" y="195" width="420" height="70" fill="#27272a" stroke="#f472b6" rx="8"/><text x="350" y="220" fill="#f472b6" font-size="14" text-anchor="middle" font-weight="bold">SYSTEM EVOLUTION (outer loop)</text><text x="350" y="240" fill="#a1a1aa" font-size="11" text-anchor="middle">agent slipped? update the rule, command, or skill that allowed it</text><text x="350" y="256" fill="#a1a1aa" font-size="11" text-anchor="middle">the fix is committed to git, so the whole team inherits it</text><path d="M620 135 L620 230 L570 230" fill="none" stroke="#f472b6" stroke-width="2" stroke-dasharray="5 4"/><polygon points="570,224 570,236 560,230" fill="#f472b6"/><path d="M140 230 L80 230 L80 148" fill="none" stroke="#f472b6" stroke-width="2" stroke-dasharray="5 4"/><polygon points="74,148 86,148 80,138" fill="#f472b6"/><rect x="35" y="285" width="630" height="34" fill="#27272a" stroke="#52525b" rx="6"/><text x="350" y="307" fill="#e4e4e7" font-size="12" text-anchor="middle">Planning and implementing run in separate sessions on purpose: the plan file carries the context across.</text></svg>`,
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'System evolution: the outer loop',
+            md: 'The step most teams skip is the one Medin calls the most powerful part of the whole system. When a PIV pass ships a mistake, or the same mistakes keep repeating, run a short retro *with the agent* (he ships /execution-report and /system-review commands for exactly this): which rule, command, or skill allowed it? Maybe the style conventions in the global rules were too vague, or the validation command never compares new components against existing ones. Fix the machinery, then move on. His motto for the loop: don\'t just fix the bug, fix the system that allowed the bug. The inner loop chews through tickets; the outer loop upgrades the system that runs the inner loop, and because the AI layer lives in git, every fix compounds across the whole team. His workshop repo, [ai-transformation-workshop](https://github.com/coleam00/ai-transformation-workshop), packages the whole kit: the prime, create-prd, create-stories, plan-feature, execute, and validate commands, a browser-automation skill, and a deliberately unfinished poll app to practice on.',
+          },
+        ],
+      },
+      {
+        heading: 'Prompt to PR: a pipeline shaped like a team',
+        blocks: [
+          {
+            type: 'text',
+            md: 'Engineer Rudy Garcia pushes the same ideas one step further in his April 2026 talk "Prompt to PR." His starting complaint is the default way everyone codes with AI: ask, check the output, ask again, check again, babysitting every step, then letting a swarm of review bots comment on the PR and feeding the comments back in by hand. His fix starts from a historical observation: humans wrote plenty of terrible code before AI existed, and experienced organizations contained it with process. Medical-device and avionics shops ship reliable software out of unreliable humans because the pipeline enforces quality: specs, architecture review, QA, security gates. So Garcia rebuilt that pipeline out of Claude Code primitives you already know: one **orchestrator** skill plus a bench of specialized subagents, each a markdown file that mirrors a role on a real engineering team. [Claude Code Mastery · Subagents & Context Isolation](lesson:m1-l6) covered the primitive; [Agents, Harnesses & Loops · Multi-Agent Patterns](lesson:m2-l5) covered the pattern.\n\nOne prompt kicks it off. The orchestrator writes zero code itself: its job is routing work through the stages and keeping a small running context. The stages that produce *documents* come first. A product-manager agent writes requirements as user stories with acceptance criteria. An architect agent reads your actual codebase and writes the design doc. A test planner decides which automated tests must exist so the feature can never silently regress (the discipline Garcia says human engineers skip most). A task planner breaks the work into small ordered tasks. Code generation starts only after all four documents exist. An engineer agent then implements task by task, self-validating as it goes, and hands off to the gates: a QA verifier confirms every requirement and every planned test is real, a security reviewer hunts for holes, and a manual-test agent drives an actual browser through the feature the way a user would. Any issue loops the pipeline back to the task planner until the gates pass, and the run ends with a final summary written for the human.',
+          },
+          {
+            type: 'diagram',
+            caption: 'Garcia\'s prompt-to-PR pipeline. Document-producing stages run before any code exists; automated gates run after; humans read the summary and own the merge.',
+            svg: `<svg viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif"><rect width="700" height="400" fill="#18181b" rx="8"/><text x="350" y="28" fill="#e4e4e7" font-size="15" font-weight="bold" text-anchor="middle">PROMPT &#8594; PR: SPECIALIST AGENT STAGES</text><rect x="30" y="45" width="150" height="44" fill="#27272a" stroke="#22d3ee" rx="6"/><text x="105" y="63" fill="#22d3ee" font-size="12" text-anchor="middle" font-weight="bold">ONE PROMPT</text><text x="105" y="79" fill="#a1a1aa" font-size="10" text-anchor="middle">a brief, or a sentence</text><line x1="180" y1="67" x2="210" y2="67" stroke="#52525b" stroke-width="2"/><polygon points="210,61 210,73 220,67" fill="#52525b"/><rect x="220" y="45" width="450" height="44" fill="#27272a" stroke="#38bdf8" rx="6"/><text x="445" y="63" fill="#38bdf8" font-size="12" text-anchor="middle" font-weight="bold">ORCHESTRATOR SKILL</text><text x="445" y="79" fill="#a1a1aa" font-size="10" text-anchor="middle">routes every stage, writes zero code, keeps a small context</text><text x="30" y="116" fill="#a78bfa" font-size="12" font-weight="bold">DOCS BEFORE CODE</text><rect x="30" y="126" width="145" height="52" fill="#27272a" stroke="#a78bfa" rx="6"/><text x="102" y="147" fill="#a78bfa" font-size="12" text-anchor="middle" font-weight="bold">PM AGENT</text><text x="102" y="164" fill="#a1a1aa" font-size="10" text-anchor="middle">stories + acceptance</text><line x1="175" y1="152" x2="187" y2="152" stroke="#52525b" stroke-width="2"/><polygon points="187,147 187,157 195,152" fill="#52525b"/><rect x="195" y="126" width="145" height="52" fill="#27272a" stroke="#a78bfa" rx="6"/><text x="267" y="147" fill="#a78bfa" font-size="12" text-anchor="middle" font-weight="bold">ARCHITECT</text><text x="267" y="164" fill="#a1a1aa" font-size="10" text-anchor="middle">design doc from your code</text><line x1="340" y1="152" x2="352" y2="152" stroke="#52525b" stroke-width="2"/><polygon points="352,147 352,157 360,152" fill="#52525b"/><rect x="360" y="126" width="145" height="52" fill="#27272a" stroke="#a78bfa" rx="6"/><text x="432" y="147" fill="#a78bfa" font-size="12" text-anchor="middle" font-weight="bold">TEST PLANNER</text><text x="432" y="164" fill="#a1a1aa" font-size="10" text-anchor="middle">anti-regression plan</text><line x1="505" y1="152" x2="517" y2="152" stroke="#52525b" stroke-width="2"/><polygon points="517,147 517,157 525,152" fill="#52525b"/><rect x="525" y="126" width="145" height="52" fill="#27272a" stroke="#a78bfa" rx="6"/><text x="597" y="147" fill="#a78bfa" font-size="12" text-anchor="middle" font-weight="bold">TASK PLANNER</text><text x="597" y="164" fill="#a1a1aa" font-size="10" text-anchor="middle">small ordered tasks</text><line x1="350" y1="178" x2="350" y2="202" stroke="#52525b" stroke-width="2"/><polygon points="344,202 356,202 350,212" fill="#52525b"/><rect x="30" y="212" width="640" height="46" fill="#27272a" stroke="#fbbf24" rx="6"/><text x="350" y="232" fill="#fbbf24" font-size="13" text-anchor="middle" font-weight="bold">ENGINEER AGENT</text><text x="350" y="249" fill="#a1a1aa" font-size="10" text-anchor="middle">implements task by task, writes the tests, self-validates</text><line x1="350" y1="258" x2="350" y2="272" stroke="#52525b" stroke-width="2"/><polygon points="344,272 356,272 350,282" fill="#52525b"/><rect x="30" y="282" width="200" height="46" fill="#27272a" stroke="#34d399" rx="6"/><text x="130" y="302" fill="#34d399" font-size="12" text-anchor="middle" font-weight="bold">QA VERIFIER</text><text x="130" y="319" fill="#a1a1aa" font-size="10" text-anchor="middle">every requirement + test real</text><rect x="250" y="282" width="200" height="46" fill="#27272a" stroke="#34d399" rx="6"/><text x="350" y="302" fill="#34d399" font-size="12" text-anchor="middle" font-weight="bold">SECURITY REVIEW</text><text x="350" y="319" fill="#a1a1aa" font-size="10" text-anchor="middle">holes before they ship</text><rect x="470" y="282" width="200" height="46" fill="#27272a" stroke="#34d399" rx="6"/><text x="570" y="302" fill="#34d399" font-size="12" text-anchor="middle" font-weight="bold">MANUAL TESTER</text><text x="570" y="319" fill="#a1a1aa" font-size="10" text-anchor="middle">drives a real browser</text><path d="M682 305 L682 152 L670 152" fill="none" stroke="#f472b6" stroke-width="2" stroke-dasharray="5 4"/><polygon points="670,146 670,158 660,152" fill="#f472b6"/><text x="640" y="270" fill="#f472b6" font-size="10" text-anchor="end">issues? loop to tasks</text><line x1="350" y1="328" x2="350" y2="340" stroke="#52525b" stroke-width="2"/><polygon points="344,340 356,340 350,350" fill="#52525b"/><rect x="30" y="350" width="640" height="40" fill="#27272a" stroke="#22d3ee" rx="6"/><text x="350" y="375" fill="#22d3ee" font-size="12" text-anchor="middle" font-weight="bold">FINAL SUMMARY &#8594; HUMAN: read it, review what matters, merge the PR</text></svg>`,
+          },
+          {
+            type: 'text',
+            md: 'Numbers make the design click. A full run can burn millions of tokens across subagents and take anywhere from 20 minutes to 2 hours, yet the orchestrator itself finishes holding maybe 10,000 to 20,000 tokens. That means the conversation survives the run: you can question a decision, ask it to respin the architect stage with one change, and iterate without starting over. Every stage writes its artifact into a `docs/` folder that later stages read, which doubles as permanent documentation: years later, each feature folder still explains what was built, why, and which architectural decisions got made. His guardrails are hooks, the deterministic layer from [Claude Code Mastery · Hooks: Deterministic Control](lesson:m1-l5): one of his checks free memory before spawning another subagent, born from the day an agent wrote a test that invoked the test runner recursively and froze his machine.\n\nGarcia\'s sharpest idea is organizational: **your experts become the agents**. Every company has the one person everybody queues up to ask about security, accessibility, or database conventions, and that knowledge usually walks out the door at 5pm. Have that person write the corresponding subagent file, and their judgment becomes a gate every feature passes through whether or not they are in the room. A junior developer running the orchestrator inherits the encoded standards of the whole senior staff. Garcia also quotes Boris Cherny, the creator of Claude Code: give the agent a feedback loop to verify its own work and the quality of the result improves 2-3x, the same claim this course built in [Agents, Harnesses & Loops · Verification: the #1 Quality Lever](lesson:m2-l4). This pipeline is that claim scaled up to a whole team\'s worth of verifiers. He shares his starter repo of orchestrator, subagents, and hooks in the talk (linked from the video description), with a blunt caveat: the generic version produces generic results, and the payoff arrives when you rewrite each agent file around what your team actually cares about.',
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'Agents drive',
+              items: [
+                'Requirements, architecture, and test plans, drafted as documents before any code exists',
+                'Implementation plus self-validation, task by task',
+                'QA, security, and browser click-through gates, looping until clean',
+                'Ticket updates, branch and PR creation, and the write-up of what shipped',
+              ],
+            },
+            right: {
+              title: 'Humans hold',
+              items: [
+                'Approval pauses after requirements and architecture (his rule for work code; personal projects run full-auto)',
+                'Reading the final summary and deciding whether to merge',
+                'Respinning any single stage when a decision looks wrong',
+                'Authorship of the agent files themselves: the experts encode the standards',
+              ],
+            },
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'The bill, and the fine print',
+            md: 'Every subagent starts a fresh conversation, so context shared across stages gets re-sent at full price instead of the 0.1x cached rate; [Token Economics & AI-Native SDLC · Modeling Agent Costs](lesson:m7-l1) explains exactly why that multiplies spend. Garcia has hit two-hour runs, crashed a laptop with five parallel type checks, and moved heavy runs into cloud sandboxes. His verdict stands anyway: against a human going back and forth all day and re-establishing context after every PR round-trip, the pipeline roughly breaks even on tokens and wins decisively on attention. Budget for it on purpose rather than discovering it on an invoice.',
           },
         ],
       },
@@ -556,10 +653,325 @@ export const lessons: Lesson[] = [
     resources: [
       { label: 'Vibe engineering: Simon Willison', url: 'https://simonwillison.net/2025/Oct/7/vibe-engineering/', kind: 'article' },
       { label: 'GitHub Spec Kit: spec-driven development toolkit', url: 'https://github.com/github/spec-kit', kind: 'repo' },
+      { label: 'BMAD Method: agent-driven spec-and-build framework', url: 'https://github.com/bmad-code-org/BMAD-METHOD', kind: 'repo' },
       { label: 'Amazon Kiro: spec-first agentic IDE', url: 'https://kiro.dev', kind: 'docs' },
       { label: 'Revenge of the Junior Developer: Steve Yegge', url: 'https://sourcegraph.com/blog/revenge-of-the-junior-developer', kind: 'article' },
       { label: 'Anthropic engineering blog (agentic coding posts)', url: 'https://www.anthropic.com/engineering', kind: 'article' },
       { label: 'CodeRabbit: agentic PR review', url: 'https://www.coderabbit.ai', kind: 'docs' },
+      { label: 'AI Transformation Blueprint workshop (Hour 2: Cole Medin\'s PIV loop, live)', url: 'https://www.youtube.com/watch?v=OcTMwjqje5Q', kind: 'video' },
+      { label: 'Cole Medin\'s workshop repo: PIV commands, skills, and demo app', url: 'https://github.com/coleam00/ai-transformation-workshop', kind: 'repo' },
+      { label: 'Prompt to PR: Rudy Garcia on an AI-orchestrated SDLC', url: 'https://www.youtube.com/watch?v=MzCy_6MjhCs', kind: 'video' },
+    ],
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // m7-l4: The AI Transformation Playbook (sits between l2 and l3;
+  // ids are stable keys, array order is display order)
+  // ───────────────────────────────────────────────────────────────
+  {
+    id: 'm7-l4',
+    title: 'The AI Transformation Playbook',
+    day: 22,
+    minutes: 50,
+    xp: 100,
+    objectives: [
+      'Can split any role into front stage and back stage, and explain why AI transformation starts back stage',
+      'Can name the four no-go zones where AI should never be deployed and defend each one to an efficiency-obsessed exec',
+      'Can classify a candidate task into the AAA layers (automation, augmentation, autonomy) using the selection criteria for each layer, and justify the build order with the onion argument',
+      'Can spec a digital employee as brain plus skills plus tools, with a success metric attached, and argue for a fleet of specialists over one monolithic agent',
+    ],
+    skipQuiz: [
+      {
+        q: 'Lior Weinstein opens his transformation argument with a stat about how knowledge workers spend their time. What is the split?',
+        options: [
+          'About 30% of the day goes to meetings and admin, leaving 70% for real work',
+          'Roughly 60% goes to "work about work" (status meetings, searching for information, reformatting, copying between systems), leaving about 40% for the job you were hired to do',
+          'Half the day goes to email alone, according to his client data',
+          '90% of the day is productive for senior roles; the waste concentrates in junior staff',
+        ],
+        answer: 1,
+        explain: 'The 60/40 split sets up the whole playbook: most of the working day already goes to robot-shaped tasks. The opportunity is handing that layer to machines, and the tragedy he points at is the brilliant work that never happens because busy work ate the day.',
+      },
+      {
+        q: 'Weinstein uses the history of the ATM to answer the "AI deletes jobs" panic. What actually happened to bank tellers after cash machines rolled out?',
+        options: [
+          'Teller headcount collapsed within a decade, exactly as predicted',
+          'Teller jobs held roughly flat while wages dropped sharply',
+          'Teller employment went up: banks opened more branches, and the role shifted from counting cash toward advertising, selling, and problem solving',
+          'Tellers were retrained as ATM technicians almost one for one',
+        ],
+        answer: 2,
+        explain: 'ATMs made each branch cheaper to run, so banks opened more of them and hired more tellers, whose work moved up the value chain. His bet is the same shape now: one person with AI doing what five did manually, and the person moving toward judgment work rather than out the door.',
+      },
+      {
+        q: 'A task qualifies for the automation layer (full offload, no human in the loop) when it matches four patterns. Which task below fits all four?',
+        options: [
+          'Deciding which of two senior engineers gets the promotion',
+          'Building the Monday report from the same five spreadsheets, same columns, same formatting, every single week',
+          'Talking a frustrated enterprise client out of churning',
+          'Choosing the architecture for a brand-new payments system',
+        ],
+        answer: 1,
+        explain: 'The Monday report is repetitive, rule-based, high volume, and low judgment, the four automation patterns. The other three fail the low-judgment test hard: they need wisdom, context, or a relationship, which routes them to augmentation or to a no-go zone.',
+      },
+      {
+        q: 'In one of Weinstein\'s client stories, a logistics CEO spent $120,000 deploying an autonomous customer-onboarding agent and had a disaster within six weeks. What went wrong?',
+        options: [
+          'The model hallucinated pricing and quoted customers the wrong rates',
+          'The agent worked, but the foundations under it did not exist: customer data lived in three disconnected systems and seven onboarding steps lived only in two employees\' heads',
+          'The vendor abandoned the product mid-rollout',
+          'Employees quietly sabotaged the rollout to protect their jobs',
+        ],
+        answer: 1,
+        explain: 'Weinstein calls it building a penthouse on a vacant lot. Autonomy sits on top of automation (which produces clean, connected data) and augmentation (which produces documented process knowledge), so skipping those layers made failure structural rather than technical.',
+      },
+      {
+        q: 'Weinstein defines a digital employee (an agent) as an assembly of three parts. Which three?',
+        options: [
+          'A model, a vector database, and a dashboard',
+          'A brain (prompt, organizational context, memory), skills (step-by-step procedures and playbooks), and tools (scoped access to exactly the systems the job needs)',
+          'An orchestrator, a worker pool, and a message queue',
+          'A frontend, a backend, and an eval suite',
+        ],
+        answer: 1,
+        explain: 'The trio deliberately mirrors hiring a person: knowledge, training, and access. Tool scoping is part of the definition, so a sales agent never touches finance data and a content agent cannot send email.',
+      },
+    ],
+    sections: [
+      {
+        heading: 'The end of boring work',
+        blocks: [
+          {
+            type: 'text',
+            md: 'This lesson steps back from code and asks the question a fractional CTO gets paid to answer: where does AI belong in a whole business? The framework comes from **Lior Weinstein**, founder of [CTOx](https://ctox.com), a large community of fractional CTOs, and himself an active fractional CTO with clients ranging from early startups to nine-figure companies. He taught it during an April 2026 workshop alongside Cole Medin, whose engineering half of the same event feeds the PIV material in [Token Economics & AI-Native SDLC · The AI-Native SDLC](lesson:m7-l2).\n\nHis opening stat frames everything: about **60% of a knowledge worker\'s day goes to "work about work"**. The phrase covers meetings about status, hunting for information, reformatting data, and copying numbers from one system into another. The job you were actually hired for gets the remaining 40%. And his point cuts deeper than the number: the real cost is the brilliant work that never happens because busy work ate the day. The architecture decision postponed because you were updating [Jira](https://www.atlassian.com/software/jira) (the ticket tracker), the product call never made because you were formatting a report.\n\nHe names the moment every exec is living through the **Blockbuster moment**. Blockbuster was printing money when Netflix showed up with a different model, and Blockbuster decided it was fine. It was not fine. Every business now faces that fork with AI, and this playbook is his method for choosing the Netflix side on purpose instead of by luck.\n\nFor the fear that AI deletes jobs, he offers the **ATM story**. When cash machines arrived in the 1980s, every banker predicted the end of the teller. Teller employment went *up*: machines made branches cheaper to run, banks opened more branches, and the teller\'s job shifted from counting cash toward advertising, selling, and problem solving. His bet is the same shape here: make every person 10x more effective, with intelligence that never sleeps. One person with AI does the manual work of five, and the org chart changes accordingly.',
+          },
+          {
+            type: 'diagram',
+            caption: 'Weinstein\'s two org-chart slides, side by side. The same three-level hierarchy of 13 humans, one year apart: today every node in the tree has its own cluster of about 30 agents beneath it, so 13 humans direct 390 workers.',
+            svg: `<svg viewBox="0 0 700 315" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif"><rect width="700" height="315" fill="#18181b" rx="8"/><defs><g id="agsw" fill="#a78bfa"><circle cx="0" cy="0" r="2"/><circle cx="7" cy="0" r="2"/><circle cx="14" cy="0" r="2"/><circle cx="0" cy="7" r="2"/><circle cx="7" cy="7" r="2"/><circle cx="14" cy="7" r="2"/><circle cx="0" cy="14" r="2"/><circle cx="7" cy="14" r="2"/><circle cx="14" cy="14" r="2"/><circle cx="0" cy="21" r="2"/><circle cx="7" cy="21" r="2"/><circle cx="14" cy="21" r="2"/><circle cx="0" cy="28" r="2"/><circle cx="7" cy="28" r="2"/><circle cx="14" cy="28" r="2"/></g></defs><text x="170" y="30" fill="#e4e4e7" font-size="14" font-weight="bold" text-anchor="middle">AN ORG CHART 1 YEAR AGO</text><text x="170" y="48" fill="#34d399" font-size="12" text-anchor="middle">13 humans = 13 workers</text><path d="M170 82 L68 122 M170 82 L170 122 M170 82 L272 122 M68 142 L34 182 M68 142 L68 182 M68 142 L102 182 M170 142 L136 182 M170 142 L170 182 M170 142 L204 182 M272 142 L238 182 M272 142 L272 182 M272 142 L306 182" stroke="#34d399" stroke-width="1" fill="none"/><rect x="155" y="62" width="30" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="170" y="76" fill="#e4e4e7" font-size="10" text-anchor="middle">1</text><rect x="53" y="122" width="30" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="68" y="136" fill="#e4e4e7" font-size="10" text-anchor="middle">2</text><rect x="155" y="122" width="30" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="170" y="136" fill="#e4e4e7" font-size="10" text-anchor="middle">3</text><rect x="257" y="122" width="30" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="272" y="136" fill="#e4e4e7" font-size="10" text-anchor="middle">4</text><rect x="21" y="182" width="26" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="34" y="196" fill="#e4e4e7" font-size="10" text-anchor="middle">5</text><rect x="55" y="182" width="26" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="68" y="196" fill="#e4e4e7" font-size="10" text-anchor="middle">6</text><rect x="89" y="182" width="26" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="102" y="196" fill="#e4e4e7" font-size="10" text-anchor="middle">7</text><rect x="123" y="182" width="26" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="136" y="196" fill="#e4e4e7" font-size="10" text-anchor="middle">8</text><rect x="157" y="182" width="26" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="170" y="196" fill="#e4e4e7" font-size="10" text-anchor="middle">9</text><rect x="191" y="182" width="26" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="204" y="196" fill="#e4e4e7" font-size="10" text-anchor="middle">10</text><rect x="225" y="182" width="26" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="238" y="196" fill="#e4e4e7" font-size="10" text-anchor="middle">11</text><rect x="259" y="182" width="26" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="272" y="196" fill="#e4e4e7" font-size="10" text-anchor="middle">12</text><rect x="293" y="182" width="26" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="306" y="196" fill="#e4e4e7" font-size="10" text-anchor="middle">13</text><line x1="350" y1="22" x2="350" y2="240" stroke="#52525b" stroke-width="1"/><text x="530" y="30" fill="#e4e4e7" font-size="14" font-weight="bold" text-anchor="middle">AN ORG CHART TODAY</text><text x="530" y="48" fill="#34d399" font-size="12" text-anchor="middle">13 humans <tspan fill="#a78bfa">(30 agents each)</tspan> = 390 workers</text><path d="M530 82 L428 122 M530 82 L530 122 M530 82 L632 122 M428 142 L394 182 M428 142 L428 182 M428 142 L462 182 M530 142 L496 182 M530 142 L530 182 M530 142 L564 182 M632 142 L598 182 M632 142 L632 182 M632 142 L666 182" stroke="#34d399" stroke-width="1" fill="none"/><rect x="515" y="62" width="30" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="530" y="76" fill="#e4e4e7" font-size="10" text-anchor="middle">1</text><use href="#agsw" x="523" y="88"/><rect x="413" y="122" width="30" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="428" y="136" fill="#e4e4e7" font-size="10" text-anchor="middle">2</text><rect x="515" y="122" width="30" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="530" y="136" fill="#e4e4e7" font-size="10" text-anchor="middle">3</text><rect x="617" y="122" width="30" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="632" y="136" fill="#e4e4e7" font-size="10" text-anchor="middle">4</text><use href="#agsw" x="421" y="146"/><use href="#agsw" x="523" y="146"/><use href="#agsw" x="625" y="146"/><rect x="381" y="182" width="26" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="394" y="196" fill="#e4e4e7" font-size="10" text-anchor="middle">5</text><rect x="415" y="182" width="26" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="428" y="196" fill="#e4e4e7" font-size="10" text-anchor="middle">6</text><rect x="449" y="182" width="26" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="462" y="196" fill="#e4e4e7" font-size="10" text-anchor="middle">7</text><rect x="483" y="182" width="26" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="496" y="196" fill="#e4e4e7" font-size="10" text-anchor="middle">8</text><rect x="517" y="182" width="26" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="530" y="196" fill="#e4e4e7" font-size="10" text-anchor="middle">9</text><rect x="551" y="182" width="26" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="564" y="196" fill="#e4e4e7" font-size="10" text-anchor="middle">10</text><rect x="585" y="182" width="26" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="598" y="196" fill="#e4e4e7" font-size="10" text-anchor="middle">11</text><rect x="619" y="182" width="26" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="632" y="196" fill="#e4e4e7" font-size="10" text-anchor="middle">12</text><rect x="653" y="182" width="26" height="20" fill="#27272a" stroke="#34d399" rx="4"/><text x="666" y="196" fill="#e4e4e7" font-size="10" text-anchor="middle">13</text><use href="#agsw" x="387" y="206"/><use href="#agsw" x="421" y="206"/><use href="#agsw" x="455" y="206"/><use href="#agsw" x="489" y="206"/><use href="#agsw" x="523" y="206"/><use href="#agsw" x="557" y="206"/><use href="#agsw" x="591" y="206"/><use href="#agsw" x="625" y="206"/><use href="#agsw" x="659" y="206"/><rect x="30" y="250" width="640" height="52" fill="#27272a" stroke="#52525b" rx="6"/><text x="350" y="271" fill="#e4e4e7" font-size="13" text-anchor="middle">Same hierarchy, same payroll: every node gains a swarm of about 30 agents.</text><text x="350" y="290" fill="#a1a1aa" font-size="11" text-anchor="middle">Agents multiply the existing tree instead of replacing it. Purple dots = AI agents.</text></svg>`,
+          },
+          {
+            type: 'callout',
+            variant: 'quote',
+            title: 'The frame',
+            md: 'Weinstein\'s framing for the whole hour: what AI ends is the boring part of work. The people who thrive in the transition are the ones who think clearly about how work should flow, and reclaimed time is the payoff: space to care, to think, and to lead.',
+          },
+        ],
+      },
+      {
+        heading: 'Front stage, back stage',
+        blocks: [
+          {
+            type: 'text',
+            md: 'The first tool in the playbook is a split borrowed from live events. When Celine Dion goes on stage and performs, the singing is her **front stage**: her brilliance, the genius only she can supply. Nobody expects her to verify the payment system is working, send the ticket confirmations, or seat 20,000 people. That machinery is the **back stage**: everything else. It has to work, and none of the magic lives there.\n\nEvery role has both. Your front stage is the work where you shine, the work that needs YOUR judgment, creativity, relationships, or expertise: the reason you got hired, the reason your team trusts you. Your back stage is everything that supports it without being the main act: the prep, the admin, the coordination. The workshop\'s first exercise sounds almost too basic to matter: take a typical week and sort everything you do into the two lists. It matters because people discover the same pattern every time: the brilliant work sits buried under the admin. In the live session, a coach put coaching on the front stage and schedule planning on the back; a systems engineer put "fixing someone\'s network and making them feel taken care of" up front and time-and-ticket entry in back.\n\nEverything that follows builds toward one strategic move, stated on its own slide: move your back stage to AI so you live on your front stage. And notice what the exercise does for you as an advisor. Sorting a team\'s work this way tells you what each person uniquely contributes, which is exactly the map you need before proposing any AI initiative to a client.',
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'Front stage (protect it)',
+              items: [
+                'Work that needs your judgment, creativity, or relationships',
+                'The architecture call, the coaching session, the client dinner',
+                'The reason you were hired and the thing your team trusts you for',
+                'Where all of your reclaimed time should go',
+              ],
+            },
+            right: {
+              title: 'Back stage (hand it off)',
+              items: [
+                'Prep, admin, formatting, coordination, status reporting',
+                'Copying data between systems that refuse to talk to each other',
+                'Necessary for the show, invisible when done well',
+                'Where every AI initiative in this lesson starts',
+              ],
+            },
+          },
+        ],
+      },
+      {
+        heading: 'The no-go zones',
+        blocks: [
+          {
+            type: 'text',
+            md: 'Before mapping where AI goes, Weinstein maps where it never goes, and he weights this as heavily as the rest of the framework. AI manufactures efficiency; empathy, care, and presence stay stubbornly human. Four zones stay off-limits because in them the human connection is the product itself, and automating the product away hollows out a business while every dashboard says things improved.',
+          },
+          {
+            type: 'table',
+            headers: ['No-go zone', 'What lives there', 'Examples from the workshop'],
+            rows: [
+              [
+                'Relationships',
+                'Trust built face to face; the call you make when a team member is struggling',
+                'Client relationships, coaching, reading team dynamics and hiring instincts',
+              ],
+              [
+                'Judgment calls',
+                'Decisions that need wisdom, context, and experience, including knowing when to break the rules',
+                'Big financial decisions, figuring out what a customer needs versus what they say they want',
+              ],
+              [
+                'Physical presence',
+                'Being in the room when it matters',
+                'Worker-safety calls on a job site, the meeting where your presence is the message',
+              ],
+              [
+                'Empathy & creativity',
+                'Moments that need a human heart; ideas that come from lived experience; the art',
+                'Firing someone, tough conversations (AI can help prepare them; a human delivers them), taste',
+              ],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'Operational red lines',
+            md: 'The workshop chat added hard operational lines worth stealing verbatim: never give an agent delete access to the production database, never let it push sweeping customer-facing changes without oversight, and never let it execute financial decisions. These are the org-scale cousins of the deterministic guardrails you built in [Claude Code Mastery · Hooks: Deterministic Control](lesson:m1-l5): boundaries enforced by structure instead of goodwill.',
+          },
+        ],
+      },
+      {
+        heading: 'The AAA framework: hands, suit, brain',
+        blocks: [
+          {
+            type: 'text',
+            md: 'With the front stage protected and the red lines drawn, the **AAA framework** sorts everything else: three layers, three kinds of intelligence, three ways AI shows up in a company.\n\n**Layer 1, automation, is the hands.** Work gets fully offloaded: no human in the loop, the machine does it, and you never think about it again. Four patterns qualify a task, and a strong candidate hits all four. It is *repetitive* (same task, same way, every time). It is *rule-based* (the logic fits on an index card: if the invoice is under $10,000, approve it; if a lead books a call, update the CRM, the customer relationship management system). It is *high volume* (frequent enough that the math is obvious, like hundreds of support-ticket routings a week). And it is *low judgment* (no wisdom, context, or relationship required). When workshop attendees tallied their own robot tasks, the answers ran 2, 3, 5, and 10 hours per week per person. Multiply that across a team and the tally becomes the business case.',
+          },
+          {
+            type: 'text',
+            md: '**Layer 2, augmentation, is the suit.** Think Iron Man: Tony Stark stays inside, still calling the shots, and the suit adds capabilities he could never have alone. The human keeps the judgment while AI compresses everything around it. The evidence Weinstein cites is the Harvard Business School and Boston Consulting Group field study of 758 consultants ([Navigating the Jagged Technological Frontier](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4573321)): consultants working with AI completed 12.2% more tasks, finished 25.1% faster, and produced 40% higher-quality work. The finding worth repeating in a boardroom: the biggest gains went to the *lowest* performers. AI lifts the floor hardest, which makes it an equalizer for a team rather than a superstar amplifier. The slide\'s own summary line: AI is the great equalizer.\n\nThe tell for a layer-2 candidate is a lopsided **prep-to-judgment ratio**. Attendees volunteered days of root-cause analysis feeding a one-hour safety decision, a week of research behind a one-hour training, and hours of deck polishing for five minutes on screen. In each case the expertise takes minutes; the prep buries it. Augmentation compresses the prep and leaves the judgment where it was: same person, same role, fundamentally different output, with 45 minutes of research becoming 5. The layer also carries a career path Weinstein names explicitly: **doer** (you execute the task) to **manager of bots** (you oversee the AI doing it, handle the exceptions, and improve the system) to **strategist** (you direct intelligence at outcomes and design new capabilities). The path moves one direction, toward more valuable work.',
+          },
+          {
+            type: 'text',
+            md: '**Layer 3, autonomy, is the brain: digital employees.** Weinstein is deliberate about that term. A digital employee takes input, thinks, decides, acts, handles exceptions, and produces output with nobody in the loop, the way a competent hire does. Four criteria gate entry to this layer, and a candidate needs all four. The function must be *self-contained*: clear inputs and outputs, a box you can draw around the whole thing. It must be *measurable*: you know objectively whether it worked. It needs *error recovery*: it can detect failure and try alternatives. And, the critical one, it must be *built on layers 1 and 2*. Autonomy is where you arrive once the foundations exist, never the place you start.\n\nHis exercise for finding candidates: if you could hire 30 people whose only job was handling things you never want to think about again, what would they do? The answers that work are always narrow: 30 specialists, never one assistant who does everything. A meeting prepper who briefs you before every call. A report builder who has the Monday numbers done. A follow-up tracker that never lets a promise slip. An inbox filter that surfaces only what matters. A pipeline watcher that alerts you to at-risk deals. Write five of those job descriptions and you have drafted your first agent roadmap.',
+          },
+          {
+            type: 'diagram',
+            caption: 'Weinstein\'s onion, redrawn from the deck: three concentric layers with automation at the core, augmentation wrapped around it, and autonomy on the outside. Each layer depends on the one beneath it, so you build from the inside out.',
+            svg: `<svg viewBox="0 0 700 365" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif"><rect width="700" height="365" fill="#18181b" rx="8"/><text x="350" y="30" fill="#e4e4e7" font-size="15" font-weight="bold" text-anchor="middle">THE ONION</text><path d="M115 310 A235 235 0 0 1 585 310 Z" fill="#27272a" stroke="#fbbf24" stroke-width="2"/><path d="M180 310 A170 170 0 0 1 520 310 Z" fill="#18181b" stroke="#a78bfa" stroke-width="2"/><path d="M245 310 A105 105 0 0 1 455 310 Z" fill="#27272a" stroke="#38bdf8" stroke-width="2"/><line x1="80" y1="310" x2="620" y2="310" stroke="#52525b" stroke-width="2"/><text x="350" y="105" fill="#fbbf24" font-size="14" font-weight="bold" text-anchor="middle">AUTONOMY</text><text x="350" y="123" fill="#a1a1aa" font-size="10" text-anchor="middle">the brain: digital employees</text><text x="350" y="170" fill="#a78bfa" font-size="14" font-weight="bold" text-anchor="middle">AUGMENTATION</text><text x="350" y="188" fill="#a1a1aa" font-size="10" text-anchor="middle">the suit: judgment stays human</text><text x="350" y="252" fill="#38bdf8" font-size="14" font-weight="bold" text-anchor="middle">AUTOMATION</text><text x="350" y="270" fill="#a1a1aa" font-size="10" text-anchor="middle">the hands: full offload</text><line x1="55" y1="298" x2="55" y2="105" stroke="#34d399" stroke-width="2"/><polygon points="49,105 61,105 55,93" fill="#34d399"/><text x="55" y="190" fill="#34d399" font-size="10" text-anchor="middle">build</text><text x="55" y="204" fill="#34d399" font-size="10" text-anchor="middle">order</text><text x="350" y="332" fill="#e4e4e7" font-size="12" text-anchor="middle">Work from the inside out: Automation &#8594; Augmentation &#8594; Autonomy. Each layer depends on the one beneath it.</text><text x="350" y="350" fill="#f472b6" font-size="11" text-anchor="middle">Skip a layer and it collapses: the $120k penthouse went up on a vacant lot.</text></svg>`,
+          },
+        ],
+      },
+      {
+        heading: 'Build from the inside out',
+        blocks: [
+          {
+            type: 'text',
+            md: 'Why does build order deserve its own section? Because the most expensive failure mode in AI transformation is skipping straight to the exciting layer. Weinstein\'s onion model says each layer feeds the next. Automation produces the clean data and reliable plumbing that augmentation depends on. Augmentation produces the documented organizational knowledge that autonomous agents need before they can act unsupervised: the **SOPs** (standard operating procedures, written step-by-step playbooks for how a task gets done), the scoring criteria, the tribal knowledge finally on paper. An agent can only follow a procedure that exists somewhere outside someone\'s head.\n\nHis client story makes it concrete. A logistics company at roughly $60 million in revenue had a CEO who wanted to skip to the future, so he deployed an autonomous customer-onboarding agent: $120,000 and six weeks later, a disaster. The failure had nothing to do with the model. The agent worked; the ground under it did not exist. Customer data lived in three systems that never talked to each other, and seven onboarding steps lived undocumented in two employees\' heads. Weinstein\'s summary is the line to keep: the CEO built a penthouse on a vacant lot.\n\nThe selection rule that falls out of this: treat your AAA map (his recap slide draws it as four boxes: your robot task to automate, your Iron Man moment to compress, who you\'d hire to hand off, and the always-human zone to protect) as a blueprint rather than a wish list, and start with the one initiative that has the *cleanest math*. Countable hours saved, an objective success measure, a box you can draw around the function, and foundations that already exist. On returns, the research Weinstein cites pegs AI at $3.70 back on every $1 invested, plus what his slide calls a priceless return on time. Sequencing is what separates companies that see that number from companies that fund penthouses.',
+          },
+        ],
+      },
+      {
+        heading: 'Digital employees are specialists',
+        blocks: [
+          {
+            type: 'text',
+            md: 'When a candidate survives every filter, you spec it the way you would write a job description, because Weinstein\'s agent anatomy is a hiring analogy that holds up under inspection.',
+          },
+          {
+            type: 'table',
+            headers: ['Part', 'What it holds', 'Hiring analogy'],
+            rows: [
+              [
+                'The brain',
+                'Its prompt (role and boundaries), its organizational context, and the memory it accumulates from doing the work',
+                'Who the hire is: their knowledge of the company plus what they learn on the job',
+              ],
+              [
+                'The skills',
+                'SOPs and playbooks: step-by-step procedures, scoring criteria, voice and tone',
+                'Their training and their craft',
+              ],
+              [
+                'The tools',
+                'Scoped access to exactly the systems the job needs: the CRM, email, a spreadsheet. A sales agent never touches finance data; a content agent cannot send email',
+                'Their badge and their system permissions',
+              ],
+            ],
+          },
+          {
+            type: 'text',
+            md: 'The anatomy should feel familiar. A system prompt plus skills plus scoped tools is exactly what you assembled for coding agents in [Claude Code Mastery · Agent Skills Deep Dive](lesson:m1-l3), pointed at sales follow-ups instead of pull requests. Where Weinstein plants his flag is on *specialization*: hundreds of agents, each doing one narrow thing well, over one giant brain that tries to do everything. His metaphors do the arguing. A monolithic agent is a brick wall: pull one brick and the whole thing caves, and you cannot debug it, grade it, or change it safely. Specialized agents are LEGO blocks: swap one out, grade each independently, and when something breaks you know exactly which block.\n\nThe Q&A sharpened that into a traceability argument any engineer will recognize. When a giant do-everything agent fails, where do you even look? Which skill, which prompt, which memory caused it? A specialist gives every failure an address, the way a stack trace gives a bug a line number. That maps directly onto the orchestration patterns from [Agents, Harnesses & Loops · Multi-Agent Patterns](lesson:m2-l5).\n\nAt scale, his own company runs the pattern with a supporting cast. **Dispatcher agents** coordinate scheduling across hundreds of agents, so the org avoids drowning in thousands of cron jobs (scheduled background tasks). **Refinery agents** score every run against a definition of done, then review the scores every 48 hours and decide whether an underperformer needs a different model, different data, or a rewritten prompt. Every agent ships with its evaluation on day one, the same verification-first doctrine from [Agents, Harnesses & Loops · Verification: the #1 Quality Lever](lesson:m2-l4). His discovery tooling closes the loop: connect a person\'s email, Slack, and calendar, infer the hats they wear, and surface evidence-backed agent opportunities, each proposal arriving with boundaries ("never send a reply without review") and a success metric attached. The demo scan in his deck read 5,790 items from one person\'s accounts and came back with 54 opportunities across 7 roles. Run that across a company and the transformation backlog stops being guesswork.',
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'What this means for hiring',
+            md: 'Weinstein\'s hiring bar, stated bluntly in the Q&A: he interviews engineers by watching them fly, firing up their AI setup on a small live build. A candidate who opens a Google Doc and starts hand-planning gets passed over; he wants "pilots in cockpits." Attitude beats years of experience in his telling, because AI can backfill the experience while the mindset has to come with the person. Adopt the bar or argue with it, but expect clients to start asking you about it either way.',
+          },
+        ],
+      },
+    ],
+    lab: {
+      title: 'Run the playbook on a real client',
+      intro: 'You advise real businesses, and Weinstein\'s framework only earns its keep when it maps onto one of them. Pick a company you work with (or your own practice), run the full AAA mapping, and finish with a one-page transformation brief you could put in front of the owner next week.',
+      steps: [
+        'Pick the business and list its key roles, 5-10 people or functions. For each one, write a front-stage line (the work only they can do) and a back-stage line (the prep, admin, and coordination that buries it).',
+        'Mark the no-go zones explicitly: the relationships, judgment calls, physical-presence moments, and empathy work that stay human no matter what. Write them down; a transformation brief without protected zones reads like a layoff plan.',
+        'Hunt layer-1 automation candidates: tasks that are repetitive, rule-based, high volume, and low judgment. Estimate the hours per week each one eats. You want at least three with honest numbers.',
+        'Find the Iron Man moments for layer 2: expert tasks with a brutal prep-to-judgment ratio, hours of research feeding a 20-minute decision. Note the ratio for at least two of them.',
+        'Write five digital-employee job descriptions for layer 3: a title, a one-line scope (one narrow job done well), the success metric you would grade it on, and the minimal set of tools it gets access to.',
+        'Pick the single first initiative with the cleanest math: countable hours saved, an objective success measure, and a box you can draw around the whole function. Then check it against the onion: does it depend on clean data or a documented process that does not exist yet? If so, that data or documentation work IS the initiative.',
+        'Write the one-page brief: the 60/40 diagnosis for this company, the protected zones, the AAA map, the chosen first initiative with its math, and the build order. Draft it with Claude Code if you like; the judgment calls inside it are yours.',
+      ],
+      checklist: [
+        'Org map covers the key roles with a front-stage and a back-stage line for each',
+        'No-go zones are written down and specific to this business, including at least one judgment call and one relationship',
+        'AAA map holds 3+ automation candidates with hours per week, 2+ Iron Man ratios, and 5 digital-employee specs with success metrics and scoped tools',
+        'Chosen first initiative passes the cleanest-math test and respects the build order (no penthouse on a vacant lot)',
+        'One-page transformation brief exists and would survive being read aloud to the business owner',
+      ],
+    },
+    checkQuiz: [
+      {
+        q: 'The Harvard/BCG study of consultants working with AI is Weinstein\'s core evidence for the augmentation layer. What did it find?',
+        options: [
+          '12.2% more tasks completed, 25.1% faster, 40% higher quality, with the biggest gains going to the lowest performers',
+          'Speed doubled while quality dropped 15%, concentrated among juniors',
+          'Only the top decile improved; everyone else got slower',
+          'No measurable difference once task difficulty was controlled for',
+        ],
+        answer: 0,
+        explain: 'All three numbers moved in the right direction at once, and the gains concentrated at the bottom of the performance curve. That makes augmentation an equalizer: it lifts the whole team\'s floor rather than adding a rocket to the star performer.',
+      },
+      {
+        q: 'Which of these belongs in a no-go zone, kept away from AI entirely, rather than in one of the AAA layers?',
+        options: [
+          'Routing hundreds of support tickets a week',
+          'Drafting the first pass of a quarterly board deck',
+          'Delivering a firing decision, or any conversation where the human relationship is the actual product',
+          'Reconciling invoices under a fixed approval threshold',
+        ],
+        answer: 2,
+        explain: 'The four no-go zones are relationships, judgment calls, physical presence, and empathy or creativity. AI can help prepare a tough conversation, and a human still delivers it; ticket routing and invoice rules are textbook automation, and deck drafting is augmentation.',
+      },
+      {
+        q: 'Why does Weinstein insist on hundreds of specialized agents instead of one powerful generalist agent?',
+        options: [
+          'Specialized agents run on cheaper models, and cost is the whole argument',
+          'A monolithic agent cannot hold enough context to work at all',
+          'Traceability and safe change: when a specialist fails you know exactly which agent, skill, or prompt broke, and you can regrade or swap one without touching the rest',
+          'Vendor pricing penalizes large single agents',
+        ],
+        answer: 2,
+        explain: 'His images are a brick wall versus LEGO blocks. A giant do-everything agent gives a failure nowhere to point, while a specialist gives every failure an address, and each one can be measured, improved, or replaced independently.',
+      },
+      {
+        q: 'The augmentation layer comes with an evolution path for the human. What changes when you move from doer to manager of bots?',
+        options: [
+          'You stop being accountable for the output',
+          'You oversee the AI doing the task, handle the exceptions, and improve the system, instead of executing the task by hand',
+          'You write the same code, just faster',
+          'You move into people management and leave the domain behind',
+        ],
+        answer: 1,
+        explain: 'The doer executes manually; the manager of bots supervises, catches exceptions, and tunes the system doing the work. The third stage, strategist, directs intelligence at outcomes and designs new capabilities, and the path only moves in that direction.',
+      },
+    ],
+    resources: [
+      { label: 'The Complete AI Transformation Blueprint (Hour 1: Lior Weinstein\'s playbook)', url: 'https://www.youtube.com/watch?v=OcTMwjqje5Q', kind: 'video' },
+      { label: 'CTOx: Lior Weinstein\'s fractional-CTO community', url: 'https://ctox.com', kind: 'course' },
+      { label: 'Navigating the Jagged Technological Frontier: the Harvard/BCG consultant study', url: 'https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4573321', kind: 'article' },
+      { label: 'Cole Medin\'s workshop repo (the engineering half of the same event)', url: 'https://github.com/coleam00/ai-transformation-workshop', kind: 'repo' },
     ],
   },
 
