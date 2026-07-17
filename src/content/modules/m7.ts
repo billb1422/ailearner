@@ -469,7 +469,7 @@ export const lessons: Lesson[] = [
         blocks: [
           {
             type: 'text',
-            md: 'Engineer Rudy Garcia pushes the same ideas one step further in his April 2026 talk "Prompt to PR." His starting complaint is the default way everyone codes with AI: ask, check the output, ask again, check again, babysitting every step, then letting a swarm of review bots comment on the PR and feeding the comments back in by hand. His fix starts from a historical observation: humans wrote plenty of terrible code before AI existed, and experienced organizations contained it with process. Medical-device and avionics shops ship reliable software out of unreliable humans because the pipeline enforces quality: specs, architecture review, QA, security gates. So Garcia rebuilt that pipeline out of Claude Code primitives you already know: one **orchestrator** skill plus a bench of specialized subagents, each a markdown file that mirrors a role on a real engineering team. [Claude Code Mastery · Subagents & Context Isolation](lesson:m1-l6) covered the primitive; [Agents, Harnesses & Loops · Multi-Agent Patterns](lesson:m2-l5) covered the pattern.\n\nOne prompt kicks it off. The orchestrator writes zero code itself: its job is routing work through the stages and keeping a small running context. The stages that produce *documents* come first. A product-manager agent writes requirements as user stories with acceptance criteria. An architect agent reads your actual codebase and writes the design doc. A test planner decides which automated tests must exist so the feature can never silently regress (the discipline Garcia says human engineers skip most). A task planner breaks the work into small ordered tasks. Code generation starts only after all four documents exist. An engineer agent then implements task by task, self-validating as it goes, and hands off to the gates: a QA verifier confirms every requirement and every planned test is real, a security reviewer hunts for holes, and a manual-test agent drives an actual browser through the feature the way a user would. Any issue loops the pipeline back to the task planner until the gates pass, and the run ends with a final summary written for the human.',
+            md: 'Engineer Rudy Garcia takes the same ideas to a heavier, more autonomous scale in his April 2026 talk "Prompt to PR." His starting complaint is the default way everyone codes with AI: ask, check the output, ask again, check again, babysitting every step, then letting a swarm of review bots comment on the PR and feeding the comments back in by hand. His fix starts from a historical observation: humans wrote plenty of terrible code before AI existed, and experienced organizations contained it with process. Medical-device and avionics shops ship reliable software out of unreliable humans because the pipeline enforces quality: specs, architecture review, QA, security gates. So Garcia rebuilt that pipeline out of Claude Code primitives you already know: one **orchestrator** skill plus a bench of specialized subagents, each a markdown file that mirrors a role on a real engineering team. [Claude Code Mastery · Subagents & Context Isolation](lesson:m1-l6) covered the primitive; [Agents, Harnesses & Loops · Multi-Agent Patterns](lesson:m2-l5) covered the pattern.\n\nOne prompt kicks it off. The orchestrator writes zero code itself: its job is routing work through the stages and keeping a small running context. The stages that produce *documents* come first. A product-manager agent writes requirements as user stories with acceptance criteria. An architect agent reads your actual codebase and writes the design doc. A test planner decides which automated tests must exist so the feature can never silently regress (the discipline Garcia says human engineers skip most). A task planner breaks the work into small ordered tasks. Code generation starts only after all four documents exist. An engineer agent then implements task by task, self-validating as it goes, and hands off to the gates: a QA verifier confirms every requirement and every planned test is real, a security reviewer hunts for holes, and a manual-test agent drives an actual browser through the feature the way a user would. Any issue loops the pipeline back to the task planner until the gates pass, and the run ends with a final summary written for the human.',
           },
           {
             type: 'diagram',
@@ -506,6 +506,64 @@ export const lessons: Lesson[] = [
             variant: 'warning',
             title: 'The bill, and the fine print',
             md: 'Every subagent starts a fresh conversation, so context shared across stages gets re-sent at full price instead of the 0.1x cached rate; [Token Economics & AI-Native SDLC · Modeling Agent Costs](lesson:m7-l1) explains exactly why that multiplies spend. Garcia has hit two-hour runs, crashed a laptop with five parallel type checks, and moved heavy runs into cloud sandboxes. His verdict stands anyway: against a human going back and forth all day and re-establishing context after every PR round-trip, the pipeline roughly breaks even on tokens and wins decisively on attention. Budget for it on purpose rather than discovering it on an invoice.',
+          },
+        ],
+      },
+      {
+        heading: 'Two approaches, one spine: which to reach for',
+        blocks: [
+          {
+            type: 'text',
+            md: "Line the two methods up side by side and the overlap is the real lesson. Both grow from the same parents you already met: spec-driven development and the verification loop. Strip away the tooling and they run the same four plays. They produce the thinking as documents before a line of code exists (Medin's PRD and stories, Garcia's PM and architect docs). They gate the work behind checks that must pass before a human spends attention (Medin's `/validate` and `/code-review`, Garcia's QA, security, and browser agents). They bottle reusable expertise so it compounds instead of living in one head (Medin commits commands to git, Garcia has each expert write a subagent file). And they keep the human on the merge decision and the judgment calls, never on the typing. Once you agree on that spine, the differences turn into a choice about scale and budget rather than a fight about philosophy.",
+          },
+          {
+            type: 'text',
+            md: "What separates them is how much machinery you aim at a single ticket. Medin runs one operator through cheap, deliberately separate sessions, staying close enough to eyeball each phase as it lands. Garcia aims an orchestrated swarm of specialist subagents at that same ticket and steps back further, trading money and hands-on control for a pipeline that reviews its own work. Same destination, a very different vehicle to get there.",
+          },
+          {
+            type: 'diagram',
+            caption: "Both methods sit on one axis and rest on the same foundation. Sliding right buys autonomy and parallelism; sliding left buys thrift and a short setup.",
+            svg: `<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif"><rect width="700" height="300" fill="#18181b" rx="8"/><text x="350" y="30" fill="#e4e4e7" font-size="15" font-weight="bold" text-anchor="middle">SAME SPINE, DIFFERENT SCALE</text><line x1="70" y1="66" x2="628" y2="66" stroke="#52525b" stroke-width="2"/><polygon points="628,60 628,72 640,66" fill="#52525b"/><text x="70" y="54" fill="#a1a1aa" font-size="11" text-anchor="start">lightweight &#183; cheap &#183; hands-on</text><text x="628" y="54" fill="#a1a1aa" font-size="11" text-anchor="end">heavyweight &#183; autonomous &#183; fleet</text><rect x="60" y="86" width="250" height="92" fill="#27272a" stroke="#38bdf8" rx="8"/><text x="185" y="112" fill="#38bdf8" font-size="14" text-anchor="middle" font-weight="bold">PIV LOOP</text><text x="185" y="134" fill="#a1a1aa" font-size="11" text-anchor="middle">one operator, ticket by ticket</text><text x="185" y="151" fill="#a1a1aa" font-size="11" text-anchor="middle">you review every phase</text><text x="185" y="169" fill="#34d399" font-size="11" text-anchor="middle">cheap &#183; start this week</text><rect x="390" y="86" width="250" height="92" fill="#27272a" stroke="#f472b6" rx="8"/><text x="515" y="112" fill="#f472b6" font-size="14" text-anchor="middle" font-weight="bold">PROMPT &#8594; PR</text><text x="515" y="134" fill="#a1a1aa" font-size="11" text-anchor="middle">orchestrated agent swarm</text><text x="515" y="151" fill="#a1a1aa" font-size="11" text-anchor="middle">it reviews itself, you approve</text><text x="515" y="169" fill="#fbbf24" font-size="11" text-anchor="middle">costly &#183; encodes a team</text><line x1="185" y1="178" x2="185" y2="206" stroke="#52525b" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="515" y1="178" x2="515" y2="206" stroke="#52525b" stroke-width="1.5" stroke-dasharray="4 3"/><rect x="60" y="206" width="580" height="72" fill="#27272a" stroke="#34d399" rx="8"/><text x="350" y="230" fill="#34d399" font-size="13" text-anchor="middle" font-weight="bold">SHARED SPINE</text><text x="350" y="252" fill="#a1a1aa" font-size="11" text-anchor="middle">specs before code &#183; verification gates before human eyes</text><text x="350" y="269" fill="#a1a1aa" font-size="11" text-anchor="middle">encode expertise into reusable artifacts &#183; human owns the merge</text></svg>`,
+          },
+          {
+            type: 'table',
+            headers: ['Dimension', 'PIV loop (Medin)', 'Prompt to PR (Garcia)'],
+            rows: [
+              ['Shape', 'One operator, one ticket at a time', 'An orchestrator plus a bench of specialist subagents'],
+              ['Your role', 'Review each phase: brain dump, PRD, implementation', 'Approve the design, then read the final summary'],
+              ['Context and cost', 'Lean sessions, cheap, friendlier to prompt caching', 'Millions of tokens per run; each subagent re-sends context at full price'],
+              ['Time per ticket', 'Minutes of your attention, spread across phases', '20 minutes to 2 hours hands-off, with a laptop or cloud sandbox working'],
+              ['Setup cost', 'Low: a few commands you grow as patterns repeat', 'High: every agent file wants rewriting around your team'],
+              ['Sweet spot', 'A solo builder or fractional CTO working hands-on', 'A team encoding its senior standards for fleet-scale output'],
+              ['Biggest risk', 'You stay the bottleneck at every phase', 'Generic agent files produce generic, expensive results'],
+            ],
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'Reach for the PIV loop when',
+              items: [
+                "You are the one hands-on keyboard and want to stay close to the code",
+                "Budget matters and you want lean, cache-friendly, sequential runs",
+                "The work is a steady stream of tickets on a codebase you know well",
+                "You want to start this week with three or four commands, not a rebuild",
+              ],
+            },
+            right: {
+              title: 'Reach for Prompt to PR when',
+              items: [
+                "You want to bottle a whole team's standards so juniors inherit them",
+                "The bottleneck is human review capacity, not code generation",
+                "You can afford real token spend for hands-off, self-reviewing runs",
+                "Several features need to move in parallel without you babysitting each",
+              ],
+            },
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'For a fractional CTO, the split is clean',
+            md: "On your own hands-on work, the PIV loop wins: it keeps you next to the code, keeps the bill small, and needs almost no setup. When you are standing up a client's team and want their security reviewer's judgment or their database conventions to outlive any single person's 5pm, Garcia's pipeline earns its cost, because it turns that expertise into a gate every feature crosses. The two even nest: run the lightweight PIV loop day to day, and reserve the full prompt-to-PR pipeline for the features where a missed security hole or a silent regression would actually hurt. Before you commit a team to either, price the run against [Token Economics & AI-Native SDLC · Modeling Agent Costs](lesson:m7-l1); the cheap method and the expensive one can differ by two orders of magnitude on the same ticket.",
           },
         ],
       },
