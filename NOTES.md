@@ -105,6 +105,7 @@ Deliberate editorial calls made during the enrichment pass. Honor these in futur
 - **Multi-agent posture (m2-l6):** kept all existing team depth, ADDED a "prefer one generalist + skills; escalate to teams only under real parallelism" counterweight (Google/Medin trend). Did not gut the multi-agent content.
 - **Source-3 lag items kept at the app's July-2026 stance** (do not regress): auto permission mode is the default (not "in research"), the commands/skills merger is settled, CLAUDE.md precedence is managed→user→project→local (local wins).
 - **Skipped as low-value:** m1-l6 security-reviewer walkthrough and m1-l7 Chrome/Sentry demos (source agents rated them mere confirmations of content already present).
+- **Boss sequencing fix:** the m0 "Draw the Map" boss used to require a model→harness→loop stack, but harness/loop aren't formally taught until Module 2 (m2-l1/l2/l3). Rescoped m0's boss to what Module 0 actually teaches (LLM mechanics + context engineering + vibe-to-agentic + cost model); the full model→harness→loop stack map now lives in the m2 "Build a Loop" boss. If you add forward-referencing boss/lab requirements, check the concept is taught at or before that module.
 
 ## Gotchas / conventions that bite
 

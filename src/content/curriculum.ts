@@ -23,9 +23,9 @@ export const MODULES: Module[] = [
     boss: {
       title: 'Draw the Map',
       description:
-        'Teach it to prove you know it. Produce a one-page visual (hand-drawn, Excalidraw, or AI-assisted) that explains the full stack (model → harness → loop), plus a back-of-envelope cost model for one real AI workload you care about. Show it to one other person, or present it to Claude and ask for a brutal critique.',
+        "Teach it to prove you know it. Produce a one-page visual (hand-drawn, Excalidraw, or AI-assisted) that maps this module's mental models: how an LLM actually works, where context engineering fits, and the jump from vibe coding to agentic engineering. Add a back-of-envelope cost model for one real AI workload you care about. Show it to one other person, or present it to Claude and ask for a brutal critique. (You draw the full model → harness → loop stack later, in the Agents, Harnesses & Loops boss, once those two layers are actually yours.)",
       requirements: [
-        'One-page visual exists covering model vs harness vs loop and where context engineering fits',
+        'One-page visual exists covering how an LLM works, where context engineering fits, and the vibe-to-agentic shift',
         'It includes a worked cost estimate for a real workload (model tier, input/output tokens, caching)',
         'You presented it to a person or to Claude-as-critic and incorporated at least one correction',
       ],
@@ -67,13 +67,14 @@ export const MODULES: Module[] = [
     boss: {
       title: 'Build a Loop',
       description:
-        'Ship a working verification loop: write a task contract with acceptance criteria, then set up an agent that iterates until a real programmatic check passes, and cannot stop before it does.',
+        "Ship a working verification loop: write a task contract with acceptance criteria, then set up an agent that iterates until a real programmatic check passes, and cannot stop before it does. Then, now that all three layers are finally yours, draw the one-page stack map you deferred back in Module 0: model → harness → loop, showing where context engineering sits.",
       requirements: [
         'A CONTRACT.md (or SPEC.md) exists with explicit acceptance criteria and testing requirements',
         'The agent has a real binary pass/fail check: tests, build, or screenshot diff',
         'A Stop hook (or equivalent gate) blocks completion until the check passes',
         'The loop ran end-to-end at least once: agent worked, failed the check, iterated, then passed',
         'You wrote down the loop’s stop condition and its cost guardrail (max turns or budget)',
+        'A one-page stack map exists: model → harness → loop, showing where context engineering fits (the map deferred from the Draw the Map boss)',
       ],
       xp: 250,
       badgeId: 'boss-m2',
