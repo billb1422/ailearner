@@ -1728,19 +1728,55 @@ the spec already answers.`,
             caption: 'Two forces: caching flattens the curve; fresh sessions restart it near zero.',
           },
           {
+            type: 'text',
+            md: "So how do you turn that into an actual dollar figure? Price **one whole session first**, then scale it to a month. Working session-first matters because `/cost` in Claude Code reports **totals for the session**, already summed across every turn. The quadratic growth you just read about is baked into those totals. You don't add it back in yourself.\n\nOne more thing before the formula. Every rate on the price sheet is dollars **per million tokens**, and `/cost` hands you raw token counts in the hundreds of thousands. Divide by a million before you multiply, or your answer comes out a million times too big.",
+          },
+          {
             type: 'code',
             lang: 'text',
-            code: `monthly_cost =
-    sessions_per_day
-  x turns_per_session
-  x (  fresh_input  x input_rate
-     + cached_input x 0.1 x input_rate
-     + output       x output_rate )
-  x 30
+            code: `STEP 1: price one real session, straight from the /cost totals
+
+  session_cost =
+      (fresh_input  / 1,000,000) x input_rate
+    + (cache_reads  / 1,000,000) x input_rate x 0.1
+    + (cache_writes / 1,000,000) x input_rate x 1.25
+    + (output       / 1,000,000) x output_rate
+
+  0.1  = the 90% cache-read discount
+  1.25 = the cache-write premium on the 5-minute TTL (use 2.0 for the 1-hour TTL)
+
+STEP 2: scale that one session to a month
+
+  monthly_cost = session_cost x sessions_per_day x 30
 
 anchors: median Claude Code dev ~ $6/day
          90% of devs < $12/day`,
             caption: "The back-of-envelope model. You'll use it in the lab.",
+          },
+          {
+            type: 'text',
+            md: 'Here it is on real numbers. Say `/cost` reports a 40-turn Sonnet 5 session at the standard $3 in / $15 out rate.',
+          },
+          {
+            type: 'table',
+            headers: ['Line item', 'Tokens from /cost', 'Rate applied', 'Cost'],
+            rows: [
+              ['Fresh input', '20,000', '$3.00 per M', '$0.06'],
+              ['Cache reads', '1,200,000', '$0.30 per M (0.1x)', '$0.36'],
+              ['Cache writes', '160,000', '$3.75 per M (1.25x)', '$0.60'],
+              ['Output', '30,000', '$15.00 per M', '$0.45'],
+              ['Session total', '', '', '$1.47'],
+            ],
+          },
+          {
+            type: 'text',
+            md: 'Three sessions a day gets you $1.47 x 3 x 30 = **$132 a month**. Now the decision falls out on its own: Max 5x costs a flat $100, so at that usage level the plan beats metered pricing with room to spare.\n\nNotice which line is biggest. Cache reads and cache writes together run $0.96 of that $1.47, which is 65% of the bill. Fresh input is almost a rounding error. That ratio is what a healthy cached session looks like, and it doubles as a diagnostic: if your fresh-input number ever rivals your cache-read number, something in your prompt is changing between turns and the cache is missing.',
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'The two mistakes that produce an absurd number',
+            md: "**Forgetting the million.** 1,200,000 cache-read tokens times $3 is $3.6 million, which should be your signal that a divisor went missing. Those tokens cost $0.36.\n\n**Multiplying by turns_per_session.** The `/cost` totals already cover all 40 turns. Multiply the session cost by 40 again and a correct $1.47 becomes $58.80, which balloons to $5,292 a month. If your monthly estimate lands in the thousands and you aren't running agent fleets, check for this one first.",
           },
         ],
       },
@@ -1804,8 +1840,8 @@ anchors: median Claude Code dev ~ $6/day
       steps: [
         'Run a real Claude Code work session (20+ minutes), then execute `/cost` to see token usage and spend for the session.',
         'Count the turns and note the model used. Estimate fresh input vs cached input vs output from the /cost breakdown.',
-        'Compute the session by hand with the formula: fresh_input x rate + cached_input x 0.1 x rate + output x output_rate. Check it against what /cost reported.',
-        'Recompute the same session pretending caching was OFF (all input at full rate). Write down the multiplier you dodged.',
+        'Compute the session by hand with the STEP 1 formula, dividing every token count by 1,000,000 first and including the cache-write line. Do NOT multiply by turn count: the /cost totals already cover every turn. Check your figure against what /cost reported.',
+        'Recompute the same session pretending caching was OFF (every input token at the full rate, no cache-read or cache-write lines). Write down the multiplier you dodged.',
         'Model your month: sessions/day x per-session cost x 30. Compare the result against Pro ($20), Max 5x ($100), and Max 20x ($200).',
         'Identify two tasks from this week you could have routed to Haiku 4.5, and estimate the saving at $1/$5 vs your current model.',
       ],
