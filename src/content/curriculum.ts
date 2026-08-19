@@ -1,0 +1,193 @@
+import type { Module } from '../types'
+import { lessons as m0Lessons } from './modules/m0'
+import { lessons as m1aLessons } from './modules/m1a'
+import { lessons as m1bLessons } from './modules/m1b'
+import { lessons as m2aLessons } from './modules/m2a'
+import { lessons as m2bLessons } from './modules/m2b'
+import { lessons as m3Lessons } from './modules/m3'
+import { lessons as m4Lessons } from './modules/m4'
+import { lessons as m5Lessons } from './modules/m5'
+import { lessons as m6Lessons } from './modules/m6'
+import { lessons as m7Lessons } from './modules/m7'
+
+export const MODULES: Module[] = [
+  {
+    id: 'm0',
+    title: 'Mental Models',
+    emoji: '🧭',
+    color: '#38bdf8',
+    tagline: 'How LLMs, agents, and token economics actually work',
+    days: 'Days 1–3',
+    lessons: m0Lessons,
+    boss: {
+      title: 'Draw the Map',
+      description:
+        'Teach it to prove you know it. Produce a one-page visual (hand-drawn, Excalidraw, or AI-assisted) that explains the full stack — model → harness → loop — plus a back-of-envelope cost model for one real AI workload you care about. Show it to one other person (or present it to Claude and ask for a brutal critique).',
+      requirements: [
+        'One-page visual exists covering model vs harness vs loop and where context engineering fits',
+        'It includes a worked cost estimate for a real workload (model tier, input/output tokens, caching)',
+        'You presented it to a person or to Claude-as-critic and incorporated at least one correction',
+      ],
+      xp: 250,
+      badgeId: 'boss-m0',
+    },
+  },
+  {
+    id: 'm1',
+    title: 'Claude Code Mastery',
+    emoji: '⌨️',
+    color: '#a78bfa',
+    tagline: 'CLAUDE.md, skills, hooks, subagents, MCP — configuration as leverage',
+    days: 'Days 4–8',
+    lessons: [...m1aLessons, ...m1bLessons],
+    boss: {
+      title: 'Rig Your Ride',
+      description:
+        'Build the daily-driver setup you will actually use: a pruned CLAUDE.md, two custom skills for workflows you repeat, one verification hook, and one subagent — then run a real task end-to-end through it.',
+      requirements: [
+        'Project CLAUDE.md written and pruned (<200 lines, only rules that prevent real mistakes)',
+        'Two custom skills created for recurring workflows, committed to version control',
+        'One hook installed that enforces something automatically (e.g. blocks a bad command or runs a formatter)',
+        'One custom subagent defined in .claude/agents/ and used for a real delegation',
+        'A real multi-step task completed through this setup, using plan mode first',
+      ],
+      xp: 250,
+      badgeId: 'boss-m1',
+    },
+  },
+  {
+    id: 'm2',
+    title: 'Agents, Harnesses & Loops',
+    emoji: '🔁',
+    color: '#f472b6',
+    tagline: 'The expert core: harness design, loop engineering, multi-agent patterns',
+    days: 'Days 9–13',
+    lessons: [...m2aLessons, ...m2bLessons],
+    boss: {
+      title: 'Build a Loop',
+      description:
+        'Ship a working verification loop: write a task contract with acceptance criteria, then set up an agent that iterates until a real programmatic check passes — and cannot stop before it does.',
+      requirements: [
+        'A CONTRACT.md (or SPEC.md) exists with explicit acceptance criteria and testing requirements',
+        'The agent has a binary pass/fail check (tests, build, or screenshot diff) — not vibes',
+        'A Stop hook (or equivalent gate) blocks completion until the check passes',
+        'The loop ran end-to-end at least once: agent worked, failed the check, iterated, then passed',
+        'You wrote down the loop’s stop condition and its cost guardrail (max turns or budget)',
+      ],
+      xp: 250,
+      badgeId: 'boss-m2',
+    },
+  },
+  {
+    id: 'm3',
+    title: 'AI-Assisted Design',
+    emoji: '🎨',
+    color: '#fb923c',
+    tagline: 'DESIGN.md, design skills, and taste you can encode',
+    days: 'Days 14–16',
+    lessons: m3Lessons,
+    boss: {
+      title: 'Ship a Screen',
+      description:
+        'Design and build one genuinely polished screen (landing page, dashboard, or app screen) driven by a DESIGN.md and at least one design skill — with zero AI tells.',
+      requirements: [
+        'DESIGN.md written BEFORE building (palette, type scale, spacing, component rules)',
+        'At least one design skill used (e.g. apple-design, a grid-system skill, or your own)',
+        'Visual iteration used screenshots or the Chrome/vision loop, not just text feedback',
+        'No AI tells: no default Inter+Lucide+purple-gradient look; fonts and icons chosen deliberately',
+        'You compared it against a reference (Dribbble/Mobbin/real product) and closed the gap',
+      ],
+      xp: 250,
+      badgeId: 'boss-m3',
+    },
+  },
+  {
+    id: 'm4',
+    title: 'Local Models',
+    emoji: '💻',
+    color: '#34d399',
+    tagline: 'Run open models on your own hardware — and know when to',
+    days: 'Days 17–18',
+    lessons: m4Lessons,
+    boss: {
+      title: 'Homelab',
+      description:
+        'Stand up a local model and make an evidence-based call: benchmark it against a frontier model on three of YOUR real tasks, and document the hybrid split you would actually use.',
+      requirements: [
+        'A local model running via Ollama, LM Studio, or MLX on your machine',
+        'Three real tasks run on both the local model and a frontier model, outputs compared',
+        'Notes on speed, quality, and cost for each',
+        'A written hybrid policy: which of your workloads go local vs frontier, and why',
+      ],
+      xp: 250,
+      badgeId: 'boss-m4',
+    },
+  },
+  {
+    id: 'm5',
+    title: 'RAG',
+    emoji: '🔎',
+    color: '#fbbf24',
+    tagline: 'Retrieval done right: hybrid search, reranking, agentic RAG',
+    days: 'Days 19–20',
+    lessons: m5Lessons,
+    boss: {
+      title: 'Ask Your Docs',
+      description:
+        'Build a small but real RAG system over your own notes or documents, with citations — then evaluate it honestly on ten real questions.',
+      requirements: [
+        'Corpus ingested: chunked, embedded, and stored (Chroma/pgvector/or hosted)',
+        'Queries return answers WITH citations to source chunks',
+        'Ten real questions evaluated; hits/misses recorded',
+        'At least one improvement iteration made (chunking, hybrid search, or reranking) with before/after notes',
+        'A one-paragraph verdict: for this corpus, was RAG the right call vs long context?',
+      ],
+      xp: 250,
+      badgeId: 'boss-m5',
+    },
+  },
+  {
+    id: 'm6',
+    title: 'Fine-Tuning',
+    emoji: '🧬',
+    color: '#f87171',
+    tagline: 'LoRA, distillation, and the discipline of when not to',
+    days: 'Day 21',
+    lessons: m6Lessons,
+    boss: {
+      title: 'Alchemy',
+      description:
+        'Produce a credible fine-tuning plan for one style/format task — or actually run a small LoRA on your Mac with MLX. Either way, the eval set is the deliverable.',
+      requirements: [
+        'A task chosen where fine-tuning is genuinely the right tool (behavior/format, not knowledge)',
+        'An eval set of at least 20 input→expected-output examples',
+        'A dataset plan (or actual dataset) with source and size justified',
+        'Either a completed MLX LoRA run OR a full written plan (base model, method, cost estimate, hosted vs local)',
+        'A go/no-go recommendation with reasoning',
+      ],
+      xp: 250,
+      badgeId: 'boss-m6',
+    },
+  },
+  {
+    id: 'm7',
+    title: 'Token Economics & AI-Native SDLC',
+    emoji: '📐',
+    color: '#22d3ee',
+    tagline: 'Price the loop, restructure the workflow, launch the capstone',
+    days: 'Day 22',
+    lessons: m7Lessons,
+    boss: {
+      title: 'Launch Master',
+      description:
+        'Write your personal AI-native operating doctrine: a one-pager covering how you will spec, delegate, verify, and budget agent work going forward — then start your capstone.',
+      requirements: [
+        'A cost model spreadsheet (or doc) for your expected monthly agent usage, with the plan-vs-API call',
+        'Your personal SDLC doctrine written: when you spec, when you delegate, how you verify, when you review',
+        'Capstone track chosen on the Capstone page and first requirement started',
+      ],
+      xp: 250,
+      badgeId: 'boss-m7',
+    },
+  },
+]
