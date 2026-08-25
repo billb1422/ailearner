@@ -1344,4 +1344,341 @@ for await (const message of query({
       },
     ],
   },
+
+  // ───────────────────────────────────────────────────────────────
+  // m2-l10 - Graph Engineering (Day 13)
+  // ───────────────────────────────────────────────────────────────
+  {
+    id: 'm2-l10',
+    title: 'Graph Engineering',
+    day: 13,
+    minutes: 55,
+    xp: 100,
+    objectives: [
+      'Define a task graph (nodes, edges, DAG) and explain the one-liner "loops handle the work, graphs handle the loops"',
+      'Walk the diamond pattern end to end: fan out, reduce, synthesize, verify, and name what each stage exists to do',
+      'Read a task graph for its critical path and predict both the wall-clock time and the token bill before running anything',
+      'Map the twelve parts of a production agent node (the managed deep agent anatomy) onto the Claude Code pieces you already use',
+      'Apply the honest decision rule: recognize when a workload is a straight line and a single loop beats any graph',
+    ],
+    skipQuiz: [
+      {
+        q: 'The mid-2026 slogan is "loops handle the work, graphs handle the loops." What does that actually mean?',
+        options: [
+          'Graphs replace loops entirely, because parallel execution makes iteration unnecessary',
+          'Each node in the graph runs its own iterate-until-verified loop, while the graph decides which nodes run, in what order, and what flows between them',
+          'Loops are for beginners and graphs are the advanced version of the same thing',
+          'Graphs are a visualization layer drawn after the loops finish, for reporting',
+        ],
+        answer: 1,
+        explain:
+          'The two structures do different jobs. A loop is one worker iterating against a check until it passes. A graph is the coordination layer above the workers: it encodes which tasks depend on which, so independent work runs in parallel and dependent work waits its turn. Take away the loops and nothing gets done; take away the graph and the loops run one after another.',
+      },
+      {
+        q: 'A task graph for agents is usually a DAG. What does the "acyclic" part buy you?',
+        options: [
+          'It guarantees the workflow can be drawn without crossing lines',
+          'It makes every node run in parallel automatically',
+          'With no cycles among nodes, there is always a valid execution order and the run is guaranteed to terminate; iteration happens inside a node, never as an arrow looping back',
+          'It prevents any single node from being visited more than once per token',
+        ],
+        answer: 2,
+        explain:
+          'DAG stands for directed acyclic graph: arrows have direction and never form a circle. No circles means you can always sort the nodes into a runnable order, and the run provably ends. The iterate-until-done behavior you still need lives inside individual nodes as loops with stop conditions, which keeps "retry until the tests pass" from becoming "run forever."',
+      },
+      {
+        q: 'In the diamond pattern, what does the reduce stage do?',
+        options: [
+          'It shrinks each worker prompt to save tokens before the fan-out',
+          'It waits for ALL parallel workers to finish, then merges and dedupes their outputs into one artifact for the synthesis stage',
+          'It cuts the number of workers in half each round until one remains',
+          'It compresses the final report for storage',
+        ],
+        answer: 1,
+        explain:
+          'Reduce is the narrowing point of the diamond, a name borrowed from the MapReduce pattern in distributed computing. It acts as a barrier: nothing downstream starts until every fan-out worker reports in. Then it merges overlapping findings, drops duplicates, and hands one clean artifact to synthesis. Skipping it means the synthesizer drowns in four overlapping raw dumps.',
+      },
+      {
+        q: 'A diamond has 4 parallel research workers (about 10 minutes each), then a reduce (2 min), then a synthesis (5 min). Roughly how long does the run take, and what do you pay for?',
+        options: [
+          'About 17 minutes of wall-clock, while paying tokens for all 6 nodes',
+          'About 47 minutes, since agent work is always sequential under the hood',
+          'About 10 minutes, because reduce and synthesis run during the research',
+          'About 17 minutes, but you only pay for the slowest worker',
+        ],
+        answer: 0,
+        explain:
+          'Wall-clock time follows the critical path: the longest chain of dependent steps, here one worker (10) plus reduce (2) plus synthesis (5), about 17 minutes. The token bill follows total work: all four workers ran, so you pay for all four plus the two merge stages. Graphs buy time with money; the width is speed, and the width is also the bill.',
+      },
+      {
+        q: 'Your workload is: migrate the database schema, THEN update the API to match, THEN update the UI to match the API. What orchestration does this deserve?',
+        options: [
+          'A three-worker diamond, since three tasks always mean three parallel agents',
+          'A single loop working through the three steps in order, because each step depends on the previous one and a graph adds cost without adding speed',
+          'An agent team with mailboxes, so the workers can negotiate the order',
+          'A tournament pattern to find the best migration',
+        ],
+        answer: 1,
+        explain:
+          'Sketch the arrows first: schema feeds API feeds UI. A straight line has a critical path equal to the whole job, so parallel machinery cannot shorten it. One well-run loop with verification at each step does everything a graph would, without the coordination overhead or the multiplied token bill. Graphs earn their keep only when the sketch shows independent branches.',
+      },
+    ],
+    sections: [
+      {
+        heading: 'Loops do the work, graphs coordinate the loops',
+        blocks: [
+          {
+            type: 'text',
+            md: "You have spent this module building loops: one agent iterating against a real check until it passes, from [Agents, Harnesses & Loops · Loop Engineering](lesson:m2-l3). You have also run parallel workers, from [Agents, Harnesses & Loops · Agent Teams & Dynamic Workflows](lesson:m2-l6). This lesson names the structure that connects those two ideas, because the naming turns out to matter: once you can draw the structure, you can reason about its speed and its cost before you spend a token.\n\nA **graph**, in this context, is a map of work. Each **node** is a unit of work: one agent running one loop with its own context, tools, and stop condition. Each **edge** is an arrow between nodes meaning 'this one needs that one's output before it can start'. Draw every task and every arrow and you have the whole workflow on one page.\n\nAgent workflows use a specific kind of graph: a **DAG**, short for [directed acyclic graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph). Directed means the arrows point one way. Acyclic means the arrows never form a circle. That second property does real work: with no circles, the nodes can always be sorted into a valid running order, and the run is guaranteed to end. The iteration you still need (retry until the tests pass) lives *inside* a node as a loop with a stop condition, never as an arrow looping back to an earlier node. Keeping cycles inside nodes is what makes the whole thing debuggable.\n\nHence the slogan going around in mid-2026: **loops handle the work, graphs handle the loops**. A loop is a worker. A graph is the org chart above the workers, deciding who runs now, who waits, and what gets handed to whom.",
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'About those viral threads',
+            md: "This topic travels the internet wrapped in fabricated authority. The threads that popularized 'graph engineering' open with quotes like an unnamed Anthropic engineer announcing that prompts are dead, or Jensen Huang declaring that nobody writes prompts anymore. Nobody said those things; the quotes are bait, invented to make a repackaged guide feel like insider knowledge. The tell: a dramatic quote with no link to a talk, paper, or transcript. The underlying material (DAG orchestration, fan-out, reduce) is real and worth learning, which is exactly what makes the format work. Take the substance, discard the framing, and check any quote against a primary source before repeating it. The high-signal versus low-signal source discipline in [The AI Transformation Playbook · Capstone Launch](lesson:m7-l3) is the general version of this rule.",
+          },
+        ],
+      },
+      {
+        heading: 'The diamond: fan out, reduce, synthesize',
+        blocks: [
+          {
+            type: 'text',
+            md: "One graph shape covers most real agent workloads, and the guides call it the **diamond** because of how it looks drawn: one node opens up into several, and the several close back down into one.\n\nWalk it with a concrete job: 'evaluate whether we should adopt library X'. The **fan-out** stage splits the question into independent slices and gives each slice its own worker with its own fresh context: one reads the library's docs and changelog, one audits how the codebase currently solves the problem, one hunts for migration horror stories, one checks license and maintenance health. Independent is the load-bearing word. None of the four needs another's output, so all four run at once.\n\nThe **reduce** stage (the name comes from [MapReduce](https://en.wikipedia.org/wiki/MapReduce), the pattern that powered early big-data systems) waits for all four to finish, then merges their reports: duplicates dropped, contradictions flagged, everything normalized into one document. Reduce is a **barrier**: a checkpoint that refuses to let anything downstream start until every upstream worker has reported. Then the **synthesize** stage reads that one clean document and writes the actual deliverable, a recommendation with trade-offs.\n\nAdd one more node before you call it done: a **verifier** that checks the synthesis against the original question. The fan-out workers each verified their own slice inside their loops, but nobody has yet checked the assembled whole. A separate verifier node, with fresh eyes and no authorship pride, is the graph-scale version of the discipline from [Agents, Harnesses & Loops · Verification: the #1 Quality Lever](lesson:m2-l4).",
+          },
+          {
+            type: 'diagram',
+            svg: `<svg viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect x="0" y="0" width="700" height="400" fill="#18181b" rx="8"/>
+  <text x="350" y="28" fill="#e4e4e7" font-size="15" font-weight="bold" text-anchor="middle">THE DIAMOND: one question out, one verified answer back</text>
+  <rect x="275" y="45" width="150" height="46" fill="#27272a" stroke="#f472b6" stroke-width="2" rx="8"/>
+  <text x="350" y="64" fill="#f472b6" font-size="12" font-weight="bold" text-anchor="middle">INTENT</text>
+  <text x="350" y="82" fill="#a1a1aa" font-size="10" text-anchor="middle">"should we adopt library X?"</text>
+  <line x1="310" y1="91" x2="105" y2="130" stroke="#52525b" stroke-width="2"/>
+  <line x1="335" y1="91" x2="268" y2="130" stroke="#52525b" stroke-width="2"/>
+  <line x1="365" y1="91" x2="432" y2="130" stroke="#52525b" stroke-width="2"/>
+  <line x1="390" y1="91" x2="595" y2="130" stroke="#52525b" stroke-width="2"/>
+  <rect x="30" y="132" width="150" height="56" fill="#27272a" stroke="#38bdf8" stroke-width="2" rx="8"/>
+  <text x="105" y="155" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">W1: docs + changelog</text>
+  <text x="105" y="173" fill="#a1a1aa" font-size="10" text-anchor="middle">own context, own loop</text>
+  <rect x="193" y="132" width="150" height="56" fill="#27272a" stroke="#38bdf8" stroke-width="2" rx="8"/>
+  <text x="268" y="155" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">W2: our codebase</text>
+  <text x="268" y="173" fill="#a1a1aa" font-size="10" text-anchor="middle">own context, own loop</text>
+  <rect x="357" y="132" width="150" height="56" fill="#27272a" stroke="#38bdf8" stroke-width="2" rx="8"/>
+  <text x="432" y="155" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">W3: migration stories</text>
+  <text x="432" y="173" fill="#a1a1aa" font-size="10" text-anchor="middle">own context, own loop</text>
+  <rect x="520" y="132" width="150" height="56" fill="#27272a" stroke="#38bdf8" stroke-width="2" rx="8"/>
+  <text x="595" y="155" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">W4: license + health</text>
+  <text x="595" y="173" fill="#a1a1aa" font-size="10" text-anchor="middle">own context, own loop</text>
+  <line x1="105" y1="188" x2="310" y2="228" stroke="#52525b" stroke-width="2"/>
+  <line x1="268" y1="188" x2="335" y2="228" stroke="#52525b" stroke-width="2"/>
+  <line x1="432" y1="188" x2="365" y2="228" stroke="#52525b" stroke-width="2"/>
+  <line x1="595" y1="188" x2="390" y2="228" stroke="#52525b" stroke-width="2"/>
+  <rect x="275" y="230" width="150" height="50" fill="#27272a" stroke="#fbbf24" stroke-width="2" rx="8"/>
+  <text x="350" y="251" fill="#fbbf24" font-size="12" font-weight="bold" text-anchor="middle">REDUCE (barrier)</text>
+  <text x="350" y="269" fill="#a1a1aa" font-size="10" text-anchor="middle">waits for ALL, merges + dedupes</text>
+  <line x1="350" y1="280" x2="350" y2="296" stroke="#52525b" stroke-width="2"/>
+  <polygon points="344,296 356,296 350,306" fill="#52525b"/>
+  <rect x="275" y="306" width="150" height="42" fill="#27272a" stroke="#34d399" stroke-width="2" rx="8"/>
+  <text x="350" y="324" fill="#34d399" font-size="12" font-weight="bold" text-anchor="middle">SYNTHESIZE</text>
+  <text x="350" y="340" fill="#a1a1aa" font-size="10" text-anchor="middle">one recommendation</text>
+  <line x1="425" y1="327" x2="490" y2="327" stroke="#52525b" stroke-width="2"/>
+  <polygon points="490,321 490,333 500,327" fill="#52525b"/>
+  <rect x="500" y="306" width="170" height="42" fill="#27272a" stroke="#a78bfa" stroke-width="2" rx="8"/>
+  <text x="585" y="324" fill="#a78bfa" font-size="12" font-weight="bold" text-anchor="middle">VERIFY</text>
+  <text x="585" y="340" fill="#a1a1aa" font-size="10" text-anchor="middle">fresh eyes vs the intent</text>
+  <text x="350" y="378" fill="#e4e4e7" font-size="11" text-anchor="middle">Critical path (time): intent + slowest worker + reduce + synthesize + verify. Token bill: every node that ran.</text>
+</svg>`,
+            caption:
+              'The diamond over a real question. Four independent workers run at once; the reduce barrier merges them; synthesis and a fresh-eyes verifier close it out.',
+          },
+          {
+            type: 'text',
+            md: "Two numbers fall straight out of the drawing, and being able to read them off before running anything is the payoff of this whole lesson.\n\nThe first is **wall-clock time**, set by the [critical path](https://en.wikipedia.org/wiki/Critical_path_method): the longest chain of dependent nodes from start to finish. In the diamond above that chain is intent, slowest worker, reduce, synthesize, verify. Adding a fifth parallel worker changes the time only if it becomes the new slowest one.\n\nThe second is the **token bill**, set by total work: every node that ran, including the four you paid for in parallel. This is the same linear-burn arithmetic from [Agents, Harnesses & Loops · Agent Teams & Dynamic Workflows](lesson:m2-l6), now visible in the picture. A graph trades money for time. Width makes it fast, and width is exactly what you pay for.\n\nOne practical note on where this runs. You already own two diamond executors: parallel subagents from [Claude Code Mastery · Subagents & Context Isolation](lesson:m1-l6) for the fan-out with the main session as reducer, or the `ultracode` keyword, which writes the whole graph as a JavaScript program you can read. Frameworks like [LangGraph](https://www.langchain.com/langgraph) exist for when a graph needs to live in production code rather than in a session, and their docs are where much of this vocabulary comes from.",
+          },
+        ],
+      },
+      {
+        heading: 'State lives on the edges (and in files)',
+        blocks: [
+          {
+            type: 'text',
+            md: "What actually travels along an edge? An **artifact**: a concrete document one node wrote and the next node reads. W2's codebase audit arrives at the reduce node as a markdown file, and the synthesis leaves as another one. The viral threads sell this as 'a shared memory that never resets', which sounds mystical right up until you name the technology: a folder of files that outlives any single agent's context window.\n\nYou already learned why files win as agent state in [Agents, Harnesses & Loops · Agent Memory & State](lesson:m2-l7), and graphs raise the stakes on every reason. With five nodes running, the shared folder is the only place the whole truth exists; each node holds one slice in its context and no more. When a run dies halfway (and long runs die), the artifacts written so far are your restart point: rerun the dead node, keep everything upstream. And when the final answer looks wrong, you debug by reading the artifacts in order until you find the node where the reasoning went bad, the same way a stack trace walks you to the broken frame.\n\nThe practical rule: **every node ends by writing a file, and every edge is a file handoff**. A node that only 'reports back' in conversation leaves no artifact to restart from, no evidence to debug with, and nothing for a second reader to check.",
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'Why this beats one giant context',
+            md: "You could try running the library evaluation in one long session instead: read the docs, then the codebase, then the forums, then decide. By the forum stage, the docs have been compacted into mush, and the context-rot arithmetic from [Mental Models · Context Engineering](lesson:m0-l4) is eating the decision quality. The graph sidesteps it structurally: each worker reads only its slice at full fidelity, and the synthesizer reads only four tight summaries. Nobody ever holds the whole mess at once, which is the entire trick.",
+          },
+        ],
+      },
+      {
+        heading: 'Anatomy of a production node',
+        blocks: [
+          {
+            type: 'text',
+            md: "So far each node has been 'a Claude Code session with a job'. Worth seeing what a node looks like when it grows up and moves to production. LangChain's **managed deep agent** is the cleanest published anatomy: a hosted agent where you supply the business logic and the platform supplies the harness (the planning loop, filesystem, and subagent machinery) plus the runtime (sandboxes and scheduling). The design will feel familiar, because it is the same split this module has been teaching: the harness is a separate thing from the work you configure into it.\n\nTheir anatomy lists twelve parts, and eleven of them map one-to-one onto Claude Code pieces you have already built. Reading the mapping does two things for you: it proves your Claude Code skills transfer to production agent platforms nearly unchanged, and it hands you a checklist for speccing any agent node, on any platform, including the digital employees coming in the final module.",
+          },
+          {
+            type: 'table',
+            headers: ['Deep-agent part', 'What it holds', 'The Claude Code piece you already know'],
+            rows: [
+              ['agent.py', 'Model choice and core options', 'Model picker + settings.json'],
+              ['instructions.md', 'The system prompt: role and behavior', 'CLAUDE.md'],
+              ['skills/', 'Task playbooks loaded when relevant', '.claude/skills/ (same idea, same name)'],
+              ['tools/ + connectors/', 'Functions it can call; remote MCP servers', 'Tools + MCP servers'],
+              ['middleware/', 'Custom logic wrapping model and tool calls', 'Hooks'],
+              ['sandbox/', 'Isolated filesystem and shell for its code', 'The sandboxed workspace / worktree isolation'],
+              ['memory.py', 'Preferences and knowledge across sessions', 'Auto memory + memory files'],
+              ['identity.py', 'Per-caller threads and credentials', '(No direct equivalent: multi-user serving)'],
+              ['channels/', 'Where it talks: Slack and friends', 'Claude in Slack, unattended surfaces'],
+              ['schedules/', 'Cron-style recurring runs', 'Scheduled tasks and /schedule'],
+              ['evals/', 'Tests that grade the agent itself', 'Verification loops + skill evals'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'Use it as a spec checklist',
+            md: "Twelve boxes, one question each: what model, what instructions, which playbooks, which tools, what wraps the calls, where does it run, what does it remember, who is calling it, where does it talk, when does it wake up, and how is it graded? Any agent you can answer all eleven-plus-one questions for is specced. Any agent you cannot is a demo. Keep this list; it comes back when you write digital-employee job descriptions in [The AI Transformation Playbook · Where AI Belongs in a Business](lesson:m7-l4).",
+          },
+        ],
+      },
+      {
+        heading: 'When not to build a graph',
+        blocks: [
+          {
+            type: 'text',
+            md: "The honest half of graph engineering is refusing to do it. The failure mode is real and common: someone learns the diamond, gets excited, and puts a five-node graph on a task that a single session finishes in twenty minutes. Now they have five contexts to pay for, five prompts to maintain, artifacts to schlep between nodes, and a distributed system to debug when the answer comes out wrong. All to parallelize work that had no parallelism in it.\n\nThe test costs one minute: **sketch the arrows before you spawn anything**. Write the subtasks, draw the dependencies. A drawing that comes out as a straight line means the critical path IS the whole job, and no graph on earth shortens it; run one loop. A drawing with genuinely independent branches, wide enough that the time saved matters, is a diamond candidate. A drawing too tangled to sketch usually means you do not understand the task yet, and no orchestration fixes that.",
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'Graph earns its keep',
+              items: [
+                'Independent slices: research angles, review lenses, disjoint directories',
+                'Work too big for one context even with compaction',
+                'A verifier that must not share the builder’s context or its biases',
+                'The same pipeline will run again next week (worth engineering once)',
+              ],
+            },
+            right: {
+              title: 'Run one loop instead',
+              items: [
+                'Each step needs the previous step’s output (a chain in disguise)',
+                'The whole job fits one context with room to spare',
+                'A one-off task: orchestration setup costs more than it saves',
+                'You cannot yet write down what "done" means for each node',
+              ],
+            },
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'The 5-to-10% claim, translated',
+            md: "The viral guides claim most people use AI at 5 to 10% of its capacity, which is marketing arithmetic with a real observation buried inside: most people run every task, no matter its shape, as a single sequential chat. The workloads that were secretly diamonds (research, review, evaluation across independent slices) crawl through one context and come out mediocre. Graph engineering, stripped of its hype, is one habit: look at the shape of the work before choosing the shape of the run.",
+          },
+        ],
+      },
+    ],
+    lab: {
+      title: 'Draw the DAG, then run the diamond',
+      intro:
+        'Take one real, genuinely parallel question from your work, sketch its graph on paper first, then run it as a diamond and check whether the drawing predicted the run.',
+      steps: [
+        'Pick a real evaluation question you actually face (a library choice, a build-vs-buy call, a review across several areas). Confirm it splits into 3-4 slices where no slice needs another’s output.',
+        'Sketch the DAG on paper or in Excalidraw: intent, workers, reduce, synthesize, verify. Mark the critical path and write your prediction: wall-clock time and rough token cost.',
+        'Create a scratch folder for artifacts. Write intent.md: the question, the slices, and what "done" means for each worker.',
+        'Run the fan-out: launch 3-4 parallel subagents (or prompt `ultracode` with your sketch and read the generated harness before approving). Require each worker to end by writing its own findings file.',
+        'Run reduce + synthesize: a fresh session reads ONLY the findings files, merges and dedupes into merged.md, then writes recommendation.md.',
+        'Run the verifier: another fresh session reads intent.md and recommendation.md, and answers one question: does the recommendation actually answer the intent? Log what it caught.',
+        'Compare reality to your sketch: actual time vs predicted critical path, actual cost via /cost vs your guess, and whether the same job in one long session would have been good enough. Write the three-line verdict at the bottom of intent.md.',
+      ],
+      checklist: [
+        'A hand-drawn DAG existed BEFORE any agent ran, with the critical path marked',
+        'Every worker ended by writing an artifact file; no node reported only in conversation',
+        'The reduce stage waited for all workers and produced one merged artifact',
+        'A fresh-context verifier checked the final answer against intent.md',
+        'Predicted vs actual time and cost are written down, plus the one-loop-would-have-sufficed verdict',
+      ],
+    },
+    checkQuiz: [
+      {
+        q: 'In the managed deep agent anatomy, what does the platform provide versus what do you provide?',
+        options: [
+          'The platform provides the model weights; you provide the GPU time',
+          'You provide instructions, skills, tools, and model choice; the platform provides the harness (planning loop, filesystem, subagents) and the runtime (sandboxes, scheduling)',
+          'You provide the Python code for the loop; the platform provides only hosting',
+          'The platform provides everything, including the business logic',
+        ],
+        answer: 1,
+        explain:
+          'The split is the same one this module keeps finding: business logic versus harness. You write what the agent should do and know; the platform runs the loop, the filesystem, the sandboxes, and the schedule. Which is also why your Claude Code experience transfers: you have been configuring exactly that kind of harness all along.',
+      },
+      {
+        q: 'Why should every node in a task graph end by writing a file?',
+        options: [
+          'Files are cheaper than tokens under all pricing plans',
+          'The artifacts are the shared state: they let a dead run restart from the last good node, give you evidence to debug node by node, and carry the handoff between contexts that never see each other',
+          'The reduce stage can only read files, never conversation history',
+          'Because DAGs technically require file output to remain acyclic',
+        ],
+        answer: 1,
+        explain:
+          'No node holds the whole picture in context, so the artifact folder is the only complete record of the run. Crash recovery, debugging, and handoffs all read from it. A node that only reported in conversation leaves nothing behind: no restart point, no evidence, no input for the next node.',
+      },
+      {
+        q: 'A thread opens with "A Google engineer says prompts are obsolete" and no link, then teaches fan-out orchestration. The right read?',
+        options: [
+          'Discard the whole thread, since one fabrication poisons all of it',
+          'Trust it, since the technique working proves the quote true',
+          'Recognize the fabricated-authority format: an unverifiable quote as bait wrapped around real technique. Take the substance, drop the quote, and verify claims against primary sources like framework docs',
+          'Repost it, but add your own disclaimer',
+        ],
+        answer: 2,
+        explain:
+          'The bait-plus-substance format is the standard shape of viral AI content in 2026. The orchestration material is usually repackaged from real framework docs, which means the docs themselves are the better source anyway. Verify quotes before repeating them; your credibility rides on it more than theirs does.',
+      },
+      {
+        q: 'You add a fifth parallel worker to a diamond whose slowest existing worker takes 10 minutes. The new worker takes 4 minutes. What changes?',
+        options: [
+          'Wall-clock time drops, because more workers always means faster',
+          'Wall-clock time stays the same (the critical path still runs through the 10-minute worker) while the token bill goes up by one worker',
+          'The token bill stays flat because parallel work shares a context',
+          'The reduce stage gets faster, since it now has more inputs',
+        ],
+        answer: 1,
+        explain:
+          'The critical path runs through the slowest chain, and a 4-minute worker on a parallel branch does not touch it. You paid for a fifth full context and saved zero minutes. Whether that trade makes sense depends entirely on whether the fifth slice adds information the synthesis actually needs.',
+      },
+    ],
+    resources: [
+      {
+        label: 'LangChain - Managed Deep Agents overview (the node anatomy)',
+        url: 'https://docs.langchain.com/langsmith/python/managed-deep-agents-overview',
+        kind: 'docs',
+      },
+      {
+        label: 'LangGraph - graph-based agent orchestration',
+        url: 'https://www.langchain.com/langgraph',
+        kind: 'docs',
+      },
+      {
+        label: 'Anthropic - Building Effective Agents (parallelization + orchestrator-workers)',
+        url: 'https://www.anthropic.com/engineering/building-effective-agents',
+        kind: 'article',
+      },
+      {
+        label: 'MapReduce - where the reduce vocabulary comes from',
+        url: 'https://en.wikipedia.org/wiki/MapReduce',
+        kind: 'article',
+      },
+      {
+        label: 'Anatomy of a managed deep agent (the thread that mapped it)',
+        url: 'https://x.com/caspar_br/status/2088345102540587356',
+        kind: 'thread',
+      },
+    ],
+  },
 ]

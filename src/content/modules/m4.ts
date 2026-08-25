@@ -1000,4 +1000,243 @@ claude
       { label: 'Ollama blog: the MLX backend', url: 'https://ollama.com/blog/mlx', kind: 'article' },
     ],
   },
+
+  // ────────────────────────────────────────────────────────────
+  // m4-l4: The Hardware Ladder & the Install Business
+  // ────────────────────────────────────────────────────────────
+  {
+    id: 'm4-l4',
+    title: 'The Hardware Ladder & the Install Business',
+    day: 18,
+    minutes: 45,
+    xp: 100,
+    objectives: [
+      'Rank the local-AI hardware tiers from $0 to about $4,700 and say what genuinely runs at each price',
+      'Explain why a used NVIDIA RTX 3090 competes with Macs costing twice as much, and where the Mac still wins',
+      'Deconstruct the "$400 Mac mini, $2,100 install" business pitch into what is real and what is marketing',
+      'Spec an honest local-AI install service for a small business: assessment first, hybrid routing, and a support plan priced in',
+    ],
+    skipQuiz: [
+      {
+        q: 'What makes a used RTX 3090 the classic budget king of local AI in 2026?',
+        options: [
+          'It has more total memory than any Mac at any price',
+          'For roughly $700-900 used, its 24GB of VRAM and very high memory bandwidth run 24-32B models faster than Macs costing two or three times as much',
+          'NVIDIA licenses it for commercial inference while newer cards are consumer-only',
+          'It is the only GPU llama.cpp supports',
+        ],
+        answer: 1,
+        explain:
+          'Generation speed is limited by memory bandwidth, and the 3090 has roughly 936 GB/s of it, well above most Macs. Its 24GB of VRAM caps model size around the 24-32B class at Q4, but inside that cap a used 3090 outruns far pricier machines. The trade: a loud tower, real power draw, and it caps out where a big-RAM Mac keeps going.',
+      },
+      {
+        q: 'A small business owner asks what a base $599 Mac mini (16GB) can actually run well. The honest answer:',
+        options: [
+          'Frontier-quality models, since Apple Silicon closes the gap',
+          '8-12B models at Q4: real workhorses for classification, drafting, and private RAG, and a clear quality tier below the frontier',
+          'Nothing useful; 16GB is below the minimum for any model',
+          'Any model, as long as you accept slower loading times',
+        ],
+        answer: 1,
+        explain:
+          'The RAM arithmetic from earlier in this module: 16GB minus 8-10GB for the system leaves room for an 8-12B model at Q4 plus its KV cache. Models that size handle routine private work honestly well in 2026. What they cannot do is frontier-grade reasoning, and an install pitch that skips that sentence is selling, not advising.',
+      },
+      {
+        q: 'The viral pitch: buy a $400 Mac mini, install Ollama, charge a client $2,100, collect $100-150/month. What does the price actually have to cover for the business to be legitimate?',
+        options: [
+          'Nothing beyond the hour of installation; software margins are the whole point',
+          'Assessment of the client\'s real tasks, model selection and evaluation, integration into their workflow, documentation, and ongoing support: updates, breakage, and the quarterly model refresh',
+          'Only the hardware markup, since Ollama handles everything else automatically',
+          'A reseller license fee to Apple and Ollama',
+        ],
+        answer: 1,
+        explain:
+          'An hour of `brew install ollama` is worth an hour. What a client is actually paying $2,100 for is judgment: which of their tasks a local model genuinely handles, which model, wired into what workflow, plus someone to call when it breaks. The retainer is the honest part of the pitch: local models go stale in about six months, and somebody has to own that.',
+      },
+      {
+        q: 'Which client situation is a genuinely strong case for a local-AI box rather than a cloud subscription?',
+        options: [
+          'A startup that wants the best possible code-generation quality',
+          'A medical or legal practice handling records that must never leave the building, running high-volume routine tasks like transcription cleanup and document classification',
+          'A solo founder who already pays $20/month for a frontier plan and mostly needs deep reasoning',
+          'Any business that finds subscriptions annoying',
+        ],
+        answer: 1,
+        explain:
+          'The structural wins from the hybrid-split lesson decide it: privacy that survives any benchmark cycle, high volume at electricity prices, and tasks where an 8-30B model is honestly good enough. Records-heavy practices hit all three. The startup and the founder need frontier reasoning quality, which stays a cloud product.',
+      },
+      {
+        q: 'A vendor demo shows a local install completed in an 11-second video and claims "a few thousand a month from local installs" as a solo operator. How should you read it?',
+        options: [
+          'As proof the business model works at that speed and margin',
+          'As content marketing: the install being fast is true and beside the point, since the sellable work is the assessment, integration, and support the video never shows',
+          'As fraud that should be reported',
+          'As evidence local AI is too easy to charge for at all',
+        ],
+        answer: 1,
+        explain:
+          'The video is real and the framing is bait. Installing Ollama IS fast; that is exactly why the install alone is worth almost nothing. The viable version of this business sells what the clip omits: knowing which client tasks a local model can honestly carry, wiring it into their actual workflow, and being on the hook when it drifts. Speed of install and value of service are different numbers.',
+      },
+    ],
+    sections: [
+      {
+        heading: 'The ladder: $0 to $4,700',
+        blocks: [
+          {
+            type: 'text',
+            md: "The first three lessons sized models to YOUR Mac. This one widens the lens to the whole hardware market, because two conversations keep coming up in 2026 that need the full ladder: 'what should I buy for local AI?' and 'could I sell local AI to businesses?'. The second one is making the rounds as a get-rich-quick pitch, and we'll take it apart properly in a minute.\n\nThe ladder below runs from free to about $4,700. Two spec numbers decide everything on it, both familiar from [Local Models · The Open-Model Landscape 2026](lesson:m4-l1): **memory capacity** sets which models fit at all, and **memory bandwidth** (how fast the chip can stream weights out of RAM, measured in gigabytes per second) sets how fast they generate. Every rung is some trade between those two and the electric bill.",
+          },
+          {
+            type: 'table',
+            headers: ['Price', 'The box', 'Memory', 'What genuinely runs', 'The catch'],
+            rows: [
+              ['$0', 'The laptop or desktop you already own', 'Whatever it has', 'A 4-8B model, often CPU-only and slow', 'Fine for learning; painful for daily work'],
+              ['$200-400', 'Used office mini-PC, RAM maxed', '32-64GB DDR4', '8-14B on CPU at a crawl (1-5 tok/s)', 'Capacity without bandwidth; patience required'],
+              ['$599', 'Mac mini M4 base', '16GB unified', '8-12B at Q4, comfortably', 'The famous "$400" mini once refurbished or on sale'],
+              ['$700-900', 'Used RTX 3090 in any old tower', '24GB VRAM @ ~936 GB/s', '24-32B at Q4, FAST (often 30-60 tok/s)', 'Loud, hot, ~350W, and hard-capped at 24GB'],
+              ['$999-1,399', 'Mac mini M4 Pro', '24-64GB unified', 'The 30B-A3B MoE sweet spot, silent, ~10W idle', 'Bandwidth below the 3090; quieter and thriftier'],
+              ['$2,000-2,500', 'Mac Studio M4 Max / dual used 3090s', '64-96GB', '70B dense or gpt-oss 120B', 'The dual-GPU route needs real DIY tolerance'],
+              ['$4,000-4,700', 'Mac Studio 128GB+', '128GB+ unified', 'The 235B-class MoE flagships', 'Frontier-adjacent open models, still not frontier'],
+            ],
+          },
+          {
+            type: 'text',
+            md: "The interesting fight on that ladder is the used **RTX 3090** versus the Mac mini tier, and it teaches the bandwidth lesson better than any benchmark chart. The 3090 shipped in 2020 as a gaming card, yet its 24GB of **VRAM** (the graphics card's own dedicated memory) moves data at roughly 936 GB/s, which beats most of Apple's lineup. Inside its 24GB cap, it generates tokens noticeably faster than Macs costing twice as much, which is why the r/LocalLLaMA crowd keeps buying them used.\n\nSo why did this course teach the Mac path first? Because the cap and the ownership costs are real: 24GB stops at the 32B class while a big-RAM Mac walks up to 235B MoE territory, and the Mac idles near-silent at a few watts, which matters enormously for the always-on agent-server pattern from [Local Models · Local Agents & the Hybrid Split](lesson:m4-l3). Rule of thumb: bandwidth wins the speed race, capacity wins the capability race, and electricity plus noise decide who gets to live in an office.",
+          },
+        ],
+      },
+      {
+        heading: 'The pitch: a $400 box and a $2,100 invoice',
+        blocks: [
+          {
+            type: 'text',
+            md: "Now the business pitch, as it actually circulates. A viral thread describes the play: buy a cheap Mac mini, install [Ollama](https://ollama.com) with a local model, deliver it to a small business as 'your own private AI, no cloud, no subscription', charge about $2,100 for the install, then collect a $100-150 monthly retainer. The accompanying video shows the install taking under a minute, and the author claims a few thousand a month as a solo operator. No SaaS, no code, no investors.\n\nRun the seller-side math and you see why the format spreads. Hardware $600, an afternoon of setup, $2,100 invoice: roughly $1,400 gross on day one, plus retainers stacking as installs accumulate. Ten clients would mean $1,000-1,500 a month of recurring revenue for maintenance that is mostly quiet. The arithmetic is genuinely attractive, which is exactly why it deserves the same treatment as the '$599 mini replaces $459 of subscriptions' thumbnail from the last lesson: claim by claim, with your own calculator.",
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'What the pitch gets right',
+              items: [
+                'Small businesses with sensitive data DO want AI that never phones home',
+                'An 8-30B model honestly covers routine work: drafting, classification, private RAG',
+                'A one-time box beats a per-seat subscription for some buyers, psychologically and financially',
+                'Recurring maintenance revenue is real, because models and tools genuinely need refreshing',
+              ],
+            },
+            right: {
+              title: 'What it quietly skips',
+              items: [
+                'The install is the cheapest part; the video shows the only step that takes no skill',
+                'A 16GB mini runs 8-12B models, a full quality tier below what the client uses in ChatGPT',
+                'Someone must own failures: hallucinated answers, a stale model, a broken update',
+                'A client who needed frontier quality churns fast, and tells other businesses why',
+              ],
+            },
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'The 11-second-install tell',
+            md: "Watch what the demo chooses to show: the part that takes an hour and no judgment. The same tell shows up across get-rich-with-AI content, and you saw its cousin in the loop-engineering hype cycles: effort compressed on camera, hard parts left off screen. When the shown step is trivially easy, the unshown steps are the actual product. That cuts both ways: it means the pitch oversells, AND it means the durable business, if there is one, lives in exactly what the video skipped.",
+          },
+        ],
+      },
+      {
+        heading: 'The fractional-CTO read: when local is genuinely right',
+        blocks: [
+          {
+            type: 'text',
+            md: "Strip the hype and a real question remains, one your clients will ask you directly: should this business run AI on a box in the office? The structural scorecard from [Local Models · Local Agents & the Hybrid Split](lesson:m4-l3) answers it, applied to someone else's workload instead of yours.\n\nLocal earns its place when three things line up. The data must be genuinely sensitive: patient records, legal files, payroll, anything where 'we never send it anywhere' is worth money in trust or required by rules like [HIPAA](https://www.hhs.gov/hipaa/index.html) (the US health-data privacy law). The volume must be high and routine: transcription cleanup, document classification, drafting from templates, private search over the firm's own files. And the quality bar must be honest: an 8-30B model has to be genuinely good enough for THESE tasks, verified on the client's real work, using the same benchmark discipline this module's boss challenge drills on your own tasks.\n\nWhen any leg is missing, recommend the boring alternative. A business whose bottleneck is frontier-grade reasoning belongs on a $20-100 cloud plan. A business with sensitive data AND hard reasoning needs belongs on the hybrid split: the local box absorbs the private routine volume, one cloud subscription handles the rest, and the routing policy is written down. You wrote that policy for yourself in the last lesson; the client version is the same document with their tasks in it.",
+          },
+          {
+            type: 'text',
+            md: "If you ever offer this as a service, the deliverable list writes itself from everything above, and none of it fits in an 11-second video. Start with a paid assessment: a week of watching where their hours actually go, straight from the back-stage mapping you'll formalize in [The AI Transformation Playbook · Where AI Belongs in a Business](lesson:m7-l4). Then the build: hardware sized to the shortlisted tasks, models chosen by running THEIR documents through candidates, the workflows wired in, and a one-page routing policy naming what stays local and what escalates. Then the part the retainer honestly pays for: quarterly model refreshes on the six-month half-life from [Local Models · The Open-Model Landscape 2026](lesson:m4-l1), monitoring, and being the person they call. Price all of that at $2,100 plus $150 a month and nobody got fleeced; the number was never the scandal, the missing service under it was.",
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'The one-question filter',
+            md: "Before proposing a local box to anyone, answer this in writing: which specific tasks, at what volume, does an open model demonstrably handle for this client, shown on their own data? A crisp answer means the install is defensible engineering. A vague one means you're about to sell a very quiet space heater with a retainer attached.",
+          },
+        ],
+      },
+    ],
+    lab: {
+      title: 'Spec an install you could defend',
+      intro:
+        "Play both sides of the deal. Spec a local-AI install for one real small business you know (a client, a friend's shop, your dentist), then attack your own proposal the way a skeptical buyer should.",
+      steps: [
+        'Pick a real small business you know something about. List 5 of its back-stage tasks (admin, drafting, classifying, searching internal docs) and mark which involve data the owner would hate to see leave the building.',
+        'Pick the hardware rung: choose from the ladder table and justify it in one line against the tasks, using the RAM arithmetic from lesson 1.',
+        'Pick the model(s): choose from your lesson-1 shortlist. For at least one task, actually test it: run a realistic sample (sanitized if needed) through the model on your own Mac and judge the output honestly.',
+        'Write the one-page proposal: tasks covered, hardware, models, what stays local vs what escalates to a cloud plan, the install price, and what the monthly retainer specifically buys (updates, monitoring, support).',
+        "Now attack it: write the three hardest questions the owner should ask (start with: 'why is this better than the $20/month tool I already use?'). Answer them in writing, or amend the proposal where you can't.",
+        'Verdict: one paragraph on whether this deal is genuinely good for the client, good only for the seller, or good for both. Keep the page; it doubles as a template if a real client ever asks.',
+      ],
+      checklist: [
+        'Five real back-stage tasks listed, with the sensitive ones flagged',
+        'Hardware rung chosen with the RAM arithmetic shown, and models picked from a current shortlist',
+        'At least one task actually tested on a local model, with an honest quality note',
+        'The proposal names what escalates to cloud, and what the retainer concretely buys',
+        'The three skeptical-buyer questions are answered in writing, and the who-wins verdict exists',
+      ],
+    },
+    checkQuiz: [
+      {
+        q: 'Why does memory bandwidth, rather than capacity, decide generation speed?',
+        options: [
+          'Bandwidth determines how many models can be stored on disk',
+          'Every generated token requires streaming the active weights out of memory, so tokens per second tracks how fast that streaming goes',
+          'Capacity only matters for training, never for inference',
+          'Bandwidth is a marketing number with no runtime effect',
+        ],
+        answer: 1,
+        explain:
+          "The speed lesson from earlier in the module, now driving purchase decisions: each token means reading all the active parameters out of memory once. A used 3090 at ~936 GB/s outruns bigger-memory machines with slower buses on any model that fits its 24GB. Capacity decides what CAN run; bandwidth decides how it FEELS.",
+      },
+      {
+        q: 'A law firm wants AI for summarizing case files (confidential, high volume) and for novel legal strategy arguments. Your recommendation?',
+        options: [
+          'Everything local: a big Mac Studio handles both',
+          'Everything cloud: local models cannot summarize',
+          'The hybrid split: a local box for the confidential high-volume summarization and classification, one cloud subscription for the deep reasoning, and a written routing policy between them',
+          'Neither: law firms cannot use AI',
+        ],
+        answer: 2,
+        explain:
+          'Two legs of the local case are strong (sensitive data, high routine volume) and one task genuinely needs frontier reasoning. That is the textbook hybrid: route by task class, write the policy down, and nobody uploads a client file out of habit. It is the same split you wrote for yourself, sold as advice.',
+      },
+      {
+        q: 'What makes the monthly retainer the most defensible part of the install-business pitch?',
+        options: [
+          'Recurring revenue is always ethical by definition',
+          'Local models and tools genuinely decay on a roughly six-month half-life, so refreshes, monitoring, and support are real ongoing work someone must own',
+          'The retainer covers the electricity the box consumes',
+          'Apple requires service contracts on business hardware',
+        ],
+        answer: 1,
+        explain:
+          'The half-life discipline from lesson 1 applies to a client box with extra force, because the client will never re-run a leaderboard check themselves. Somebody has to refresh the model shortlist, apply updates, and answer the phone when output quality drifts. Charging monthly for that is honest; charging monthly for nothing is the grift version.',
+      },
+      {
+        q: 'The strongest single argument AGAINST recommending a $599 mini install for a given client is:',
+        options: [
+          'Ollama licensing costs more at commercial scale',
+          'Their actual bottleneck tasks need frontier-model quality, so the local box would automate the wrong things and disappoint on the right ones',
+          'Macs cannot run around the clock',
+          '16GB machines cannot load any language model',
+        ],
+        answer: 1,
+        explain:
+          'The fatal mismatch is task quality, and it is invisible in a demo. An 8-12B model handling the routine 80% beautifully still fails the client whose business value sits in the hard 20%. The assessment exists to catch exactly this before an invoice does: match the box to the tasks, never the tasks to the box.',
+      },
+    ],
+    resources: [
+      { label: 'Ollama: the install-business runtime of choice', url: 'https://ollama.com', kind: 'docs' },
+      { label: 'r/LocalLLaMA: where the hardware ladder gets argued daily', url: 'https://www.reddit.com/r/LocalLLaMA/', kind: 'article' },
+      { label: 'The $400-mini install pitch (the thread this lesson deconstructs)', url: 'https://x.com/brainrulax/status/2083169896641265692', kind: 'thread' },
+      { label: 'LMArena leaderboard: refresh the client shortlist quarterly', url: 'https://lmarena.ai', kind: 'article' },
+      { label: 'HIPAA basics: why "never leaves the building" is worth money', url: 'https://www.hhs.gov/hipaa/index.html', kind: 'docs' },
+    ],
+  },
 ]

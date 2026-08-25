@@ -313,6 +313,583 @@ export const lessons: Lesson[] = [
   },
 
   // ───────────────────────────────────────────────────────────────
+  // m8-l1: Designing an Agent Workforce
+  // ───────────────────────────────────────────────────────────────
+  {
+    id: 'm8-l1',
+    title: 'Designing an Agent Workforce',
+    day: 22,
+    minutes: 55,
+    xp: 100,
+    objectives: [
+      'Sketch a working agent org: a chief-of-staff orchestrator over 4-6 specialist agents, each with a named role',
+      'Write a charter for one agent: role, scope, boundaries, escalation rules, and a success metric',
+      'Split organizational knowledge correctly: what goes in the shared knowledge base versus each agent\'s private memory',
+      'Wire routines: scheduled runs and event triggers, so the workforce produces without being prompted',
+      'Read operator threads about agent workforces critically, separating durable patterns from week-one marketing numbers',
+    ],
+    skipQuiz: [
+      {
+        q: 'Operators running agent workforces converge on one structural rule: the human talks to a single chief-of-staff agent, which delegates to the specialists. Why?',
+        options: [
+          'Vendors charge per conversation, so fewer chats save money',
+          'One front door keeps the human out of coordination work: the chief of staff decomposes outcomes into tasks, routes them, chases completion, and reports back once, instead of the human managing 6 separate agents',
+          'Specialist agents refuse instructions from humans for safety reasons',
+          'It makes the org chart diagram look cleaner in demos',
+        ],
+        answer: 1,
+        explain:
+          'The whole point of the workforce is handing off coordination, and talking to six agents individually IS coordination. The chief-of-staff pattern moves that burden into the org: you state the outcome, one agent turns it into delegated tasks and returns one consolidated report. It is the orchestrator node from graph engineering, applied to operations instead of code.',
+      },
+      {
+        q: 'What belongs in the SHARED knowledge base rather than an individual agent\'s memory?',
+        options: [
+          'Everything, so all agents stay perfectly synchronized',
+          'Facts every agent needs identically: what the company does, the customer profile, the brand voice, pricing, current priorities. Task state and role-specific learnings stay in each agent\'s own memory',
+          'Nothing; sharing knowledge between agents causes hallucinations',
+          'Only login credentials and API keys',
+        ],
+        answer: 1,
+        explain:
+          'The split mirrors a real office: the company wiki versus each person\'s working notes. Company facts duplicated into six private memories drift apart the first time one gets updated and five do not. Task state pushed into the shared base buries every agent in every other agent\'s noise. Shared truths go in one place; working state stays local.',
+      },
+      {
+        q: 'An agent workforce charter should contain which of these?',
+        options: [
+          'The model version, the GPU it runs on, and its token budget only',
+          'Role, scope (what it owns), boundaries (what it never touches), escalation rules (when to stop and ask a human), and the metric it is graded on',
+          'A list of prompts to copy-paste each morning',
+          'The agent\'s personality description and preferred emoji',
+        ],
+        answer: 1,
+        explain:
+          'A charter is a job description with the boundaries made explicit, because an agent will not infer them. The escalation rules matter most: they encode when autonomy ends and a human decision begins. An agent with a metric but no boundaries optimizes into places you did not want it; one with boundaries but no metric cannot be graded or improved.',
+      },
+      {
+        q: 'What turns an agent workforce from a set of chatbots into something that produces without being prompted?',
+        options: [
+          'Larger context windows',
+          'Routines: scheduled runs (the analyst reports every night at 9) and event triggers (a new lead arriving kicks off qualification), so work starts from the calendar and the inbox rather than from a human typing',
+          'Giving every agent admin access to all systems',
+          'Fine-tuning each agent on the company\'s data',
+        ],
+        answer: 1,
+        explain:
+          'A workforce that only moves when you prompt it is a fancy chat interface, and you are still the bottleneck. Routines invert the flow: time-based schedules cover the recurring work, event triggers cover the reactive work, and the human reads outputs instead of initiating inputs. This is the loop discipline from the harness module, running on a calendar.',
+      },
+      {
+        q: 'A thread reports week-one results: 214 verified prospects, 89 personalized outreaches, inbox at zero, 11 content pieces. The literate reading?',
+        options: [
+          'Multiply by 52 to get the annual value of the system',
+          'The patterns described (delegation, charters, triage) are real and worth stealing; the numbers are unverified marketing that omit quality, error rates, supervision time, and whether any prospect converted',
+          'The numbers prove agent workforces outperform human teams',
+          'Dismiss the entire thread since numbers this good are impossible',
+        ],
+        answer: 1,
+        explain:
+          'The same substance-versus-framing discipline as the graph-engineering hype: operators sharing real patterns dress them in numbers no reader can check. Volume metrics without quality metrics are the oldest trick in sales content; 89 outreaches that land as spam are worth less than five that land as relevant. Steal the architecture, audit the arithmetic.',
+      },
+    ],
+    sections: [
+      {
+        heading: 'From framework to org chart',
+        blocks: [
+          {
+            type: 'text',
+            md: "The previous lesson gave you Weinstein's theory: back-stage work moves to AI, digital employees are specialists, autonomy sits on top of foundations. This lesson is the operating manual, drawn from the operators actually running agent workforces day to day in mid-2026, most visibly the wave of people building on **Grok Bot** (xAI's agent-workforce product, which gets its own hands-on treatment next lesson). Their tooling varies; their patterns converge hard, and the patterns are what transfer to any platform, including one you assemble yourself from Claude Code parts.\n\nHere is a real example org, condensed from an operator's writeup of an eight-agent setup. Every agent has a name and one narrow job. **Atlas**, the chief of staff, decomposes outcomes into tasks, delegates to the team, and delivers a daily report. **Scout** researches prospects and delivers a qualified list every morning. **Quill** produces content drafts in the operator's voice. **Pitch** writes personalized outreach with follow-up sequences. **Vault** triages the inbox by priority so mornings start at zero. **Ledger** reports the numbers nightly. The operator's summary line is the thesis of this whole module: my bottleneck was never how much I could do, it was how much I could hand off.\n\nNotice what the roster is: Weinstein's write-five-job-descriptions exercise, actually running. Narrow specialists, an explicit coordinator, and nothing resembling one giant do-everything assistant.",
+          },
+          {
+            type: 'diagram',
+            caption: 'The converged shape of a working agent org: one human, one chief-of-staff front door, specialists behind it, shared knowledge underneath, and routines driving the work instead of prompts.',
+            svg: `<svg viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect width="700" height="400" fill="#18181b" rx="8"/>
+  <rect x="290" y="20" width="120" height="42" fill="#27272a" stroke="#e4e4e7" stroke-width="2" rx="8"/>
+  <text x="350" y="38" fill="#e4e4e7" font-size="12" font-weight="bold" text-anchor="middle">YOU</text>
+  <text x="350" y="54" fill="#a1a1aa" font-size="10" text-anchor="middle">outcomes in, reports out</text>
+  <line x1="350" y1="62" x2="350" y2="86" stroke="#818cf8" stroke-width="2"/>
+  <polygon points="344,86 356,86 350,96" fill="#818cf8"/>
+  <rect x="250" y="96" width="200" height="48" fill="#27272a" stroke="#818cf8" stroke-width="2" rx="8"/>
+  <text x="350" y="116" fill="#818cf8" font-size="13" font-weight="bold" text-anchor="middle">ATLAS: chief of staff</text>
+  <text x="350" y="134" fill="#a1a1aa" font-size="10" text-anchor="middle">decomposes, delegates, reports daily</text>
+  <line x1="290" y1="144" x2="82" y2="186" stroke="#52525b" stroke-width="2"/>
+  <line x1="320" y1="144" x2="216" y2="186" stroke="#52525b" stroke-width="2"/>
+  <line x1="350" y1="144" x2="350" y2="186" stroke="#52525b" stroke-width="2"/>
+  <line x1="380" y1="144" x2="484" y2="186" stroke="#52525b" stroke-width="2"/>
+  <line x1="410" y1="144" x2="618" y2="186" stroke="#52525b" stroke-width="2"/>
+  <rect x="20" y="188" width="124" height="52" fill="#27272a" stroke="#34d399" rx="8"/>
+  <text x="82" y="209" fill="#34d399" font-size="12" font-weight="bold" text-anchor="middle">SCOUT</text>
+  <text x="82" y="227" fill="#a1a1aa" font-size="10" text-anchor="middle">prospect research</text>
+  <rect x="154" y="188" width="124" height="52" fill="#27272a" stroke="#fbbf24" rx="8"/>
+  <text x="216" y="209" fill="#fbbf24" font-size="12" font-weight="bold" text-anchor="middle">QUILL</text>
+  <text x="216" y="227" fill="#a1a1aa" font-size="10" text-anchor="middle">content, your voice</text>
+  <rect x="288" y="188" width="124" height="52" fill="#27272a" stroke="#f472b6" rx="8"/>
+  <text x="350" y="209" fill="#f472b6" font-size="12" font-weight="bold" text-anchor="middle">PITCH</text>
+  <text x="350" y="227" fill="#a1a1aa" font-size="10" text-anchor="middle">outreach, follow-ups</text>
+  <rect x="422" y="188" width="124" height="52" fill="#27272a" stroke="#38bdf8" rx="8"/>
+  <text x="484" y="209" fill="#38bdf8" font-size="12" font-weight="bold" text-anchor="middle">VAULT</text>
+  <text x="484" y="227" fill="#a1a1aa" font-size="10" text-anchor="middle">inbox triage</text>
+  <rect x="556" y="188" width="124" height="52" fill="#27272a" stroke="#a78bfa" rx="8"/>
+  <text x="618" y="209" fill="#a78bfa" font-size="12" font-weight="bold" text-anchor="middle">LEDGER</text>
+  <text x="618" y="227" fill="#a1a1aa" font-size="10" text-anchor="middle">nightly metrics</text>
+  <rect x="20" y="270" width="440" height="50" fill="#27272a" stroke="#34d399" stroke-width="1.5" rx="8"/>
+  <text x="240" y="291" fill="#34d399" font-size="12" font-weight="bold" text-anchor="middle">SHARED KNOWLEDGE BASE</text>
+  <text x="240" y="309" fill="#a1a1aa" font-size="10" text-anchor="middle">company facts, voice, customer profile, priorities: one copy, every agent reads it</text>
+  <rect x="480" y="270" width="200" height="50" fill="#27272a" stroke="#fbbf24" stroke-width="1.5" rx="8"/>
+  <text x="580" y="291" fill="#fbbf24" font-size="12" font-weight="bold" text-anchor="middle">ROUTINES</text>
+  <text x="580" y="309" fill="#a1a1aa" font-size="10" text-anchor="middle">schedules + event triggers</text>
+  <text x="350" y="352" fill="#e4e4e7" font-size="11" text-anchor="middle">Each specialist keeps its own private memory (task state, role learnings). Charters draw every box's edges.</text>
+  <text x="350" y="374" fill="#a1a1aa" font-size="10" text-anchor="middle">Same diamond logic as graph engineering: the chief of staff is the fan-out and the reduce.</text>
+</svg>`,
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'You already know this graph',
+            md: "Squint and the org chart is the diamond from [Agents, Harnesses & Loops · Graph Engineering](lesson:m2-l10): the chief of staff fans work out to specialists and reduces their outputs into one report. The difference is lifespan. A graph run finishes; a workforce runs indefinitely, which is why it needs the three things a one-shot diamond skips: charters, shared knowledge, and routines. Those three are the rest of this lesson.",
+          },
+        ],
+      },
+      {
+        heading: 'The charter: a job description with edges',
+        blocks: [
+          {
+            type: 'text',
+            md: "Weinstein specced a digital employee as brain plus skills plus tools. Operators add the missing document: the **charter**, the artifact that makes an agent manageable over months instead of impressive for a demo. A charter answers five questions, and the answers go in a file the agent reads at the start of every run.\n\n**Role**: the one job, in one sentence. **Scope**: what it owns, listed concretely (Scout owns prospect research for the consulting practice; Scout does not own outreach). **Boundaries**: what it never does, stated as hard rules (never contacts a prospect, never spends money, never deletes anything). **Escalation**: the situations where it stops and asks (a prospect replies angrily; a metric moves more than 20%; confidence is low). **Metric**: the number or check it is graded on (25 qualified prospects a day that pass the fit criteria).\n\nThe escalation section earns special attention because it encodes the supervision reality from [Token Economics & AI-Native SDLC · The AI-Native SDLC](lesson:m7-l2): even in mid-2026, humans fully delegate only a sliver of work. A good charter makes the supervision cheap by defining exactly which moments need it, rather than making you review everything or nothing.",
+          },
+          {
+            type: 'code',
+            lang: 'markdown',
+            code: `# CHARTER: Scout (prospect research)
+
+ROLE: Find and qualify prospects for the fractional-CTO practice.
+
+SCOPE (owns):
+- Daily research pass over target industries
+- Qualification against the fit criteria in /knowledge/icp.md
+- A morning list: name, company, why-now, fit score, source links
+
+BOUNDARIES (never):
+- Never contacts a prospect by any channel
+- Never uses data sources the client list forbids
+- Never edits /knowledge/; propose changes to Atlas instead
+
+ESCALATE TO HUMAN WHEN:
+- A prospect is a current or former client (check /knowledge/clients.md)
+- Fit criteria produce fewer than 5 qualified names for 3 days running
+
+METRIC: qualified prospects/day that survive human spot-check (target: 25,
+sampled weekly; three bad weeks triggers a charter review)`,
+            caption: 'A working charter: one page, readable by the agent on every run and by you when something goes wrong.',
+          },
+          {
+            type: 'text',
+            md: "Operators running bigger rosters add two refinements worth stealing on day one. The first splits the charter from the **daily message**. The charter holds the durable rules and gets left alone; each actual task assignment travels as a short message with five fields: the outcome wanted, the sources to use, the constraints, the deliverable format, and the review point. Mixing the two is how charters bloat into unreadable scrolls, the same disease the CLAUDE.md pruning discipline treats in [Claude Code Mastery · CLAUDE.md & the Memory System](lesson:m1-l2).\n\nThe second is a name for the most important line in the boundaries section: the **fence**, the point where work pauses for human approval. Operators draw it around **one-way actions**: sending, spending, publishing, deleting, agreeing to terms. Everything reversible runs free; everything irreversible queues at the fence. The reasoning is blunt and worth quoting: approval does not reverse work already completed. A fence placed after the send button is a receipt, and only a fence placed before it is a control.",
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'Charters are the twelve-box checklist, worn down to daily size',
+            md: "The production-node anatomy from [Agents, Harnesses & Loops · Graph Engineering](lesson:m2-l10) asked twelve spec questions per agent. The charter is the operator's compression of the five that change most often: role, scope, boundaries, escalation, metric. Keep charters in version control next to the shared knowledge base, and review the metric section on a schedule; the refinery-agent pattern from the previous lesson (score every run, review every 48 hours) is what charter review looks like at scale.",
+          },
+        ],
+      },
+      {
+        heading: 'Shared knowledge vs private memory',
+        blocks: [
+          {
+            type: 'text',
+            md: "The second convergent pattern, and the one most beginners get backwards: split what the agents know into two stores with different rules.\n\nThe **shared knowledge base** holds the facts every agent needs identically: what the company does and for whom, the ideal customer profile, the brand voice with examples, pricing, current quarter priorities, the client list. One copy, one owner (usually you, via the chief of staff), read by everyone at the start of every run. When your positioning changes, you edit one file and the entire workforce updates at once.\n\nEach agent's **private memory** holds its working state and role learnings: Scout's list of already-researched companies, Quill's notes on which hooks performed, Vault's sender-priority rankings. Nobody else needs this, and pushing it into the shared base buries every agent in every other agent's operational noise, which is the context-rot problem from the foundations module wearing an org chart.\n\nThe failure modes run both directions. Company facts duplicated into six private memories drift the moment one copy updates and five do not, and the agents start contradicting each other about what the business even sells. Task state crammed into the shared base makes every agent's context read like everyone's desk at once. The rule that keeps it straight: **shared truths in one place, working state local**. This is the files-as-substrate doctrine from [Agents, Harnesses & Loops · Agent Memory & State](lesson:m2-l7), promoted from one agent to an organization, and it is exactly how the memory and filesystem split works in the deep-agent anatomy too.",
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'Shared knowledge base (one copy)',
+              items: [
+                'What the company does, for whom, at what price',
+                'Ideal customer profile and fit criteria',
+                'Brand voice, with real writing samples',
+                'Current priorities and the do-not-touch list (clients, competitors)',
+              ],
+            },
+            right: {
+              title: 'Per-agent private memory',
+              items: [
+                'Task state: what this agent already processed',
+                'Role learnings: what worked, what flopped',
+                'Working files mid-pipeline',
+                'Anything no other agent would ever read',
+              ],
+            },
+          },
+        ],
+      },
+      {
+        heading: 'Routines: work that starts without you',
+        blocks: [
+          {
+            type: 'text',
+            md: "The third pattern separates a workforce from a very organized set of chatbots: **routines**, meaning work that starts from the calendar or from events instead of from you typing.\n\nTwo trigger types cover everything. **Scheduled** routines run on a clock: Ledger compiles the metrics report at 9pm, Scout's research pass starts at 6am so the list is waiting with coffee, Vault sweeps the inbox every two hours. **Event** routines fire on something happening: a new lead in the CRM kicks off qualification, a calendar invite triggers meeting prep, an angry-sentiment reply escalates to you immediately. String them together and the workforce runs a full daily cycle in which your role is reading outputs and making the judgment calls the charters escalated.\n\nOne more operator trick belongs here: **teach by demonstration**. For fiddly multi-step tasks inside web tools, several platforms let you screen-record yourself doing the task once while narrating, and the agent turns the recording into a repeatable procedure. It is skill authoring for people who would never write a skill file, and the output is the same thing: a stored procedure the agent replays. Treat the recording as a draft rather than a finished skill, though. Operators harden it until it states six things: when to use it, the required inputs and access, the exact sequence, how to validate the result, what to return, and what requires approval. That is the same discipline as [Claude Code Mastery · Skill Authoring Doctrine](lesson:m1-l4), and the approval line is what separates an employee from an incident. Pair it with saved authenticated browser sessions (the agent reuses a logged-in profile rather than asking you to reauthenticate hourly) and whole categories of web-app grunt work become routine-able. What that access model implies for safety gets a hard look next lesson.",
+          },
+          {
+            type: 'text',
+            md: "Three roster-hygiene rules round out the operating manual, each one earned by somebody's bloated setup.\n\n**The ownership test decides worker versus method.** Before creating a new agent, ask whether the job has recurring work, its own memory, its own task list, and regular handoffs with other agents. All four present: hire a worker. Anything less: save the procedure as a stored method (a skill, in your vocabulary) that an existing worker runs on demand. The failure this prevents is hiring 20 workers for 20 tasks, most of which recur twice a year; it is Weinstein's specialists argument with a floor under it, because a specialist still has to have a beat worth owning.\n\n**Routing rides on the descriptions.** Give every charter a scope written clearly enough that a coordinator can route by reading it, add one line ('anything outside my scope goes to whoever owns it'), and a goal stated to the group finds its owner without you forwarding anything. The description does the wiring, which is the same trigger-surface craft you practiced writing skill descriptions in [Claude Code Mastery · Skill Authoring Doctrine](lesson:m1-l4).\n\n**A weekly review, with a deletion quota.** Once a week, have each agent evaluate its own runs against its metric and propose one workflow improvement, and delete at least one routine nobody read the output of. Rosters accrete the way config does, and the pruning habit from your CLAUDE.md carries over unchanged.",
+          },
+          {
+            type: 'text',
+            md: "The operators running six or more agents add a final pattern set, and every line of it should ring a bell from the harness module, because it is that module's doctrine rediscovered under production pressure.\n\n**Producers never grade their own output.** The agent that found a signal is the worst possible judge of it, so a separate reviewer holds the confirmation rules and can kill the handoff; high-conviction output requires two agents agreeing independently. This is the adversarial-verification pattern from [Agents, Harnesses & Loops · Multi-Agent Patterns](lesson:m2-l5) promoted to an org rule.\n\n**A handoff carries five things**: the artifact, the evidence, the status, the blockers, and the next action. Anything less forces the receiving agent to reconstruct reality from chat history, and that reconstruction is where drift starts. One owner per stage; group channels only where the handoff itself needs witnesses.\n\n**Done must be checkable by something the agent cannot fake**: a file existing at a known path, a field crossing a threshold, a pull request opened. Never trust 'the bot says it ran'. You built this reflex in [Agents, Harnesses & Loops · Verification: the #1 Quality Lever](lesson:m2-l4); here it becomes the difference between a workforce and a fiction.\n\n**Route corrections back into the instructions.** When Scout flags 12 prospects and only 2 are real, say exactly that to Scout so its threshold tightens. Thirty corrections later the roster holds institutional knowledge no single prompt could, which is Medin's system-evolution outer loop wearing an org chart.",
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'The week-one numbers are marketing',
+            md: "Operator threads close with dashboards: 214 prospects, 89 outreaches, inbox zero, 11 content pieces in week one. Read those the way you read the graph-engineering bait quotes: the architecture is real, the arithmetic is unaudited. Volume without quality is the oldest trick in growth content; 89 personalized outreaches that read as templated spam damage a brand at scale, and nobody posts their reply rate. Your own workforce gets judged the way the previous lesson taught: a metric per agent, spot-checked by a human, reviewed on a schedule. Steal the org chart, keep your own scoreboard.",
+          },
+        ],
+      },
+    ],
+    lab: {
+      title: 'Charter your first workforce',
+      intro:
+        "Design the agent org for your own practice on paper, then make one piece of it real with tools you already have. The paper design is next lesson's shopping list; the real routine proves the pattern without waiting for any product.",
+      steps: [
+        'Take the five digital-employee job descriptions from the previous lesson\'s lab (or write them now): five specialists for your own practice, each with one narrow job.',
+        'Draw the org chart: you, a chief-of-staff agent, and the five specialists. Mark which arrows are daily reports and which are escalations.',
+        'Write one full charter (role, scope, boundaries, escalation, metric) for the specialist you would hire first. One page, concrete enough that a stranger could grade the agent with it.',
+        'Split the knowledge: create a knowledge/ folder with 3 shared files (what-we-do.md, icp.md or audience.md, voice.md with real writing samples). Note in each charter what stays in that agent\'s private memory instead.',
+        'Make one routine real with Claude: set up one scheduled task (a morning brief, a nightly log summary, a weekly review of some folder) that reads your knowledge files and produces its output on a schedule without you prompting it.',
+        'Run it for two days, then grade it against the charter metric you wrote. Amend the charter where reality disagreed with the paper.',
+      ],
+      checklist: [
+        'Org chart exists: one chief of staff, five specialists, report and escalation arrows marked',
+        'One complete charter written, with all five sections concrete',
+        'knowledge/ folder exists with three shared files, and the shared-vs-private split is noted per agent',
+        'One scheduled routine actually ran without being prompted, at least twice',
+        'The charter was amended at least once from observed behavior',
+      ],
+    },
+    checkQuiz: [
+      {
+        q: 'Your workforce\'s Quill agent starts contradicting Scout about which industries the company targets. The most likely cause?',
+        options: [
+          'The agents are running on different model versions',
+          'Target-industry facts were duplicated into private memories instead of living in one shared knowledge file, and the copies drifted when one got updated',
+          'Quill needs a larger context window',
+          'Agent workforces cannot share factual knowledge',
+        ],
+        answer: 1,
+        explain:
+          'Contradiction between agents about company-level facts is the signature symptom of the duplicated-knowledge failure. The fix is structural: move the fact to the shared knowledge base, delete the private copies, and make every charter point at the shared file. One copy, one owner, no drift.',
+      },
+      {
+        q: 'Which task should a charter route to ESCALATE rather than letting the agent handle it?',
+        options: [
+          'Formatting the nightly metrics report',
+          'A prospect on the research list turns out to be a former client with a complicated history',
+          'Deduplicating the morning prospect list',
+          'Retrying a web page that failed to load',
+        ],
+        answer: 1,
+        explain:
+          'The former-client case needs relationship context and judgment, which lands it in the no-go zones from the transformation playbook: relationships stay human. The other three are exactly the routine, low-judgment work the workforce exists to absorb. Charters exist to make this routing explicit instead of hoping the agent guesses right.',
+      },
+      {
+        q: 'Why does the chief-of-staff agent deliver ONE daily report instead of each specialist reporting to you directly?',
+        options: [
+          'Specialist agents produce reports in incompatible formats',
+          'Because reading six reports and reconciling them IS coordination work, and the workforce exists to take coordination off your plate; the chief of staff is the reduce step',
+          'Direct reports would exceed platform rate limits',
+          'It hides specialist mistakes from the human',
+        ],
+        answer: 1,
+        explain:
+          'Six direct reports quietly reinstall you as the project manager of your own workforce. The chief of staff consolidates, flags what needs judgment, and files the rest, which is the reduce stage of the diamond running as a daily rhythm. You read one artifact and spend attention only where the charters escalated.',
+      },
+      {
+        q: 'The teach-by-demonstration pattern is best understood as:',
+        options: [
+          'Fine-tuning the underlying model on your screen recordings',
+          'Skill authoring by showing instead of writing: one narrated walkthrough becomes a stored, repeatable procedure the agent replays, like a skill file for people who will never write markdown',
+          'A way to give agents permissions without credentials',
+          'A replacement for charters and metrics',
+        ],
+        answer: 1,
+        explain:
+          'The recording becomes a procedure, which is exactly what a skill file is: a stored playbook loaded when the task comes up. Nothing about the model changes. The pattern matters because it lets non-engineers (your clients, their staff) encode their own procedures, which is how workforce setups escape the demo phase inside real businesses.',
+      },
+    ],
+    resources: [
+      { label: 'An 8-agent workforce, documented by its operator', url: 'https://x.com/ridark_eth/status/2090138832511324179', kind: 'thread' },
+      { label: 'A week of agent-workforce lessons in 10 minutes (Nate Herk)', url: 'https://x.com/nateherk/status/2089917020087210160', kind: 'thread' },
+      { label: 'LangChain - Managed Deep Agents (charter-shaped anatomy, productized)', url: 'https://docs.langchain.com/langsmith/python/managed-deep-agents-overview', kind: 'docs' },
+      { label: 'Anthropic - Building Effective Agents (orchestrator-workers)', url: 'https://www.anthropic.com/engineering/building-effective-agents', kind: 'article' },
+    ],
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // m8-l2: Hands-On: Grok Bot
+  // ───────────────────────────────────────────────────────────────
+  {
+    id: 'm8-l2',
+    title: 'Hands-On: Grok Bot',
+    day: 22,
+    minutes: 45,
+    xp: 100,
+    objectives: [
+      'Describe what Grok Bot is, what it costs, and where it sits relative to Claude Code on the harness map',
+      'Walk the setup path: context interview, templates, charters, connections, and the first routine',
+      'Explain what "god mode" login access actually grants, and apply hard rules for what never gets it',
+      'Name the beta limitations and the risks (UI drift, prompt injection, spam-at-scale) an operator must design around',
+      'Decide, with reasons, whether the subscription earns its keep for a given practice or stays on the watchlist',
+    ],
+    skipQuiz: [
+      {
+        q: 'What is Grok Bot, in one accurate sentence?',
+        options: [
+          'A local model that runs on a Mac mini without internet',
+          'xAI\'s cloud agent-workforce product: persistent agents that run around the clock, sign into web apps with real credentials, and execute multi-tool workflows on schedules and triggers',
+          'A Claude Code plugin for social media posting',
+          'An open-source framework you self-host',
+        ],
+        answer: 1,
+        explain:
+          'Grok Bot is the productized version of everything the previous lesson designed on paper: hosted agents with charters, shared knowledge, routines, and (the controversial part) authenticated access to the same web apps you use. It runs in xAI\'s cloud, priced as a monthly subscription, and in mid-2026 it is explicitly a beta.',
+      },
+      {
+        q: 'What does the "god mode" framing in the hype threads actually refer to?',
+        options: [
+          'An unlocked model with no safety filters',
+          'Granting the agent real login access to your apps (email, CRM, calendar) so it executes full workflows end to end, instead of drafting things for you to send',
+          'Free unlimited usage during the beta',
+          'Admin rights over other users\' bots',
+        ],
+        answer: 1,
+        explain:
+          'The capability jump the threads celebrate is authenticated action: the bot signs in as you and completes the workflow (send the email, update the CRM, book the call) rather than handing you a draft. That capability is where the payoff lives, and precisely where the risk lives, which is why the boundaries section of this lesson exists.',
+      },
+      {
+        q: 'Grok Bot pricing in mid-2026 runs roughly:',
+        options: [
+          '$20/month flat, matching frontier chat plans',
+          'Free during beta',
+          '$120-300/month depending on tier, which is the number a value calculation has to beat',
+          '$0.10 per completed task',
+        ],
+        answer: 2,
+        explain:
+          'The tiers span roughly $120 to $300 a month, several times a chat subscription. The comparison that makes it look cheap is a part-time human assistant; the comparison that makes it look expensive is your existing Claude setup plus scheduled tasks. The honest evaluation prices YOUR delegable hours, which is what the lab does.',
+      },
+      {
+        q: 'Which beta limitation do operators report most consistently?',
+        options: [
+          'The bots cannot read email at all',
+          'Workflows that drive web apps break when the app\'s interface changes, and sensitive task categories are blocked or gated, so flows need monitoring rather than fire-and-forget trust',
+          'Only one bot can run at a time',
+          'It only works in the US',
+        ],
+        answer: 1,
+        explain:
+          'A bot that operates a web app the way a human does inherits the fragility of that approach: a redesigned button breaks the routine. Add the platform\'s own gates around sensitive actions and the practical posture becomes: automate, then monitor, and expect maintenance. Beta means the failure modes are still being discovered, some by you.',
+      },
+      {
+        q: 'The correct FIRST question before adopting Grok Bot (or any agent-workforce product) for your practice:',
+        options: [
+          'Which of the six templates looks coolest?',
+          'Do I have documented, high-volume back-stage work with clear success criteria that I could hand a competent assistant next week? Because without that, the product has nothing to run',
+          'How fast can I connect every account I own?',
+          'What are competitors paying for it?',
+        ],
+        answer: 1,
+        explain:
+          'The onion rule from the transformation playbook applies to your own practice: autonomy sits on documented process and clean foundations. A subscription cannot delegate work you have never defined. The workforce design from the previous lesson (charters, knowledge base, one metric per agent) is the prerequisite; the product is just where it runs.',
+      },
+    ],
+    sections: [
+      {
+        heading: 'What it is, and where it sits',
+        blocks: [
+          {
+            type: 'text',
+            md: "Four of the loudest threads of August 2026 are about one product, so let's look at it squarely. **Grok Bot** is [xAI](https://x.ai)'s agent-workforce offering: persistent agents that live in xAI's cloud, run around the clock, connect to your actual tools, and execute multi-step workflows without you in the loop. Pricing runs roughly **$120 to $300 a month** by tier, and the whole thing carries a **beta** label that should stay in the front of your mind for everything that follows.\n\nPlace it on the harness map you have been building all course. Claude Code is an interactive harness: you drive, it works, sessions end. A Grok Bot agent is closer to the managed deep agent anatomy from [Agents, Harnesses & Loops · Graph Engineering](lesson:m2-l10): instructions, skills, tools, memory, schedules, and channels, hosted and always on. Nothing conceptually new is inside the box. What the product adds is packaging (templates, a consumer-grade setup flow) and one genuinely spicy capability we'll treat separately: authenticated access to your web apps.\n\nA disclosure before the tour: this lesson is pinned to August 2026 reporting from operators, because the product is moving fast and beta products change under you. Treat every specific below the way the half-life discipline taught you to treat model rankings: verify against the vendor's current docs before acting, and expect this page of the course to age faster than any other.",
+          },
+          {
+            type: 'table',
+            headers: ['', 'Claude Code (your daily harness)', 'Grok Bot (agent workforce)'],
+            rows: [
+              ['Interaction', 'You drive sessions interactively', 'Agents run standing routines; you read reports'],
+              ['Lifespan', 'A session, plus scheduled tasks', 'Always on, around the clock'],
+              ['Strength', 'Deep work with you in the loop: code, analysis, writing', 'Volume ops without you: triage, research, outreach, logging'],
+              ['Access model', 'Your filesystem + MCP tools you configure', 'Signs into web apps with real credentials; saved browser profiles'],
+              ['Trust posture', 'You watch it work', 'You audit its outputs; monitoring is the job'],
+              ['Cost', 'Plan you already pay for', '$120-300/month on top'],
+            ],
+          },
+        ],
+      },
+      {
+        heading: 'The setup path, in order',
+        blocks: [
+          {
+            type: 'text',
+            md: "Operators converge on a setup sequence, and its logic will feel familiar because you have met every step wearing different clothes.\n\n**First, the context interview.** Before configuring anything, run a structured interview where the agent grills YOU: what the business does, for whom, what good output looks like, what is off limits. One operator packaged this as a 'Grill Me' skill, and it is the interview pattern from [Mental Models · Prompting That Actually Works](lesson:m0-l3) pointed at your business instead of a feature. The transcript becomes the seed of the shared knowledge base, which the platform then maintains.\n\n**Second, templates, then charters, one hire at a time.** The product ships six starter roles: a Chief of Staff, Scout (research), Quill (writing), Forge (building and automation), Guide (support and answers), and Ledger (numbers). The field-tested sequencing rule: create ONE agent first, the chief of staff, and reverse-prompt the rest of the team into existence. Brain-dump your work into it (projects, tools, recurring chores, deadlines), then ask it to review your connections and propose the three most useful specialists and automations. Approve from its proposals rather than inventing a roster cold. Templates get you moving in an afternoon; they are also generic by definition, the same trap as generic subagent files in the prompt-to-PR pipeline. The fix is the charter discipline from the previous lesson: rewrite each template's role, scope, boundaries, escalation, and metric around your practice before trusting it with anything.\n\n**Third, connections, narrowest first.** Wire the chief of staff to one channel you actually read. Connect tools role by role, granting each agent only what its charter's scope needs. Connector hubs like [Composio](https://composio.dev) extend the reachable app list through APIs rather than screen-driving, which is worth preferring whenever both paths exist: API calls survive redesigns that break clicked-through workflows. Several operators also log every completed agent task into a project tracker like [ClickUp](https://clickup.com), which sounds bureaucratic until the first time you need to audit what your workforce actually did last Tuesday.\n\n**Fourth, climb the ladder, and never skip a rung.** The field manual's core operating rule gives the adoption curve a fixed shape: one-time task, then corrected task, then saved skill, then tested routine, then team. Run the job manually first and fix what it misses; only a method that survived contact gets frozen into a skill and put on a schedule. Every horror story you have read started with someone scheduling attempt number one. Two warnings attach. A test run performs REAL work (it clicks real buttons, changes real files, and spends real quota; 'test' is not a sandbox), so test with safe inputs and keep write actions behind the fence (the approval point from the previous lesson's charters). And when a routine does earn its schedule, write the boring policies into it up front: owner, schedule, timezone, input source, output destination, the approval boundary, what happens on missing data (report the failure rather than quietly reusing stale data), and retries that cannot double-send.\n\n**Fifth, and optionally: swap the engine.** The deepest cut in the operator guides proves a course through-line in a consumer product: the roster's model is swappable. The app hides its model picker behind an experiment flag (with dozens of engines wired up internally, and vendor docs that contradict themselves about it, which is beta in one sentence), but a few configuration lines on the roster's shared computer put a different model behind every worker. The fashionable choice in August 2026 is [Kimi K3](https://www.moonshot.ai), Moonshot AI's frontier-adjacent model, at roughly $3 per million input tokens ($0.30 cached) and $15 per million out, with a claimed context window around a million tokens; a status command confirms which engine is live. Whether that particular swap suits you matters less than what it demonstrates: the workforce is a harness, the intelligence under it is a config line, and every worker you hire afterward runs on whatever you put there. The harness-beats-model argument from [Agents, Harnesses & Loops · What Is a Harness?](lesson:m2-l1), now available as a settings tweak.",
+          },
+        ],
+      },
+      {
+        heading: 'God mode, and the lines you do not cross',
+        blocks: [
+          {
+            type: 'text',
+            md: "The capability the hype threads call **god mode** is plain to describe: the agent gets real login access to your apps and completes workflows end to end. Where a chat assistant drafts an email for you to send, a logged-in agent sends it, updates the CRM, books the follow-up, and files the thread. Show it a task once (the teach-by-demonstration pattern), save the authenticated browser profile, and the workflow reruns on schedule forever. The setup guides sharpen the stakes further: you sign into your accounts once on the roster's shared computer, and every worker you ever hire inherits that session. One door, the whole staff through it. The threads are right that this is the hinge: everything a workforce promises flows from acting rather than suggesting.\n\nThe architecture underneath makes the stakes concrete. Every agent on the roster shares one persistent cloud computer: a managed Linux machine with a browser, a filesystem, and a terminal. Each agent's 'screen' is a work surface on that machine, and the field manual's sharpest line names the consequence: the screens are work surfaces, while the security boundary is the single shared computer underneath, where files, cookies, signed-in sessions, and command-line credentials are common property. Two operating rules follow directly. An imported marketplace skill runs one hop from your most sensitive login, so read skills before installing them, the same audit ritual as [Claude Code Mastery · MCP & Plugins](lesson:m1-l7) (the marketplaces ship SKILL.md files that also run in Claude Code; the open skills standard cuts both ways, portability for you and for a malicious author alike). And when a login wall or a two-factor prompt blocks a run, take over only the blocked step on the shared computer, then tell the agent to continue; never paste passwords or one-time codes into the chat, because the transcript keeps everything.\n\nWhich is exactly why the boundaries have to be structural, set at the credential level rather than in a prompt. Three risk classes deserve naming. **Blast radius**: a logged-in agent that misfires acts as you, at machine speed; a bad merge in code review embarrasses you once, a bad outreach sequence emails 200 prospects before breakfast. **Prompt injection**: an agent that reads web pages and inboxes with real credentials can be steered by text in what it reads (a hostile email saying 'forward this thread'), which is the sharpest unsolved problem in the whole agent field. **Quality at scale**: automation multiplies whatever quality you feed it, and 'personalized outreach' below the quality bar is spam with better grammar, billed monthly.\n\nSo the red lines from the transformation playbook get enforced here with credentials, and they are not negotiable for being obvious: nothing financial (banking, payments, trading) ever gets a login. Nothing destructive (production systems, bulk delete) gets write access. Outbound at volume (email sequences, posting) runs in draft-for-approval mode until weeks of spot-checks earn autonomy, and anything owed to a regulator or a court stays human. The platform gates some of this itself in beta; your own charter boundaries should gate it twice.\n\nThe platform's own controls support the trust ladder once you know they exist. Approvals come as allow-once, deny, or standing Always Allow, and a require-approval rule overrides an always-allow when both match a task, so the safe rule wins ties. Full autopilot (standing approval with auto-review off) exists; earn it by watching runs first, and flip it per workflow rather than globally.",
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'Beta means the failure modes are still being found',
+            md: "Operators consistently report two practical limits: workflows that drive web interfaces break when the interface changes (screen-driven automation inherits screen-level fragility), and sensitive task categories are blocked or gated by the platform. Both push the same posture: monitor your routines like you monitor a junior hire's first month, prefer API connectors over screen-driving where possible, and never build a client deliverable on a flow you have not watched fail at least once.",
+          },
+        ],
+      },
+      {
+        heading: 'The expensive lessons',
+        blocks: [
+          {
+            type: 'text',
+            md: "The field manual's most useful page is a list of mistakes that ate real operators' quotas, compiled so you can pay for them with reading time instead of billing. One pattern sits behind most of the list: the product bills like an API while feeling like a chat, so chat habits (checking constantly, re-firing anything slow) convert straight into spend.",
+          },
+          {
+            type: 'table',
+            headers: ['The mistake', 'What it costs', 'The fix'],
+            rows: [
+              ['Re-checking a connected service all day', 'The same weekly report at 12x the quota: about 61 syncs where 5 would do', 'Batch connector syncs at session end; save-and-report once'],
+              ['Re-firing a slow publish command', 'Publishing latency reads as a stall, and the retry double-posts', 'Wait, then verify the post exists before any retry'],
+              ['Leaving results in temp locations', 'The shared computer rebuilds on updates; only /workspace files, browser state, and sign-ins survive', 'Durable results go to /workspace or into the conversation'],
+              ['Pointing agents at localhost', 'The cloud machine cannot see your laptop, so local MCP servers are unreachable', 'Host custom connectors as HTTP endpoints; connect machines deliberately'],
+              ['Ignoring the platform limits', '50 agents per account, 50 routines each, only the last 20 runs kept, and routine deletion has no undo', 'Log runs externally (the project-tracker habit) and prune on purpose'],
+              ['Burning the trial like a demo', 'Honest multi-agent testing consumed a 7-day trial in about 2 days', 'Plan the first session like it costs money, because it does'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'The whole adoption curve, in one evening',
+            md: "The manual's closing advice compresses everything this lesson and the last one taught: give one agent one boring job tonight. Run it three times, fix what it misses, freeze it into a skill, schedule it. If you still open its report in a week, keep it and add the next job. That is the ladder, the charter, and the verdict math in a single habit.",
+          },
+        ],
+      },
+      {
+        heading: 'The verdict math',
+        blocks: [
+          {
+            type: 'text',
+            md: "Does the subscription earn its keep? Run the same honest arithmetic you ran on the Mac-mini pitch in [Local Models · The Hardware Ladder & the Install Business](lesson:m4-l4), because the shape of the decision is identical: a seductive monthly number versus your actual workload.\n\nPrice your delegable hours first. List the back-stage work you would hand a competent part-time assistant, estimate the weekly hours, multiply by what your time bills at. A fractional CTO with six genuinely delegable hours a week clears the $300 tier several times over, IF the workforce actually absorbs those hours at acceptable quality, which is what the first month has to prove with the ClickUp log and the charter metrics rather than with vibes. Someone whose back-stage runs two hours a week of miscellaneous odds and ends will lose money on any tier and should stay with scheduled Claude tasks, which already cover the morning-brief class of routine for a plan they pay for anyway.\n\nAnd keep the through-line straight, because it outlives this product: the patterns are the durable asset, the vendor is an implementation detail. Charters, shared knowledge, routines, escalation rules, one metric per agent: those transfer to whatever platform wins, including one assembled from Claude Code parts. The feature-validation heuristic from the next lesson applies to the whole category: when multiple major labs ship native agent-workforce products, the primitive is durable even if any single product is not. You are learning the org design either way; the subscription is just one place to run it.",
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'Subscribe (or trial seriously) when',
+              items: [
+                'You have 5+ documented, delegable back-stage hours a week with clear success criteria',
+                'The work is volume ops: triage, research, outreach prep, logging',
+                'You will actually monitor outputs weekly against charter metrics',
+                'You accept beta breakage as part of the deal',
+              ],
+            },
+            right: {
+              title: 'Hold off when',
+              items: [
+                'Your back-stage work is undocumented (fix that first; nothing to run)',
+                'Your bottleneck is deep reasoning or hands-on building, which stays in Claude Code',
+                'Scheduled Claude tasks already cover your routine layer for $0 extra',
+                'You would be granting logins you cannot afford to have misused',
+              ],
+            },
+          },
+        ],
+      },
+    ],
+    lab: {
+      title: 'Trial it, or shadow it',
+      intro:
+        "Two paths, same deliverable: a verdict with numbers. Path A trials the real product. Path B (no purchase) shadows it: run the same evaluation using your workforce design and Claude, and price what the subscription would have to beat.",
+      steps: [
+        'Both paths: list your delegable back-stage hours. Five tasks, hours per week each, your billable rate. Compute the monthly value of full delegation. This number is the bar.',
+        'Both paths: pick the ONE agent from your workforce design (previous lab) with the cleanest math, and finalize its charter.',
+        'Path A (trial): set it up. Run the context interview, customize the template with your charter, connect the minimum tools, start ONE scheduled routine in draft-for-approval mode. Log every run and its quality for a week.',
+        'Path B (shadow): implement the same routine with what you have: a scheduled Claude task reading your knowledge/ folder, producing the same deliverable on the same schedule. Log every run and its quality for a week.',
+        'Both paths: grade the week against the charter metric. Count: runs completed, outputs you actually used, outputs you had to fix, and minutes of monitoring spent.',
+        'Write the verdict: does the $120-300/month tier beat your bar, beat the shadow version, and survive the boundary rules? Subscribe, keep shadowing, or shelve with a re-check date. One paragraph, with the numbers in it.',
+      ],
+      checklist: [
+        'Delegable-hours math exists: tasks, hours, rate, monthly value',
+        'One charter finalized for the first-hire agent',
+        'One routine ran on a schedule for a week (product or shadow), in draft/approval mode where outbound',
+        'Run log exists: completed, used, fixed, minutes monitored',
+        'Written verdict with numbers, a decision, and a re-check date',
+      ],
+    },
+    checkQuiz: [
+      {
+        q: 'Why should outbound routines (email sequences, posting) start in draft-for-approval mode even when the platform allows full autonomy?',
+        options: [
+          'Draft mode is cheaper per token',
+          'Because outbound at machine speed multiplies quality AND mistakes: below-bar personalization is spam with your name on it, so autonomy gets earned through weeks of approved drafts, the same trust ladder you would run with a new hire',
+          'Approval mode trains the underlying model faster',
+          'Platforms legally require it',
+        ],
+        answer: 1,
+        explain:
+          'The blast-radius rule: an agent acting as you, at volume, puts your reputation on every send. The trust ladder mirrors onboarding a human assistant: drafts reviewed, then spot-checked, then autonomous within charter boundaries. Skipping the ladder because the demo looked clean is how 200 bad emails go out before breakfast.',
+      },
+      {
+        q: 'Why does prompt injection matter MORE for a logged-in workforce agent than for your Claude Code sessions?',
+        options: [
+          'It does not; the risk is identical everywhere',
+          'A workforce agent reads untrusted text (inboxes, web pages) unsupervised, while holding credentials that let it act as you; hostile instructions in what it reads can steer real actions with nobody watching',
+          'xAI models are uniquely vulnerable to injection',
+          'Claude Code is immune to prompt injection',
+        ],
+        answer: 1,
+        explain:
+          'The dangerous combination is untrusted input, real credentials, and no human in the loop, all at once. Your interactive sessions have you watching; the workforce by design does not. Which is why boundaries live at the credential level (what it CAN touch) rather than only in instructions (what it is ASKED to touch): instructions are exactly what injection overwrites.',
+      },
+      {
+        q: 'When both exist, why prefer an API connector (via a hub like Composio) over teaching the agent to drive the web interface?',
+        options: [
+          'APIs are always free while interfaces cost tokens',
+          'API integrations survive interface redesigns and fail loudly with error codes, while screen-driven flows break silently the day a button moves, which is the top reported beta failure',
+          'Screen-driving is banned by most terms of service',
+          'APIs let the agent skip authentication',
+        ],
+        answer: 1,
+        explain:
+          'Screen-driving inherits the fragility of screens: the workflow encodes where things WERE. An API contract is versioned and errors are explicit, so failures surface in logs instead of as quietly wrong output. Teach-by-demonstration stays valuable for the long tail of tools without connectors; use it as the fallback, never the default.',
+      },
+      {
+        q: 'A colleague asks whether to spend $300/month on this. Per the lesson, your first question back is:',
+        options: [
+          '"Which model does it run under the hood?"',
+          '"What are your documented, delegable back-stage hours worth per month, and would this beat a scheduled-Claude shadow version of the same routines?"',
+          '"Have you seen the week-one numbers people are posting?"',
+          '"Do you already pay for a frontier chat plan?"',
+        ],
+        answer: 1,
+        explain:
+          'The evaluation is a bar to clear, and the bar is personal: the priced value of hours they can genuinely hand off, compared against both the subscription and the near-free shadow alternative they can run today. The posted week-one dashboards belong in the marketing pile; their own run log from a one-agent trial is the only number that decides anything.',
+      },
+    ],
+    resources: [
+      { label: 'xAI: current product state (verify before acting; beta moves fast)', url: 'https://x.ai', kind: 'docs' },
+      { label: 'How to build a one-person company on an agent workforce (Rahul)', url: 'https://x.com/sairahul1/status/2089995692874068433', kind: 'thread' },
+      { label: 'The god-mode setup guide (read with this lesson\'s boundary rules)', url: 'https://x.com/0xmiraqle/status/2087674398304059722', kind: 'thread' },
+      { label: 'Composio: API connectors instead of screen-driving', url: 'https://composio.dev', kind: 'docs' },
+      { label: 'A week of operator lessons (Nate Herk)', url: 'https://x.com/nateherk/status/2089917020087210160', kind: 'thread' },
+      { label: 'The A-Z roster setup guide, incl. the Kimi K3 engine swap (Argona)', url: 'https://x.com/Argona0x/status/2091898304900571501', kind: 'thread' },
+      { label: 'The Grok Bot Field Manual (3 pages: setup order, swarm patterns, quota lessons)', url: 'https://x.com/Argona0x/status/2092273165053395346', kind: 'thread' },
+      { label: 'Official Grok Bot docs (the skills, routines, and approvals pages)', url: 'https://docs.x.ai/grok-bot', kind: 'docs' },
+    ],
+  },
+
+  // ───────────────────────────────────────────────────────────────
   // m7-l3: Capstone Launch
   // ───────────────────────────────────────────────────────────────
   {
@@ -394,7 +971,7 @@ export const lessons: Lesson[] = [
           {
             type: 'diagram',
             caption: 'The course in one picture: five through-lines as the stack every module was secretly teaching.',
-            svg: `<svg viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif"><rect width="700" height="400" fill="#18181b" rx="8"/><text x="290" y="32" fill="#e4e4e7" font-size="15" font-weight="bold" text-anchor="middle">THE STACK YOU BUILT</text><rect x="60" y="320" width="460" height="44" fill="#27272a" stroke="#52525b" rx="8"/><text x="290" y="341" fill="#e4e4e7" font-size="14" text-anchor="middle">MODEL: raw capability</text><text x="290" y="357" fill="#a1a1aa" font-size="11" text-anchor="middle">m0-m1 foundations - m5 local models and fine-tuning</text><rect x="60" y="252" width="460" height="56" fill="#27272a" stroke="#38bdf8" rx="8"/><text x="290" y="275" fill="#38bdf8" font-size="14" text-anchor="middle" font-weight="bold">1. HARNESS &gt; MODEL</text><text x="290" y="295" fill="#a1a1aa" font-size="11" text-anchor="middle">m2-m3 Claude Code mastery - tools, memory, skills, hooks, subagents</text><rect x="60" y="184" width="460" height="56" fill="#27272a" stroke="#a78bfa" rx="8"/><text x="290" y="207" fill="#a78bfa" font-size="14" text-anchor="middle" font-weight="bold">2. LOOPS &gt; PROMPTS</text><text x="290" y="227" fill="#a1a1aa" font-size="11" text-anchor="middle">m4 loop engineering - plan, act, check, re-prompt, stop conditions</text><rect x="60" y="116" width="460" height="56" fill="#27272a" stroke="#34d399" rx="8"/><text x="290" y="139" fill="#34d399" font-size="14" text-anchor="middle" font-weight="bold">3. VERIFICATION = QUALITY LEVER</text><text x="290" y="159" fill="#a1a1aa" font-size="11" text-anchor="middle">tests, builds, screenshots, stop hooks - binary pass/fail gates</text><rect x="60" y="52" width="460" height="52" fill="#27272a" stroke="#fbbf24" rx="8"/><text x="290" y="74" fill="#fbbf24" font-size="14" text-anchor="middle" font-weight="bold">SHIPPED WORK</text><text x="290" y="93" fill="#a1a1aa" font-size="11" text-anchor="middle">m6 design + RAG in the loop - m7 costs, SDLC, capstone</text><line x1="290" y1="320" x2="290" y2="308" stroke="#52525b" stroke-width="2"/><line x1="290" y1="252" x2="290" y2="240" stroke="#52525b" stroke-width="2"/><line x1="290" y1="184" x2="290" y2="172" stroke="#52525b" stroke-width="2"/><line x1="290" y1="116" x2="290" y2="104" stroke="#52525b" stroke-width="2"/><rect x="544" y="52" width="126" height="150" fill="#27272a" stroke="#f472b6" rx="8"/><text x="607" y="76" fill="#f472b6" font-size="13" text-anchor="middle" font-weight="bold">4. FILES</text><text x="607" y="96" fill="#a1a1aa" font-size="10" text-anchor="middle">CLAUDE.md</text><text x="607" y="112" fill="#a1a1aa" font-size="10" text-anchor="middle">SKILL.md - spec.md</text><text x="607" y="128" fill="#a1a1aa" font-size="10" text-anchor="middle">memory.md</text><text x="607" y="144" fill="#a1a1aa" font-size="10" text-anchor="middle">DESIGN.md</text><text x="607" y="168" fill="#a1a1aa" font-size="10" text-anchor="middle">state the loop</text><text x="607" y="182" fill="#a1a1aa" font-size="10" text-anchor="middle">can read and edit</text><rect x="544" y="214" width="126" height="150" fill="#27272a" stroke="#e4e4e7" rx="8"/><text x="607" y="238" fill="#e4e4e7" font-size="12" text-anchor="middle" font-weight="bold">5. CONTEXT</text><text x="607" y="254" fill="#e4e4e7" font-size="12" text-anchor="middle" font-weight="bold">ENGINEERING</text><text x="607" y="278" fill="#a1a1aa" font-size="10" text-anchor="middle">attention budget</text><text x="607" y="294" fill="#a1a1aa" font-size="10" text-anchor="middle">JIT retrieval</text><text x="607" y="310" fill="#a1a1aa" font-size="10" text-anchor="middle">compaction - notes</text><text x="607" y="326" fill="#a1a1aa" font-size="10" text-anchor="middle">subagent isolation</text><text x="607" y="350" fill="#a1a1aa" font-size="10" text-anchor="middle">spans every layer</text></svg>`,
+            svg: `<svg viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif"><rect width="700" height="400" fill="#18181b" rx="8"/><text x="290" y="32" fill="#e4e4e7" font-size="15" font-weight="bold" text-anchor="middle">THE STACK YOU BUILT</text><rect x="60" y="320" width="460" height="44" fill="#27272a" stroke="#52525b" rx="8"/><text x="290" y="341" fill="#e4e4e7" font-size="14" text-anchor="middle">MODEL: raw capability</text><text x="290" y="357" fill="#a1a1aa" font-size="11" text-anchor="middle">Mental Models foundations - Local Models - Fine-Tuning</text><rect x="60" y="252" width="460" height="56" fill="#27272a" stroke="#38bdf8" rx="8"/><text x="290" y="275" fill="#38bdf8" font-size="14" text-anchor="middle" font-weight="bold">1. HARNESS &gt; MODEL</text><text x="290" y="295" fill="#a1a1aa" font-size="11" text-anchor="middle">Claude Code Mastery - tools, memory, skills, hooks, subagents</text><rect x="60" y="184" width="460" height="56" fill="#27272a" stroke="#a78bfa" rx="8"/><text x="290" y="207" fill="#a78bfa" font-size="14" text-anchor="middle" font-weight="bold">2. LOOPS &gt; PROMPTS</text><text x="290" y="227" fill="#a1a1aa" font-size="11" text-anchor="middle">Agents, Harnesses &amp; Loops - plan, act, check, re-prompt, stop conditions</text><rect x="60" y="116" width="460" height="56" fill="#27272a" stroke="#34d399" rx="8"/><text x="290" y="139" fill="#34d399" font-size="14" text-anchor="middle" font-weight="bold">3. VERIFICATION = QUALITY LEVER</text><text x="290" y="159" fill="#a1a1aa" font-size="11" text-anchor="middle">tests, builds, screenshots, stop hooks - binary pass/fail gates</text><rect x="60" y="52" width="460" height="52" fill="#27272a" stroke="#fbbf24" rx="8"/><text x="290" y="74" fill="#fbbf24" font-size="14" text-anchor="middle" font-weight="bold">SHIPPED WORK</text><text x="290" y="93" fill="#a1a1aa" font-size="11" text-anchor="middle">AI-Assisted Design + RAG - Token Economics, SDLC, capstone</text><line x1="290" y1="320" x2="290" y2="308" stroke="#52525b" stroke-width="2"/><line x1="290" y1="252" x2="290" y2="240" stroke="#52525b" stroke-width="2"/><line x1="290" y1="184" x2="290" y2="172" stroke="#52525b" stroke-width="2"/><line x1="290" y1="116" x2="290" y2="104" stroke="#52525b" stroke-width="2"/><rect x="544" y="52" width="126" height="150" fill="#27272a" stroke="#f472b6" rx="8"/><text x="607" y="76" fill="#f472b6" font-size="13" text-anchor="middle" font-weight="bold">4. FILES</text><text x="607" y="96" fill="#a1a1aa" font-size="10" text-anchor="middle">CLAUDE.md</text><text x="607" y="112" fill="#a1a1aa" font-size="10" text-anchor="middle">SKILL.md - spec.md</text><text x="607" y="128" fill="#a1a1aa" font-size="10" text-anchor="middle">memory.md</text><text x="607" y="144" fill="#a1a1aa" font-size="10" text-anchor="middle">DESIGN.md</text><text x="607" y="168" fill="#a1a1aa" font-size="10" text-anchor="middle">state the loop</text><text x="607" y="182" fill="#a1a1aa" font-size="10" text-anchor="middle">can read and edit</text><rect x="544" y="214" width="126" height="150" fill="#27272a" stroke="#e4e4e7" rx="8"/><text x="607" y="238" fill="#e4e4e7" font-size="12" text-anchor="middle" font-weight="bold">5. CONTEXT</text><text x="607" y="254" fill="#e4e4e7" font-size="12" text-anchor="middle" font-weight="bold">ENGINEERING</text><text x="607" y="278" fill="#a1a1aa" font-size="10" text-anchor="middle">attention budget</text><text x="607" y="294" fill="#a1a1aa" font-size="10" text-anchor="middle">JIT retrieval</text><text x="607" y="310" fill="#a1a1aa" font-size="10" text-anchor="middle">compaction - notes</text><text x="607" y="326" fill="#a1a1aa" font-size="10" text-anchor="middle">subagent isolation</text><text x="607" y="350" fill="#a1a1aa" font-size="10" text-anchor="middle">spans every layer</text></svg>`,
           },
           {
             type: 'table',
@@ -403,17 +980,17 @@ export const lessons: Lesson[] = [
               [
                 'Harness beats model',
                 'The scaffolding around a model moves results more than swapping the model',
-                'Modules 2-3: Claude Code tools, memory, skills, hooks, subagents',
+                'Claude Code Mastery (tools, memory, skills, hooks, subagents), formalized in Agents, Harnesses & Loops',
               ],
               [
                 'Loops beat prompts',
                 'Prompt, act, check, re-prompt wins over one perfect prompt',
-                'Module 4: loop engineering and stop conditions',
+                'Agents, Harnesses & Loops: loop engineering and stop conditions',
               ],
               [
                 'Verification is the lever',
                 'A binary pass/fail signal inside the loop is worth 2-3x on quality',
-                'Module 4 stop hooks, Module 6 evals, every lab checklist in the course',
+                'Stop hooks in Agents, Harnesses & Loops, eval sets in Fine-Tuning, every lab checklist in the course',
               ],
               [
                 'Files are the substrate',
@@ -423,7 +1000,7 @@ export const lessons: Lesson[] = [
               [
                 'Context engineering',
                 'The smallest set of high-signal tokens in front of the model, always',
-                'Named in Module 3, then practiced in everything that followed',
+                'Named in Mental Models, then practiced in everything that followed',
               ],
             ],
           },

@@ -124,7 +124,7 @@ export const lessons: Lesson[] = [
           },
           {
             type: 'text',
-            md: 'The last line deserves a permanent spot in your toolkit. A quick vocabulary note first: **slash commands** are instructions you type inside a running Claude Code session, and they always start with a forward slash, like `/init` or `/doctor`. So `/doctor` inside a session and `claude doctor` from your shell run the same health check.\n\nWhat does it check? Your install, every settings file, your hooks, and whether your MCP servers respond. (MCP is the [Model Context Protocol](https://modelcontextprotocol.io), a standard way to plug external tools like databases or Jira into Claude; module 2 covers it properly.) When Claude Code starts acting strange, run `/doctor` before anything else. A vague feeling of "something is off" turns into a named, fixable problem.',
+            md: 'The last line deserves a permanent spot in your toolkit. A quick vocabulary note first: **slash commands** are instructions you type inside a running Claude Code session, and they always start with a forward slash, like `/init` or `/doctor`. So `/doctor` inside a session and `claude doctor` from your shell run the same health check.\n\nWhat does it check? Your install, every settings file, your hooks, and whether your MCP servers respond. (MCP is the [Model Context Protocol](https://modelcontextprotocol.io), a standard way to plug external tools like databases or Jira into Claude; [Claude Code Mastery · MCP & Plugins](lesson:m1-l7) covers it properly.) When Claude Code starts acting strange, run `/doctor` before anything else. A vague feeling of "something is off" turns into a named, fixable problem.',
           },
         ],
       },
@@ -204,7 +204,7 @@ export const lessons: Lesson[] = [
           },
           {
             type: 'text',
-            md: 'A quick tour of the six entries, top to bottom. `CLAUDE.md` holds the project memory that loads every session. `skills/` holds packaged expertise, one folder per skill (covered in [Claude Code Mastery · Agent Skills Deep Dive](lesson:m1-l3)). `agents/` holds definitions for subagents, helper agents you can spin up for specific jobs (module 2). `rules/` holds instructions that only load when certain files are involved (next lesson). `settings.json` holds shared configuration like permissions and hooks, while `settings.local.json` and `CLAUDE.local.md` are your personal, git-ignored versions of the settings and the memory file.',
+            md: 'A quick tour of the six entries, top to bottom. `CLAUDE.md` holds the project memory that loads every session. `skills/` holds packaged expertise, one folder per skill (covered in [Claude Code Mastery · Agent Skills Deep Dive](lesson:m1-l3)). `agents/` holds definitions for subagents, helper agents you can spin up for specific jobs (covered in [Claude Code Mastery · Subagents & Context Isolation](lesson:m1-l6)). `rules/` holds instructions that only load when certain files are involved (next lesson). `settings.json` holds shared configuration like permissions and hooks, while `settings.local.json` and `CLAUDE.local.md` are your personal, git-ignored versions of the settings and the memory file.',
           },
           {
             type: 'callout',
@@ -422,7 +422,7 @@ export const lessons: Lesson[] = [
             type: 'callout',
             variant: 'insight',
             title: 'The hesamation teardown: why RAG still exists',
-            md: 'A widely shared teardown of this system counted four layers: the CLAUDE.md files, auto memory, background consolidation, and a retrieval step that decides which notes surface into context. That last layer matches on **keywords only**. If a note was filed under "login flow" and you ask about "auth", the words differ, so the note may never come up even though the meaning matches. Semantic search, the kind that knows those two phrases mean the same thing, is exactly what RAG adds. RAG stands for retrieval-augmented generation: fetching relevant stored knowledge by meaning and feeding it to the model alongside your question. Module 4 builds one, and now you know the gap it fills.',
+            md: 'A widely shared teardown of this system counted four layers: the CLAUDE.md files, auto memory, background consolidation, and a retrieval step that decides which notes surface into context. That last layer matches on **keywords only**. If a note was filed under "login flow" and you ask about "auth", the words differ, so the note may never come up even though the meaning matches. Semantic search, the kind that knows those two phrases mean the same thing, is exactly what RAG adds. RAG stands for retrieval-augmented generation: fetching relevant stored knowledge by meaning and feeding it to the model alongside your question. You build one in [RAG · RAG Fundamentals](lesson:m5-l1), and now you know the gap it fills.',
           },
         ],
       },

@@ -817,7 +817,7 @@ fused = rrf([bm25_ids, dense_ids])[:50]  # feed these 50 to the reranker`,
         blocks: [
           {
             type: 'text',
-            md: `Classic RAG is a fixed pipe: retrieve once, generate once, done. Nobody ever checks whether that one retrieval was any good. **Agentic RAG** changes who's in charge. Retrieval becomes a **tool** the model can call whenever it wants, the same way the agents you built in module 4 called a web search or a file reader. The model plans what it needs to know, fires a search, reads what came back, and then decides: is this enough to answer?`,
+            md: `Classic RAG is a fixed pipe: retrieve once, generate once, done. Nobody ever checks whether that one retrieval was any good. **Agentic RAG** changes who's in charge. Retrieval becomes a **tool** the model can call whenever it wants, the same way the agents you built in [Agents, Harnesses & Loops · Anatomy of the Agent Loop](lesson:m2-l2) called a web search or a file reader. The model plans what it needs to know, fires a search, reads what came back, and then decides: is this enough to answer?`,
           },
           {
             type: 'text',
