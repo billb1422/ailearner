@@ -192,7 +192,7 @@ export const lessons: Lesson[] = [
         blocks: [
           {
             type: 'text',
-            md: 'Before trusting your own model, sanity-check it against real-world anchors. The median Claude Code developer spends about **$6 a day** in API-equivalent terms, and 90% stay under **$12 a day**. Heavy multi-agent users clear **$1,000+ a month** on metered pricing, and that group is exactly why flat monthly plans exist: a Max plan at $100-200 a month is a bargain for anyone whose metered usage would cost more.\n\nThat gives you a clean decision rule. The crossover sits around **$6-10 a day** of sustained usage. Below that line, pay-as-you-go API billing wins. Above it, a flat plan caps your downside, including the specific downside of a runaway loop billing you while you sleep.',
+            md: 'Before trusting your own model, sanity-check it against real-world anchors. The median Claude Code developer spends about **$6 a day** in API-equivalent terms, and 90% stay under **$12 a day**. Heavy multi-agent users clear **$1,000+ a month** on metered pricing, and that group is exactly why flat monthly plans exist: a Max plan at $100-200 a month is a bargain for anyone whose metered usage would cost more.\n\nThat gives you a clean decision rule. The crossover sits around **$6-10 a day** of sustained usage. Below that line, pay-as-you-go API billing wins. Above it, a flat plan caps your downside, including the specific downside of a runaway loop billing you while you sleep.\n\nOne caveat on everything you just modeled: it prices *your* seat. A product with customers in it needs a different instrument, because the question you have to answer becomes which feature, which customer, and was it worth it. That is [Token Economics & AI-Native SDLC · Cost Attribution & Unit Economics](lesson:m7-l6), and it is the next lesson.',
           },
           {
             type: 'compare',
@@ -292,6 +292,412 @@ export const lessons: Lesson[] = [
       { label: 'Batch processing: Anthropic docs', url: 'https://docs.anthropic.com/en/docs/build-with-claude/batch-processing', kind: 'docs' },
       { label: 'Token counting: Anthropic docs', url: 'https://docs.anthropic.com/en/docs/build-with-claude/token-counting', kind: 'docs' },
       { label: 'Ponytail: anti-over-engineering skill (~20% cheaper runs)', url: 'https://github.com/DietrichGebert/ponytail', kind: 'repo' },
+    ],
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // m7-l6: Cost Attribution & Unit Economics
+  // ───────────────────────────────────────────────────────────────
+  {
+    id: 'm7-l6',
+    title: 'Cost Attribution & Unit Economics',
+    day: 22,
+    minutes: 55,
+    xp: 100,
+    objectives: [
+      'Explain why a provider dashboard can never tell you which feature, customer, or loop spent the money, and name the tags that fix it',
+      'Add up all six layers of a production AI bill instead of just the model tokens, and say what share the model actually was',
+      'Convert raw spend into cost per successful outcome, then pick a model on that number rather than on the per-token price',
+      'Read a run-cost distribution, catch the runs sitting out at the 99th percentile, and project a credit burn-down that accounts for growth',
+    ],
+    skipQuiz: [
+      {
+        q: 'Your provider dashboard groups token spend by API key and by model. Which question can it never answer?',
+        options: [
+          'How many output tokens you burned last week',
+          'Which product feature, customer, or agent loop spent the money',
+          'Which model you called most often',
+          'What your total bill was last month',
+        ],
+        answer: 1,
+        explain:
+          'The provider sees API keys and models, because that is all your requests carry. It has no idea that one call came from inbox triage for a $99/month customer and the next came from a free-trial user pasting a 200-page PDF. That mapping only exists if you attach it yourself, on every call, before the money is spent.',
+      },
+      {
+        q: 'In a production AI feature, roughly what share of the real monthly bill sits outside model tokens (embeddings, vector queries, tool calls, orchestration compute, retries)?',
+        options: [
+          'Zero, since everything routes through the model',
+          'Roughly a quarter to a third',
+          'About 80%, with tokens as a rounding error',
+          'Exactly half, every time',
+        ],
+        answer: 1,
+        explain:
+          'Model tokens usually land around 70% of the true cost of a shipped AI feature. The other 25-30% hides in embedding refreshes, per-query vector search charges, paid tool APIs, the containers running the loop, and retries that burn compute without ever reaching a model. Teams quote the token number and get surprised by the invoice.',
+      },
+      {
+        q: 'Vendor X costs $0.62 per conversation and converts 9% of them. Vendor Y costs $1.05 per conversation and converts 18%. Which is cheaper per customer won?',
+        options: [
+          'X, because it costs 41% less per conversation',
+          'Y, at $5.83 per conversion against $6.89 for X',
+          'They tie, because the conversion rates cancel out',
+          'You cannot tell without the token counts',
+        ],
+        answer: 1,
+        explain:
+          'Divide cost by conversion rate. X gives $0.62 / 0.09 = $6.89 per customer won. Y gives $1.05 / 0.18 = $5.83. Y costs 69% more per conversation and still wins the customer for a dollar less, which is exactly why per-token price is the wrong number to shop on.',
+      },
+      {
+        q: 'Your agent runs cost $0.31 at the median and $12.60 at the 99th percentile. What is that spread usually telling you?',
+        options: [
+          'Your pricing tier changed partway through the month',
+          'A small set of runs is looping, retrying, or swallowing a huge tool result, and the average buries them',
+          'The median calculation is wrong',
+          'Nothing useful; that spread is normal for agents',
+        ],
+        answer: 1,
+        explain:
+          'A 40x gap between typical and worst is a defect signature. Something in that tail is retrying without a ceiling, re-reading a file that grew, or piping an entire API response straight into context. The average of the two ($6.45 in this case) describes no run that ever happened, which is why averages are the wrong summary for agent spend.',
+      },
+      {
+        q: 'You booked $150K of cloud credits to cover 24 months. Spend starts at $6K in month 1 and grows 30% a month. When do the credits run out?',
+        options: [
+          'Month 24, exactly as planned',
+          'Partway through month 9',
+          'Around month 18',
+          'They never run out at that growth rate',
+        ],
+        answer: 1,
+        explain:
+          'Compounding growth eats a fixed pot fast. Cumulative burn hits $76,537 by month 6 (51% gone) and blows past $150K partway through month 9. The cruel part is the month-3 checkpoint, where you have spent only 16% and everything looks fine.',
+      },
+    ],
+    sections: [
+      {
+        heading: 'Your dashboard knows tokens, not your product',
+        blocks: [
+          {
+            type: 'text',
+            md: "Everything so far in this module priced *your* spend: the Claude Code session on your laptop, the plan-versus-API call, the loop you run by hand. Now flip the seat. You shipped an AI feature, real customers are using it, and a bill shows up. Different problem entirely, and the tooling you get by default is close to useless for it.\n\nHere's the shape of it. A $12,900 month lands, $9,400 of which is model tokens. You open the provider console and it tells you: Sonnet 5 took $7,100, Haiku 4.5 took $2,300. Accurate, and it answers nothing you care about. Your product has four AI features and 340 customers on three plan tiers, and every request goes out through the same API key.\n\nThe missing skill is **cost attribution**: tying each dollar back to the thing that spent it. Provider dashboards can't do this for you, because your requests never told them. They see a key and a model. They can't see that one call was inbox triage for a customer paying $99 a month and the next was a free-trial user pasting a 200-page PDF into document Q&A.",
+          },
+          {
+            type: 'diagram',
+            caption: 'Same $9,400. The left column is what the provider can see. The right column is what pays your rent.',
+            svg: `<svg viewBox="0 0 700 330" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif"><rect width="700" height="330" fill="#18181b" rx="8"/><text x="30" y="34" fill="#f472b6" font-size="15" font-weight="bold">WHAT THE INVOICE SHOWS</text><rect x="30" y="52" width="300" height="46" rx="5" fill="#27272a" stroke="#52525b"/><text x="46" y="72" fill="#e4e4e7" font-size="13">claude-sonnet-5</text><text x="314" y="72" fill="#e4e4e7" font-size="13" text-anchor="end">$7,100</text><text x="46" y="90" fill="#71717a" font-size="11">api key: prod-main</text><rect x="30" y="106" width="300" height="46" rx="5" fill="#27272a" stroke="#52525b"/><text x="46" y="126" fill="#e4e4e7" font-size="13">claude-haiku-4.5</text><text x="314" y="126" fill="#e4e4e7" font-size="13" text-anchor="end">$2,300</text><text x="46" y="144" fill="#71717a" font-size="11">api key: prod-main</text><text x="30" y="184" fill="#a1a1aa" font-size="12">Two rows. Both true. Neither actionable.</text><text x="370" y="34" fill="#34d399" font-size="15" font-weight="bold">WHAT YOU NEED</text><rect x="370" y="52" width="300" height="30" rx="5" fill="#27272a" stroke="#34d399"/><text x="386" y="72" fill="#e4e4e7" font-size="12">inbox triage</text><text x="654" y="72" fill="#34d399" font-size="12" text-anchor="end">$5,900 · $0.04/run</text><rect x="370" y="88" width="300" height="30" rx="5" fill="#27272a" stroke="#34d399"/><text x="386" y="108" fill="#e4e4e7" font-size="12">document Q&amp;A</text><text x="654" y="108" fill="#34d399" font-size="12" text-anchor="end">$2,600 · $0.31/run</text><rect x="370" y="124" width="300" height="30" rx="5" fill="#27272a" stroke="#34d399"/><text x="386" y="144" fill="#e4e4e7" font-size="12">weekly digest</text><text x="654" y="144" fill="#34d399" font-size="12" text-anchor="end">$610 · $0.02/run</text><rect x="370" y="160" width="300" height="30" rx="5" fill="#27272a" stroke="#fbbf24"/><text x="386" y="180" fill="#e4e4e7" font-size="12">free-trial users</text><text x="654" y="180" fill="#fbbf24" font-size="12" text-anchor="end">$290 · 0 revenue</text><text x="370" y="212" fill="#a1a1aa" font-size="12">Now you can cut, cap, price, or promote.</text><rect x="30" y="240" width="640" height="66" rx="6" fill="#27272a" stroke="#52525b"/><text x="350" y="266" fill="#e4e4e7" font-size="14" text-anchor="middle">The right-hand column does not exist unless you write the tags onto every call.</text><text x="350" y="290" fill="#71717a" font-size="13" text-anchor="middle">You cannot reconstruct it later from an invoice. The information was never captured.</text></svg>`,
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'The four questions a cost ledger answers',
+            md: "Which feature spends the most, and is it the one customers pay for? Which customers cost more to serve than they pay? Which agent loops run away? And when you swap a model, does the number that matters actually move?\n\nNo provider dashboard answers any of them. A dozen lines of instrumentation in your own code answers all four.",
+          },
+        ],
+      },
+      {
+        heading: 'Six layers, one invoice',
+        blocks: [
+          {
+            type: 'text',
+            md: "Before you can attribute the bill, you have to find all of it. Model tokens are the line everybody quotes because it's the line the provider emails you. A shipped AI feature spends money in five more places, and they add up to real money.\n\nWalk the same month. Here's the full $12,900.",
+          },
+          {
+            type: 'table',
+            headers: ['Layer', 'What it actually is', 'This month', 'Share'],
+            rows: [
+              ['Model tokens', 'Input, output, cache reads and writes across every provider you call', '$9,400', '73%'],
+              ['Embeddings', 'Turning text into vectors, re-run every time a source document changes', '$310', '2%'],
+              ['Vector search', 'Hosted index: per-query charges plus monthly storage for the vectors', '$640', '5%'],
+              ['Tool calls', 'Paid web search, code-execution sandboxes, third-party enrichment APIs', '$1,180', '9%'],
+              ['Orchestration compute', 'The containers running the loop, the queue, and every retry', '$1,050', '8%'],
+              ['Observability and egress', 'Trace storage, log shipping, data leaving the cloud', '$320', '3%'],
+              ['True total', '', '$12,900', '100%'],
+            ],
+          },
+          {
+            type: 'diagram',
+            caption: 'The model bill is the big block, and it is still only about seven dollars in every ten. Budget from the whole bar.',
+            svg: `<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif"><rect width="700" height="260" fill="#18181b" rx="8"/><text x="30" y="34" fill="#e4e4e7" font-size="15" font-weight="bold">One month of a shipped AI feature: $12,900</text><rect x="30" y="60" width="466" height="50" fill="#38bdf8" rx="4"/><text x="263" y="91" fill="#0c4a6e" font-size="14" font-weight="bold" text-anchor="middle">model tokens $9,400</text><rect x="498" y="60" width="16" height="50" fill="#a78bfa"/><rect x="516" y="60" width="32" height="50" fill="#34d399"/><rect x="550" y="60" width="58" height="50" fill="#fbbf24"/><rect x="610" y="60" width="52" height="50" fill="#fb923c"/><rect x="664" y="60" width="16" height="50" fill="#f472b6"/><line x1="498" y1="118" x2="498" y2="140" stroke="#52525b"/><line x1="680" y1="118" x2="680" y2="140" stroke="#52525b"/><line x1="498" y1="140" x2="680" y2="140" stroke="#52525b"/><text x="589" y="158" fill="#a1a1aa" font-size="12" text-anchor="middle">everything else: $3,500</text><rect x="30" y="180" width="12" height="12" fill="#a78bfa" rx="2"/><text x="48" y="190" fill="#a1a1aa" font-size="12">embeddings $310</text><rect x="190" y="180" width="12" height="12" fill="#34d399" rx="2"/><text x="208" y="190" fill="#a1a1aa" font-size="12">vector search $640</text><rect x="370" y="180" width="12" height="12" fill="#fbbf24" rx="2"/><text x="388" y="190" fill="#a1a1aa" font-size="12">tool calls $1,180</text><rect x="30" y="206" width="12" height="12" fill="#fb923c" rx="2"/><text x="48" y="216" fill="#a1a1aa" font-size="12">orchestration + retries $1,050</text><rect x="370" y="206" width="12" height="12" fill="#f472b6" rx="2"/><text x="388" y="216" fill="#a1a1aa" font-size="12">observability + egress $320</text><text x="30" y="242" fill="#fbbf24" font-size="13">Quote only the blue block to your CFO and you are 27% light before the month even starts.</text></svg>`,
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'Retries are the layer nobody counts',
+            md: "A tool call that times out and retries three times bills three times: three sandbox spin-ups, three sets of orchestration minutes, and on the attempts that got far enough, three sets of input tokens. None of it produced an answer.\n\nCount retries as their own line in your ledger, with a `retry_of` field pointing at the original run. When the retry line grows faster than the success line, you have a reliability bug wearing a cost-problem costume. Fix the timeout, keep the money.",
+          },
+        ],
+      },
+      {
+        heading: 'Tag the call before you need the answer',
+        blocks: [
+          {
+            type: 'text',
+            md: "Attribution is a write-time job. There's no query you can run in December that reconstructs which feature spent what in October, because the tags were never on the calls. So you wrap every model call once, and every call writes one row.\n\nSix dimensions are worth slicing on, and you want all six from day one: **provider** (you'll compare vendors sooner than you think), **model** (routing decisions live here), **feature or route** (the one your product team asks about), **user** (business-to-consumer unit economics), **tenant** (business-to-business margin per account), and **experiment** (so a 1,000-run eval doesn't pollute your production numbers).",
+          },
+          {
+            type: 'code',
+            lang: 'ts',
+            caption: 'One row per model call. Price it at call time, because rates change and your ledger should remember what you actually paid.',
+            code: `type CostRow = {
+  ts: string           // ISO timestamp
+  trace_id: string     // ties every call in one user request together
+  run_id: string       // ties every turn of one agent run together
+  retry_of?: string    // set when this run is a retry of another
+  feature: string      // 'inbox_triage' | 'doc_qa' | 'weekly_digest'
+  tenant: string       // which customer account
+  user_hash: string    // sha256(user_id): never the raw id, never the email
+  experiment?: string  // 'eval-2026-08' when this is not real traffic
+  provider: string     // 'anthropic' | 'openai' | 'google'
+  model: string        // 'claude-sonnet-5'
+  in_fresh: number     // uncached input tokens
+  in_cached: number    // cache reads, billed at 0.1x
+  cache_write: number  // cache writes, billed at 1.25x or 2x
+  out: number          // output tokens
+  tool_calls: number   // paid tool invocations in this call
+  vector_queries: number
+  usd: number          // priced at call time with the rates in effect
+}`,
+          },
+          {
+            type: 'text',
+            md: "Then one more table, and this is the one that turns a cost report into a business report: **outcomes**. A row per trace with what happened and what it was worth. `(trace_id, outcome, value_usd)` covers most cases: `'converted'` and 199.00, or `'ticket_deflected'` and 14.50, or `'abandoned'` and 0.\n\nJoin the two and every question from the top of this lesson becomes a query you can actually run.",
+          },
+          {
+            type: 'code',
+            lang: 'sql',
+            caption: 'Spend per feature, per run, and per dollar of value. Three columns that end most arguments about which feature to cut.',
+            code: `select
+  c.feature,
+  count(distinct c.trace_id)            as runs,
+  round(sum(c.usd), 2)                  as spend,
+  round(sum(c.usd) / count(distinct c.trace_id), 4) as usd_per_run,
+  round(sum(c.usd) / nullif(sum(o.value_usd), 0), 4) as usd_per_value_dollar
+from cost_rows c
+left join outcomes o using (trace_id)
+where c.ts >= now() - interval '30 days'
+  and c.experiment is null
+group by c.feature
+order by spend desc;`,
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'Two things to get right on the first write',
+            md: "**Hash the user id.** Your cost ledger will get copied into a spreadsheet and mailed to an investor at some point. Hash user ids on the way in and keep prompt text out of it entirely, and that day is boring instead of a breach.\n\n**Keep tag values low-cardinality.** `feature: 'doc_qa'` groups beautifully. `feature: 'doc_qa for Acme Corp invoice 4471'` gives you 40,000 unique values, a slow query, and no chart. Put the varying part in `tenant` or `trace_id` where it belongs.",
+          },
+        ],
+      },
+      {
+        heading: 'Cost per outcome beats cost per token',
+        blocks: [
+          {
+            type: 'text',
+            md: "Now the payoff. Once spend joins to outcomes, model selection turns into a margin question, and the answer flips more often than you'd guess.\n\nRun a sales-qualification agent on two setups for a month, 10,000 conversations each. Vendor X is the cheap one on paper. Vendor Y costs 69% more per conversation. Watch what happens to the number that pays for the company.",
+          },
+          {
+            type: 'table',
+            headers: ['', 'Vendor X (cheap per token)', 'Vendor Y (pricey per token)'],
+            rows: [
+              ['All-in cost per conversation', '$0.62', '$1.05'],
+              ['Conversations in the month', '10,000', '10,000'],
+              ['Monthly spend', '$6,200', '$10,500'],
+              ['Conversion rate', '9%', '18%'],
+              ['Customers won', '900', '1,800'],
+              ['Cost per customer won', '$6.89', '$5.83'],
+              ['Gross profit per customer (first 90 days)', '$64', '$64'],
+              ['Contribution after AI cost', '$51,400', '$104,700'],
+            ],
+          },
+          {
+            type: 'text',
+            md: "Vendor Y costs $4,300 more and brings in 900 extra customers. That's **$4.78 for each additional customer**, against $64 of gross profit apiece. Roughly a 13x return on the extra spend, and the per-token price sheet said Y was the expensive option.\n\nThis is why the finance question and the engineering question have to be the same question. Cost per successful outcome, measured against what the outcome is worth, decides whether a feature survives the next budget review. Per-token price only matters through its effect on that number.",
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'What a token dashboard tells you',
+              items: [
+                'Tokens by model and API key',
+                'Total spend, after the money is gone',
+                'That the bill went up 40% this month',
+                'Nothing about who or what spent it',
+              ],
+            },
+            right: {
+              title: 'What a cost ledger tells you',
+              items: [
+                'Spend per feature, per tenant, per run',
+                'Cost per successful outcome, joined to revenue',
+                'Which 12 accounts cost more than they pay',
+                'Which runs blew past the ceiling, while they are still running',
+                'Whether the model swap you shipped on Tuesday actually helped',
+              ],
+            },
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'The fractional-CTO read',
+            md: "When you walk into a company that's already shipped AI features, this is the first thing to check and it's usually missing. Ask for spend per feature. If the answer is a provider invoice screenshot, you've found the week-one project, and it's a small one: a wrapper, two tables, one dashboard.\n\nAnd it buys you something better than a report. Every later argument about model choice, caching work, or which feature to kill gets settled with a number instead of a debate.",
+          },
+        ],
+      },
+      {
+        heading: 'Averages hide the runs that hurt',
+        blocks: [
+          {
+            type: 'text',
+            md: "With per-run costs in hand, resist the urge to average them. Agent spend is wildly skewed, and the mean describes a run that never happened.\n\nHere's a real-shaped distribution from a document Q&A agent over 30 days.",
+          },
+          {
+            type: 'table',
+            headers: ['Percentile', 'Cost of that run', 'vs median', 'What lives here'],
+            rows: [
+              ['p50 (median)', '$0.31', '1x', 'A normal question against a normal document'],
+              ['p90', '$1.10', '3.5x', 'Longer docs, a few extra tool calls'],
+              ['p99', '$12.60', '41x', 'Retry storms, giant tool results, loops with no ceiling'],
+              ['Mean', '$0.58', '1.9x', 'Describes nothing; the tail drags it up'],
+            ],
+          },
+          {
+            type: 'diagram',
+            caption: 'The 1% on the right costs more than it looks. At this shape, roughly a fifth of the monthly bill comes from the runs past p99.',
+            svg: `<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif"><rect width="700" height="300" fill="#18181b" rx="8"/><text x="30" y="32" fill="#e4e4e7" font-size="15" font-weight="bold">Run cost distribution: where the money actually sits</text><line x1="50" y1="230" x2="670" y2="230" stroke="#52525b" stroke-width="2"/><rect x="60" y="120" width="46" height="110" fill="#38bdf8" rx="3"/><rect x="110" y="90" width="46" height="140" fill="#38bdf8" rx="3"/><rect x="160" y="140" width="46" height="90" fill="#38bdf8" rx="3"/><rect x="210" y="180" width="46" height="50" fill="#38bdf8" rx="3"/><rect x="260" y="200" width="46" height="30" fill="#38bdf8" rx="3"/><rect x="310" y="212" width="46" height="18" fill="#38bdf8" rx="3"/><rect x="360" y="220" width="46" height="10" fill="#a78bfa" rx="3"/><rect x="410" y="224" width="46" height="6" fill="#a78bfa" rx="3"/><rect x="460" y="226" width="46" height="4" fill="#f472b6" rx="3"/><rect x="510" y="227" width="46" height="3" fill="#f472b6" rx="3"/><rect x="560" y="228" width="46" height="2" fill="#f472b6" rx="3"/><rect x="610" y="228" width="46" height="2" fill="#f472b6" rx="3"/><line x1="133" y1="80" x2="133" y2="240" stroke="#34d399" stroke-width="1" stroke-dasharray="4 4"/><text x="133" y="72" fill="#34d399" font-size="12" text-anchor="middle">p50 $0.31</text><line x1="383" y1="150" x2="383" y2="240" stroke="#fbbf24" stroke-width="1" stroke-dasharray="4 4"/><text x="383" y="142" fill="#fbbf24" font-size="12" text-anchor="middle">p90 $1.10</text><line x1="483" y1="180" x2="483" y2="240" stroke="#f472b6" stroke-width="1" stroke-dasharray="4 4"/><text x="520" y="172" fill="#f472b6" font-size="12" text-anchor="middle">p99 $12.60</text><text x="360" y="262" fill="#a1a1aa" font-size="13" text-anchor="middle">cost of a single run &#8594;</text><text x="30" y="288" fill="#71717a" font-size="12">Alert on p99 and on any single run over a hard ceiling. Alerting on the average catches nothing.</text></svg>`,
+          },
+          {
+            type: 'text',
+            md: "Three things produce that tail, and each has a specific fix.\n\n- A **retry loop with no ceiling**: a tool fails, the agent tries again, fails again, and keeps going. Cap total turns per run and cap retries per tool.\n- A **tool result nobody truncated**: an API returns 400KB of JSON and the whole thing goes into context, then gets re-sent on every remaining turn (the quadratic problem from [Token Economics & AI-Native SDLC · Modeling Agent Costs](lesson:m7-l1), now with a much bigger constant). Truncate tool output at the boundary, always.\n- A **user who found the expensive path**: someone uploads a 200-page PDF and asks eleven follow-up questions. Legitimate use, and it needs a per-tenant daily cap so it can't run all night.\n\nSet a hard per-run dollar ceiling and kill the run when it trips. A run that has spent $12 has almost certainly stopped making progress, and the ceiling is cheaper than the postmortem.",
+          },
+        ],
+      },
+      {
+        heading: 'Credits are a countdown, not a cushion',
+        blocks: [
+          {
+            type: 'text',
+            md: "One last trap, and it catches startups specifically. Cloud and model providers hand out credits: Google for Startups has run programs up to $350K over two years, Microsoft for Startups sits around $150K, AWS Activate offers its own tiers. A founder books that against 24 months of runway and stops thinking about it.\n\nUsage doesn't grow in a straight line, though. It compounds, because you ship more features, each feature gets more users, and agents get chattier as you add tools. Take $150K in credits, $6K of spend in month 1, and 30% month-over-month growth, which is a normal number for a product that's working.",
+          },
+          {
+            type: 'table',
+            headers: ['Month', 'Spend that month', 'Cumulative', '% of $150K credits'],
+            rows: [
+              ['1', '$6,000', '$6,000', '4%'],
+              ['3', '$10,140', '$23,940', '16%'],
+              ['6', '$22,278', '$76,537', '51%'],
+              ['8', '$37,650', '$143,148', '95%'],
+              ['9', '$48,945', '$192,093', 'gone, partway through'],
+            ],
+          },
+          {
+            type: 'diagram',
+            caption: 'The flat plan is what you told the board. The curve is what your product is doing. They diverge quietly for five months.',
+            svg: `<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif"><rect width="700" height="300" fill="#18181b" rx="8"/><text x="30" y="30" fill="#e4e4e7" font-size="15" font-weight="bold">$150K of credits, planned for 24 months</text><line x1="60" y1="240" x2="660" y2="240" stroke="#52525b" stroke-width="2"/><line x1="60" y1="240" x2="60" y2="55" stroke="#52525b" stroke-width="2"/><text x="360" y="278" fill="#a1a1aa" font-size="13" text-anchor="middle">months since the credits landed</text><text x="26" y="150" fill="#a1a1aa" font-size="12" transform="rotate(-90 26 150)" text-anchor="middle">credits spent</text><line x1="60" y1="240" x2="660" y2="70" stroke="#34d399" stroke-width="2" stroke-dasharray="6 5"/><text x="600" y="120" fill="#34d399" font-size="12" text-anchor="middle">the plan: flat burn</text><path d="M 60 240 L 110 236 L 160 229 L 210 217 L 260 196 L 310 162 L 360 106 L 385 70" fill="none" stroke="#f472b6" stroke-width="3"/><text x="330" y="128" fill="#f472b6" font-size="13" font-weight="bold" text-anchor="end">reality: 30% growth</text><line x1="60" y1="70" x2="660" y2="70" stroke="#fbbf24" stroke-width="1" stroke-dasharray="4 4"/><text x="66" y="62" fill="#fbbf24" font-size="12">$150K credits</text><line x1="158" y1="158" x2="160" y2="222" stroke="#fbbf24" stroke-width="1" stroke-dasharray="3 3"/><circle cx="160" cy="229" r="5" fill="#fbbf24"/><text x="118" y="150" fill="#fbbf24" font-size="12">month 3: 16% spent, looks fine</text><circle cx="385" cy="70" r="6" fill="#f472b6"/><text x="398" y="60" fill="#f472b6" font-size="12">month 9: empty</text><text x="60" y="256" fill="#71717a" font-size="11">0</text><text x="360" y="256" fill="#71717a" font-size="11" text-anchor="middle">9</text><text x="660" y="256" fill="#71717a" font-size="11" text-anchor="end">24</text></svg>`,
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'The checkpoint that lies to you',
+            md: "Month 3 is where this gets people. You've spent 16% of the pot, you're a quarter of the way through the calendar, and the dashboard looks healthy. Five months later the credits are gone and you're paying cash during the exact quarter you were planning to raise.\n\nProject forward instead of reading backward. Take your last three months of spend, fit the growth rate, and extend it to the credit balance. If the runway comes back shorter than the fundraise, you have a roadmap item, and you found it in month 3 instead of month 8.",
+          },
+        ],
+      },
+    ],
+    lab: {
+      title: 'Put a price tag on one feature',
+      intro:
+        'Take one AI feature you have built or are planning, and produce the report a CFO would accept: full-stack cost, cost per run, cost per outcome, and a runway projection. Use your own project if you have one, or model the aiLearner site itself as if its lesson content were generated on demand.',
+      steps: [
+        'Pick one AI feature and write down its request path end to end: which model calls fire, which tools get invoked, what gets embedded, what gets retrieved, and what runs the loop.',
+        'Build the six-layer cost table for it: model tokens, embeddings, vector search, tool calls, orchestration compute, observability and egress. Put a monthly dollar figure on every line, even if three of them are guesses, and note the guesses.',
+        'Compute the model share as a percentage of the true total. If it comes out above 90%, you probably missed a layer; go back and look at retries and orchestration.',
+        'Write the CostRow tag set you would attach to every call for this feature, filling in real values for feature, tenant, and experiment. Name the outcome you would record and what one is worth in dollars.',
+        'Compute cost per run and cost per successful outcome. Then compute what those two numbers become on a model one tier cheaper and one tier more expensive, using the July 2026 price ladder.',
+        'Estimate the p99 run for this feature: what is the single most expensive thing a user could legitimately do? Set a per-run dollar ceiling and a per-tenant daily cap, and write both down as numbers.',
+        'Project 12 months of spend at 20% and at 40% month-over-month growth. If you are on credits or a fixed budget, mark the month each curve hits zero.',
+      ],
+      checklist: [
+        'Six-layer cost table filled in, with the model share stated as a percentage and guesses flagged',
+        'A CostRow tag set written out with real values, plus the outcome event and its dollar value',
+        'Cost per run and cost per outcome computed, and compared across two other model tiers',
+        'A per-run ceiling and a per-tenant daily cap chosen, both as specific numbers',
+        'A 12-month projection at two growth rates, with the month the budget runs out marked on each',
+      ],
+    },
+    checkQuiz: [
+      {
+        q: 'Why can attribution never be reconstructed after the fact from a provider invoice?',
+        options: [
+          'Invoices are rounded to the nearest dollar',
+          'The tags that map a call to a feature, tenant, and run only exist if your code attached them at call time',
+          'Providers delete usage data after 30 days',
+          'Because caching makes the token counts unreliable',
+        ],
+        answer: 1,
+        explain:
+          'The provider only ever saw an API key, a model, and some tokens. Your product structure was never in the request. Attribution is a write-time job: wrap the call, tag the row, store it. There is no query that recovers it later.',
+      },
+      {
+        q: 'A team reports that their AI feature costs $9,400 a month, quoting the model bill. What is the likely true figure?',
+        options: [
+          'The same $9,400, since tokens are the only real cost',
+          'Somewhere near $12,000-13,000, once embeddings, vector queries, tool calls, orchestration, and retries are counted',
+          'About $4,700, because caching halves it',
+          'Impossible to estimate without knowing the model',
+        ],
+        answer: 1,
+        explain:
+          'Model tokens typically run about 70% of the true cost of a shipped feature. Adding the other five layers back puts $9,400 of tokens closer to $12,900 all in. Budget from the whole bar, and count retries as their own line.',
+      },
+      {
+        q: 'Your document Q&A agent shows a p50 run cost of $0.31 and a p99 of $12.60. What is the right first move?',
+        options: [
+          'Switch the whole feature to a cheaper model tier',
+          'Set a hard per-run dollar ceiling, cap turns and retries, and truncate tool output at the boundary',
+          'Raise prices for every customer to cover the average',
+          'Nothing, since 99% of runs are cheap',
+        ],
+        answer: 1,
+        explain:
+          'A 41x tail is a defect, so fix the defect before touching the model. Ceilings, turn caps, and truncation kill the runaway runs without degrading the 99% that already work. Downgrading the model would slow the tail and hurt every normal run at the same time.',
+      },
+      {
+        q: 'Vendor Y costs 69% more per conversation than Vendor X but doubles the conversion rate. What does that make it?',
+        options: [
+          'Worse, because per-token cost is the number that scales',
+          'Better, because cost per customer won drops even though cost per conversation rises',
+          'Identical, since cost and conversion move together',
+          'Only better if you also switch to batch pricing',
+        ],
+        answer: 1,
+        explain:
+          'At $0.62 and 9%, X wins a customer for $6.89. At $1.05 and 18%, Y wins one for $5.83, and brings in twice as many. The extra $4,300 of spend buys 900 extra customers at $4.78 each, against $64 of gross profit apiece. Shop on cost per outcome.',
+      },
+    ],
+    resources: [
+      {
+        label: 'Anthropic: Usage & Cost API (programmatic spend by key, model, workspace)',
+        url: 'https://docs.claude.com/en/docs/build-with-claude/usage-cost-api',
+        kind: 'docs',
+      },
+      {
+        label: 'Anthropic: Cost and usage reporting in the Console',
+        url: 'https://support.anthropic.com/en/articles/9534590-cost-and-usage-reporting-in-console',
+        kind: 'docs',
+      },
+      {
+        label: 'Langfuse: open-source LLM tracing with per-trace cost attribution',
+        url: 'https://langfuse.com/docs',
+        kind: 'docs',
+      },
+      {
+        label: 'Helicone: open-source proxy for per-user and per-feature LLM cost tracking',
+        url: 'https://github.com/Helicone/helicone',
+        kind: 'repo',
+      },
+      {
+        label: 'Your AI credits are running out faster than you think (the credit burn-down argument)',
+        url: 'https://www.linkedin.com/pulse/your-ai-credits-running-out-faster-than-you-think-probably-jain-nsrvc/',
+        kind: 'article',
+      },
     ],
   },
 

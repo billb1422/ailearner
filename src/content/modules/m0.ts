@@ -1830,6 +1830,10 @@ anchors: median Claude Code dev ~ $6/day
             type: 'text',
             md: "- **Route by difficulty**: Haiku 4.5 handles mechanical edits, renames, and formatting at a tenth of Fable 5's price\n- **Fresh session per task**: a shorter resent transcript attacks the quadratic term directly\n- **Batch your questions**: five asks in one turn costs far less than five separate turns\n- **Edit and regenerate** instead of arguing, since correction threads are pure token burn\n- **Reference stable context in project files** so you stop re-pasting the same material\n- **Send anything non-urgent through the Batch API** for an instant 50% off",
           },
+          {
+            type: 'text',
+            md: "Every habit above prices the meter you personally sit in front of. The moment you ship something customers use, a second bill shows up that behaves nothing like this one: token spend you cannot tie to a feature, embedding and vector-search charges the price sheet never mentions, and agent runs that cost forty times the typical one. [Token Economics & AI-Native SDLC · Cost Attribution & Unit Economics](lesson:m7-l6) picks up exactly there.",
+          },
         ],
       },
     ],

@@ -187,6 +187,7 @@ export const MODULES: Module[] = [
         'A cost model (spreadsheet or doc) for your expected monthly agent usage, with the plan-vs-API call and the daily number that justifies it',
         'Your personal AI-native SDLC doctrine written down: when you spec, when you delegate, how you verify, and what you always review by hand',
         'One workflow you repeat converted into a reusable command or skill, committed to version control (the "prompt it three times, then make it a command" rule)',
+        'A six-layer cost breakdown for one AI feature you have shipped or specced, with the tag set you would attach to every call and a cost-per-outcome number',
       ],
       xp: 250,
       badgeId: 'boss-m7',
