@@ -70,12 +70,12 @@ export function ModuleView({ module: m, modules, onOpenLesson, onBack, onBadges 
                   done ? 'bg-emerald-500 text-zinc-950' : 'bg-zinc-800 text-zinc-400'
                 }`}
               >
-                {done ? '✓' : `D${l.day}`}
+                {done ? '✓' : m.bonus ? '★' : `D${l.day}`}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="font-semibold text-zinc-100">{l.title}</div>
                 <div className="text-xs text-zinc-500 mt-0.5">
-                  Day {l.day} · ~{l.minutes} min · {l.xp} XP
+                  {m.bonus ? 'Bonus' : `Day ${l.day}`} · ~{l.minutes} min · {l.xp} XP
                   {testedOut && <span className="ml-2 text-sky-400">tested out 🧠</span>}
                   {lp?.status === 'in-progress' && <span className="ml-2 text-amber-400">in progress…</span>}
                 </div>

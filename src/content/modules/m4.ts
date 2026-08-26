@@ -690,16 +690,16 @@ mlx_lm.generate \\
     ],
     skipQuiz: [
       {
-        q: 'What does setting ANTHROPIC_BASE_URL=http://localhost:11434/v1 before launching Claude Code accomplish?',
+        q: 'What does setting ANTHROPIC_BASE_URL=http://localhost:11434 before launching Claude Code accomplish?',
         options: [
           'It enables offline caching of Anthropic API responses on your Mac',
-          "It routes Claude Code's API traffic to Ollama's local OpenAI-compatible endpoint, so you keep the same workflow with local inference",
+          "It routes Claude Code's API traffic to Ollama, which answers Anthropic-format requests itself, so you keep the same workflow with local inference",
           'It mirrors your session transcripts to a local audit log',
           'It makes Ollama proxy requests through to Anthropic with local rate limiting',
         ],
         answer: 1,
         explain:
-          "Claude Code sends its requests to whatever base URL its environment hands it. Point that at Ollama's /v1 endpoint and the harness (the tools, the loop, the UI) stays identical while a model running on your own Mac does the thinking.",
+          "Claude Code sends its requests to whatever base URL its environment hands it. Since January 2026 Ollama speaks the Anthropic Messages format natively, so pointing the variable at it makes the harness (the tools, the loop, the UI) stay identical while a model on your own Mac does the thinking.",
       },
       {
         q: 'The hybrid doctrine in one sentence:',
@@ -756,15 +756,15 @@ mlx_lm.generate \\
         blocks: [
           {
             type: 'text',
-            md: "Time to connect the two halves of this course. Claude Code is a **harness**: the loop that reads your files, calls tools, and applies edits is a separate thing from the model doing the thinking. And the harness is portable.\n\nHere's how the plumbing works. Claude Code talks to its model over HTTP, at an address it reads from the `ANTHROPIC_BASE_URL` **environment variable** (a named setting a program picks up when it starts). Meanwhile Ollama, from lesson 2, serves an OpenAI-compatible API on your Mac at localhost:11434, where 'localhost' is the standard name for 'this computer'. Point the first at the second and Claude Code drives your local model: same commands, same edit loop, and zero tokens leaving your machine.",
+            md: "Time to connect the two halves of this course. Claude Code is a **harness**: the loop that reads your files, calls tools, and applies edits is a separate thing from the model doing the thinking. And the harness is portable.\n\nHere's how the plumbing works. Claude Code talks to its model over HTTP, at an address it reads from the `ANTHROPIC_BASE_URL` **environment variable** (a named setting a program picks up when it starts). Meanwhile Ollama, from lesson 2, serves an API on your Mac at localhost:11434, where 'localhost' is the standard name for 'this computer'. Since January 2026 it answers Anthropic-format requests directly, so pointing the first at the second makes Claude Code drive your local model: same commands, same edit loop, and zero tokens leaving your machine. The full mechanism, including how to do this from a different machine on your network, is in [Bonus: Your Own Model Server · Coding Against Your Own Server From Another Machine](lesson:m9-l3).",
           },
           {
             type: 'code',
             lang: 'bash',
             code: `# Ollama running, model pulled (lesson 2)
-export ANTHROPIC_BASE_URL=http://localhost:11434/v1
+export ANTHROPIC_BASE_URL=http://localhost:11434
 export ANTHROPIC_AUTH_TOKEN=ollama          # any non-empty value
-export ANTHROPIC_MODEL=qwen3:30b-a3b        # your local model tag
+export ANTHROPIC_API_KEY=""                 # must be empty or it wins
 
 claude
 # same UI and tools; inference never leaves your Mac.
@@ -927,7 +927,7 @@ claude
       intro: 'Run a real coding task through Claude Code backed by your local model, catalogue exactly where it strains, then write down your personal local-versus-frontier routing policy.',
       steps: [
         'Verify Ollama is serving and your model responds: `curl http://localhost:11434`, then `ollama run qwen3:30b-a3b "say ok"`.',
-        'In a scratch repo, set the override and launch: `export ANTHROPIC_BASE_URL=http://localhost:11434/v1 ANTHROPIC_AUTH_TOKEN=ollama ANTHROPIC_MODEL=qwen3:30b-a3b` then `claude`.',
+        'In a scratch repo, set the override and launch: `export ANTHROPIC_BASE_URL=http://localhost:11434 ANTHROPIC_AUTH_TOKEN=ollama ANTHROPIC_API_KEY=""` then `claude --model qwen3-coder`. (Or just run `ollama launch claude`, which sets it up for you.)',
         'Give it a real, small task: add a utility function plus a unit test to an existing file. Watch the whole loop as it runs; the process tells you more than the final diff.',
         'Log every seam you see in `local-agent-notes.md`: malformed tool calls, ignored instructions, premature "done" declarations, lost context.',
         'Open a fresh terminal WITHOUT the overrides and run the identical task on frontier Claude Code. Note the differences honestly, including anywhere local held its own.',
@@ -1097,11 +1097,61 @@ claude
               ['$999-1,399', 'Mac mini M4 Pro', '24-64GB unified', 'The 30B-A3B MoE sweet spot, silent, ~10W idle', 'Bandwidth below the 3090; quieter and thriftier'],
               ['$2,000-2,500', 'Mac Studio M4 Max / dual used 3090s', '64-96GB', '70B dense or gpt-oss 120B', 'The dual-GPU route needs real DIY tolerance'],
               ['$4,000-4,700', 'Mac Studio 128GB+', '128GB+ unified', 'The 235B-class MoE flagships', 'Frontier-adjacent open models, still not frontier'],
+              ['$1,699', 'Mac mini M5 Pro (Aug 2026)', '64GB @ 307GB/s', '80B-A3B coders at Q4, or two mid models resident at once', 'Roomy but mid-bandwidth: MoE flies, dense 70B crawls'],
+              ['Top of the lineup', 'Mac Studio M5 Ultra (Aug 2026)', '512GB @ 1.2TB/s', 'Trillion-parameter MoE, but only at 2-bit', '80-core GPU, first Ultra with Neural Accelerators'],
             ],
           },
           {
             type: 'text',
             md: "The interesting fight on that ladder is the used **RTX 3090** versus the Mac mini tier, and it teaches the bandwidth lesson better than any benchmark chart. The 3090 shipped in 2020 as a gaming card, yet its 24GB of **VRAM** (the graphics card's own dedicated memory) moves data at roughly 936 GB/s, which beats most of Apple's lineup. Inside its 24GB cap, it generates tokens noticeably faster than Macs costing twice as much, which is why the r/LocalLLaMA crowd keeps buying them used.\n\nSo why did this course teach the Mac path first? Because the cap and the ownership costs are real: 24GB stops at the 32B class while a big-RAM Mac walks up to 235B MoE territory, and the Mac idles near-silent at a few watts, which matters enormously for the always-on agent-server pattern from [Local Models · Local Agents & the Hybrid Split](lesson:m4-l3). Rule of thumb: bandwidth wins the speed race, capacity wins the capability race, and electricity plus noise decide who gets to live in an office.",
+          },
+        ],
+      },
+      {
+        heading: 'Above the Ladder: the Trillion-Parameter Wall',
+        blocks: [
+          {
+            type: 'text',
+            md: "Apple pushed the top of that ladder in August 2026, and the interesting part is what the new ceiling still can't reach. Both bills went up together on the flagship, which is what makes it a real tier jump instead of a bigger container.",
+          },
+          {
+            type: 'table',
+            headers: ['Machine', 'Capacity', 'Bandwidth', 'Weight budget', 'What that buys'],
+            rows: [
+              ['Mac mini M5 Pro', '64GB', '307GB/s', '~44GB', '80B-A3B coders at full Q4 quality'],
+              ['Mac Studio M5 Ultra', '512GB', '1.2TB/s', '~450GB', '1T-parameter MoE, but only at damaged quantization'],
+            ],
+          },
+          {
+            type: 'text',
+            md: "The Ultra is four times the capacity and four times the bandwidth of the mini, with an 80-core GPU carrying Neural Accelerators for the first time on an Ultra chip and up to 4.3x the AI compute of the M3 Ultra. Apple quotes the bandwidth as 50% higher than the previous generation. The 512GB configuration arrives later than the rest of the line.\n\nSo run the arithmetic on the models everyone wants to put on it. Moonshot's Kimi line is the right test case, because its mixture-of-experts design makes it sound far more portable than it is.",
+          },
+          {
+            type: 'table',
+            headers: ['Model and quantization', 'Weights resident', 'Fits 512GB?'],
+            rows: [
+              ['Kimi K2.7-Code (1T total, 32B active) at Q4', '~600GB', 'No'],
+              ['Kimi K2.7-Code at Q2_K_XL', '~350-380GB', 'Yes, with roughly 130GB left for KV cache'],
+              ['Kimi K2.7-Code at 1.8-bit', '~247GB', 'Yes, comfortably, and badly damaged'],
+              ['Kimi K3 (2.8T total, 104B active) at native MXFP4', '1.56TB', 'No. Moonshot recommends 64+ accelerators.'],
+              ['Kimi K3 pushed to 1.8-bit', '~630GB', 'No, still over the ceiling'],
+            ],
+          },
+          {
+            type: 'text',
+            md: "The speed side works out better than you might fear. At Q2 the 1T model reads roughly 10GB per token, so 1.2TB/s divided by 10 gives about 115 tokens per second at theoretical peak. Mixture-of-experts models run at lower real efficiency than dense ones, closer to 0.4, because the router scatters reads across experts instead of streaming one contiguous block. Sanity-check that against a measured data point: an M3 Ultra at 819GB/s on a 3.5-bit Kimi build printed 20 to 26 tok/s, which implies exactly that factor. Scale to 1.2TB/s and you land near 30 to 50 tok/s, which is genuinely usable.",
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'Fitting is not the same as working',
+            md: "The only Kimi that fits 512GB fits at 2 bits per weight, well past the quality cliff from [Local Models · The Open-Model Landscape 2026](lesson:m4-l1). You would own a damaged copy of a frontier model, and whether that beats an undamaged 80B at Q4 is a genuinely open question rather than an obvious win. Meanwhile the same model, undamaged, rents for about $0.95 per million input tokens. A five-figure machine buys billions of tokens of the better version.",
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'The wall, and who is on the other side of it',
+            md: "Open weights stopped meaning runnable-at-home somewhere around the 500B mark. Active parameters set speed and total parameters set memory, and in the trillion-parameter class those numbers now sit three orders of magnitude apart. A 512GB Studio is the right purchase for exactly one buyer: someone who needs frontier-scale open weights on data that legally cannot leave the building. For everyone else the mini tier plus one subscription is the better-shaped spend, and it is the recommendation you should give clients who ask for the biggest box.",
           },
         ],
       },
@@ -1237,6 +1287,437 @@ claude
       { label: 'The $400-mini install pitch (the thread this lesson deconstructs)', url: 'https://x.com/brainrulax/status/2083169896641265692', kind: 'thread' },
       { label: 'LMArena leaderboard: refresh the client shortlist quarterly', url: 'https://lmarena.ai', kind: 'article' },
       { label: 'HIPAA basics: why "never leaves the building" is worth money', url: 'https://www.hhs.gov/hipaa/index.html', kind: 'docs' },
+      { label: 'Apple: Mac Studio with M5 Max and M5 Ultra', url: 'https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/', kind: 'article' },
+      { label: 'Unsloth: what running Kimi K2.6 locally actually takes', url: 'https://unsloth.ai/docs/models/kimi-k2.6', kind: 'docs' },
+    ],
+  },
+  // ────────────────────────────────────────────────────────────
+  // m4-l5: Routing the 80/20
+  // ────────────────────────────────────────────────────────────
+  {
+    id: 'm4-l5',
+    title: 'Routing the 80/20',
+    day: 18,
+    minutes: 50,
+    xp: 100,
+    objectives: [
+      'Explain why automatic difficulty classification fails on coding work, and what to route on instead',
+      'Climb the four-rung routing ladder from shell aliases to a full gateway, and stop at the rung that fits your setup',
+      'Split roles inside one coding task so a frontier model plans and reviews while a local model implements',
+      'Configure Claude Code Router to route by request type, so background and long-context work leaves your subscription alone',
+      'Write an escalation trigger and a repository-level rule that cannot misfire',
+    ],
+    skipQuiz: [
+      {
+        q: 'Why does routing coding requests by classifying the prompt text tend to fail?',
+        options: [
+          'Classifier models are too slow to run before every request',
+          'You cannot tell a hard task from an easy one by reading the prompt, so the classifier confidently sends the worst task to the weakest model',
+          'Coding prompts are too short for a classifier to read',
+          'Classification only works on languages the router was trained on',
+        ],
+        answer: 1,
+        explain:
+          '"Add a null check" is trivial until it lands in the one file with a race condition. Difficulty lives in the codebase rather than in the sentence, so a text classifier is guessing. Deterministic signals like which role the model is playing or which repository you are in never guess.',
+      },
+      {
+        q: 'What is the cheapest routing mechanism that captures most of the available value for a solo developer?',
+        options: [
+          'A learned router trained on your own past sessions',
+          'Two shell aliases plus a written task-class policy, with you making the call',
+          'A Kubernetes gateway with per-request cost tracking',
+          'Randomly alternating between local and frontier to average the cost',
+        ],
+        answer: 1,
+        explain:
+          'You already know what you are about to attempt, which makes you a better classifier than any model. Two aliases and a written split cost five minutes and cover most real traffic. Every rung above this one is about removing the manual step, never about routing better.',
+      },
+      {
+        q: 'In a Plan/Act split with two different models, which model belongs where?',
+        options: [
+          'Local plans because planning is cheap, frontier acts because writing code is expensive',
+          'Frontier plans and reviews the diff, local implements the bounded task it was handed',
+          'Both should be the same model to keep the transcript coherent',
+          'Frontier does both; the local model only formats output',
+        ],
+        answer: 1,
+        explain:
+          'Planning and reviewing are where reasoning depth pays, and together they are a small share of the tokens. Implementation of a task that has already been scoped and given acceptance criteria is mechanical, which is exactly what a local model handles well.',
+      },
+      {
+        q: 'Claude Code Router distinguishes several request types. Which one should go to your local box unconditionally?',
+        options: [
+          'think, because reasoning is the most expensive route',
+          'longContext, because large prompts cost the most per call',
+          'background, because it covers cheap housekeeping like diff summaries and titles',
+          'default, because it carries the highest volume',
+        ],
+        answer: 2,
+        explain:
+          'Background requests are the housekeeping your agent does around the real work: summarizing a diff, naming a session, small mechanical rewrites. They are pure volume with no reasoning requirement, which makes them the safest thing to move off a metered subscription.',
+      },
+      {
+        q: 'Which routing rule is guaranteed never to misfire?',
+        options: [
+          'Send anything under 500 tokens to the local model',
+          'Send anything the model reports low confidence on to the frontier model',
+          'Send everything in the client repository to the local box, unconditionally',
+          'Send every third request to the local model to balance load',
+        ],
+        answer: 2,
+        explain:
+          'Repository is a fact you already know before the request exists, so evaluating it requires no judgment and no model. Token count is a poor proxy for difficulty, self-reported confidence is unreliable, and round-robin ignores the task entirely.',
+      },
+    ],
+    sections: [
+      {
+        heading: 'The Router You Should Not Build',
+        blocks: [
+          {
+            type: 'text',
+            md: "You wrote a hybrid policy in [Local Models · Local Agents & the Hybrid Split](lesson:m4-l3). This lesson is about making it happen automatically, and it opens with the thing to avoid, because the obvious design is the broken one.\n\nThe obvious design: put a classifier in front of every request, have it judge how hard the task looks, send easy ones to the local model and hard ones to the frontier. It sounds smart. On coding work it fails in a specific and expensive way.",
+          },
+          {
+            type: 'text',
+            md: "Consider the prompt 'add a null check to the user lookup'. A classifier reads eight words of routine maintenance and routes local. Correct, most of the time. Then one day that lookup sits in the one file with a race condition, the null check needs to go inside a lock you didn't know about, and the local model produces a change that compiles, passes the obvious test, and quietly introduces a deadlock under load.\n\nThe difficulty was never in the sentence. It lived in the codebase. A text classifier cannot see the codebase, so it's guessing, and it guesses with total confidence. That's a worse failure mode than routing badly at random, because you stop checking.",
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'Learned routers and where their numbers come from',
+            md: "You'll see impressive claims for learned routers such as RouteLLM, including roughly 85% cost savings at 95% of frontier quality. Those evaluations route general traffic between cloud tiers, where a wrong call costs a slightly worse paragraph. Code is different: a wrong call costs a subtle bug that survives review. Treat learned routing as a solved problem for chat and an unsolved one for coding.",
+          },
+        ],
+      },
+      {
+        heading: 'Route on What You Already Know',
+        blocks: [
+          {
+            type: 'text',
+            md: "The fix is to stop asking a model to judge, and start routing on facts that exist before the request does. Three of them carry almost all the value, and none of them requires inference.\n\n**Who is asking.** A planning step and an implementation step have different reasoning requirements, and the harness knows which one it's running. Route on the role.\n\n**Where you are.** Repository, directory, or project. Client code under an NDA goes to the local box whether the task is hard or easy, because the constraint is legal instead of technical.\n\n**What shape the request is.** Token count, whether a thinking flag is set, whether it's a background housekeeping call. These are structural properties the gateway can read off the request without understanding it.",
+          },
+          {
+            type: 'diagram',
+            svg: `<svg viewBox="0 0 700 330" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect x="0" y="0" width="700" height="330" fill="#18181b" rx="8"/>
+  <text x="350" y="28" fill="#e4e4e7" font-size="16" font-weight="bold" text-anchor="middle">Two ways to decide, one of which guesses</text>
+  <rect x="30" y="55" width="300" height="230" fill="#27272a" stroke="#f87171" stroke-width="2" rx="8"/>
+  <text x="180" y="80" fill="#f87171" font-size="13" font-weight="bold" text-anchor="middle">GUESSING: classify the prompt</text>
+  <rect x="55" y="96" width="250" height="34" fill="#3f3f46" rx="4"/>
+  <text x="180" y="118" fill="#e4e4e7" font-size="11" text-anchor="middle">"add a null check to user lookup"</text>
+  <line x1="180" y1="132" x2="180" y2="152" stroke="#f87171" stroke-width="2"/>
+  <polygon points="180,157 174,145 186,145" fill="#f87171"/>
+  <rect x="80" y="158" width="200" height="30" fill="#3f3f46" rx="4"/>
+  <text x="180" y="178" fill="#a1a1aa" font-size="11" text-anchor="middle">classifier: "looks easy"</text>
+  <line x1="180" y1="190" x2="180" y2="210" stroke="#f87171" stroke-width="2"/>
+  <polygon points="180,215 174,203 186,203" fill="#f87171"/>
+  <rect x="80" y="216" width="200" height="30" fill="#7f1d1d" rx="4"/>
+  <text x="180" y="236" fill="#fca5a5" font-size="11" text-anchor="middle">local model → silent deadlock</text>
+  <text x="180" y="268" fill="#f87171" font-size="11" text-anchor="middle">the hard part was in the codebase,</text>
+  <text x="180" y="282" fill="#f87171" font-size="11" text-anchor="middle">never in the sentence</text>
+  <rect x="370" y="55" width="300" height="230" fill="#27272a" stroke="#34d399" stroke-width="2" rx="8"/>
+  <text x="520" y="80" fill="#34d399" font-size="13" font-weight="bold" text-anchor="middle">KNOWING: route on facts</text>
+  <rect x="392" y="98" width="256" height="32" fill="#3f3f46" rx="4"/>
+  <text x="404" y="119" fill="#34d399" font-size="11">role:</text>
+  <text x="448" y="119" fill="#e4e4e7" font-size="11">planning or implementing?</text>
+  <rect x="392" y="138" width="256" height="32" fill="#3f3f46" rx="4"/>
+  <text x="404" y="159" fill="#34d399" font-size="11">repo:</text>
+  <text x="448" y="159" fill="#e4e4e7" font-size="11">under NDA or not?</text>
+  <rect x="392" y="178" width="256" height="32" fill="#3f3f46" rx="4"/>
+  <text x="404" y="199" fill="#34d399" font-size="11">shape:</text>
+  <text x="448" y="199" fill="#e4e4e7" font-size="11">background call? 80K tokens?</text>
+  <rect x="392" y="222" width="256" height="34" fill="#064e3b" stroke="#34d399" rx="4"/>
+  <text x="520" y="243" fill="#6ee7b7" font-size="11" font-weight="bold" text-anchor="middle">deterministic. no inference. no guess.</text>
+  <text x="520" y="276" fill="#34d399" font-size="11" text-anchor="middle">every one of these is known before the request exists</text>
+</svg>`,
+            caption: 'Route on properties you can look up, never on a judgment about difficulty.',
+          },
+        ],
+      },
+      {
+        heading: 'Layer 0: Two Aliases and a Written Split',
+        blocks: [
+          {
+            type: 'text',
+            md: "Start here, and stay here longer than you'd expect. The cheapest router is you, because you know what you're about to attempt before you type it. No model has that information.",
+          },
+          {
+            type: 'code',
+            lang: 'bash',
+            code: `# ~/.zshrc
+alias cc='unset ANTHROPIC_BASE_URL ANTHROPIC_AUTH_TOKEN; claude'
+alias ccl='ANTHROPIC_BASE_URL=http://mac-mini.local:11434 \\
+  ANTHROPIC_AUTH_TOKEN=ollama ANTHROPIC_API_KEY="" \\
+  claude --model qwen3-coder'
+
+# cc  = frontier. ccl = the box in the closet.`,
+            caption: 'The whole routing layer, in two lines. Swap the hostname for your own server.',
+          },
+          {
+            type: 'text',
+            md: "The aliases are the easy half. The half that makes it work is writing the split down once, so you stop re-deciding it every session. Without a written policy you drift into one of two ruts: everything goes frontier out of habit and your private code tags along, or everything goes local and you quietly eat quality losses on the tasks that mattered.",
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'Goes to the local box',
+              items: [
+                'Renames, extractions, mechanical refactors',
+                'Boilerplate and test scaffolding',
+                'Commit messages, docstrings, changelogs',
+                '"Explain this file" and codebase orientation',
+                'Anything under an NDA, regardless of difficulty',
+              ],
+            },
+            right: {
+              title: 'Goes to the frontier',
+              items: [
+                'Architecture and interface design',
+                'Bugs where the cause is genuinely unclear',
+                'Multi-file refactors that must land correctly',
+                'Long agent runs with many dependent steps',
+                'Anything you would be embarrassed to ship wrong',
+              ],
+            },
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'The escalation trigger is the important line',
+            md: "Two failed local attempts and you switch, with no third try. Without that rule you'll spend forty minutes coaxing a local model through something a frontier model would have finished in one turn, and you'll count the forty minutes as free because no meter was running. Your time is the expensive input in this whole system.",
+          },
+        ],
+      },
+      {
+        heading: 'Layer 1: Split the Roles Inside One Task',
+        blocks: [
+          {
+            type: 'text',
+            md: "This is the rung that fits coding best, and it's a genuinely different idea from everything above. Instead of routing whole tasks to one model or the other, split the roles inside a single task.\n\nThe insight comes straight from [Agents, Harnesses & Loops · What Is a Harness?](lesson:m2-l1): an agent turn contains several distinct jobs, and they don't all need the same brain. Deciding the approach needs reasoning depth. Typing out the implementation needs correctness and speed. Reviewing the diff needs judgment again. Two of those three are where a frontier model earns its price, and together they're a small fraction of the tokens.",
+          },
+          {
+            type: 'text',
+            md: "Cline supports exactly this, with separate models configured for **Plan** mode and **Act** mode. The loop runs like this: the plan model reads the project state and defines one bounded task with acceptance criteria, Cline switches to act mode, the act model implements it and runs the tests, Cline switches back, and the plan model reviews the git diff and test output before accepting or sending it back for correction.",
+          },
+          {
+            type: 'diagram',
+            svg: `<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect x="0" y="0" width="700" height="300" fill="#18181b" rx="8"/>
+  <text x="350" y="28" fill="#e4e4e7" font-size="16" font-weight="bold" text-anchor="middle">Plan/Act split: the expensive model thinks, the cheap one types</text>
+  <rect x="60" y="60" width="200" height="90" fill="#27272a" stroke="#38bdf8" stroke-width="2" rx="8"/>
+  <text x="160" y="84" fill="#38bdf8" font-size="13" font-weight="bold" text-anchor="middle">PLAN · frontier</text>
+  <text x="160" y="105" fill="#e4e4e7" font-size="11" text-anchor="middle">scope one bounded task</text>
+  <text x="160" y="122" fill="#e4e4e7" font-size="11" text-anchor="middle">write acceptance criteria</text>
+  <text x="160" y="140" fill="#a1a1aa" font-size="10" text-anchor="middle">~15% of the tokens</text>
+  <rect x="440" y="60" width="200" height="90" fill="#27272a" stroke="#34d399" stroke-width="2" rx="8"/>
+  <text x="540" y="84" fill="#34d399" font-size="13" font-weight="bold" text-anchor="middle">ACT · local</text>
+  <text x="540" y="105" fill="#e4e4e7" font-size="11" text-anchor="middle">write the code</text>
+  <text x="540" y="122" fill="#e4e4e7" font-size="11" text-anchor="middle">run the tests</text>
+  <text x="540" y="140" fill="#a1a1aa" font-size="10" text-anchor="middle">~85% of the tokens</text>
+  <line x1="265" y1="90" x2="435" y2="90" stroke="#38bdf8" stroke-width="2"/>
+  <polygon points="440,90 427,84 427,96" fill="#38bdf8"/>
+  <text x="350" y="82" fill="#38bdf8" font-size="11" text-anchor="middle">here is the task</text>
+  <line x1="435" y1="128" x2="265" y2="128" stroke="#34d399" stroke-width="2"/>
+  <polygon points="260,128 273,122 273,134" fill="#34d399"/>
+  <text x="350" y="146" fill="#34d399" font-size="11" text-anchor="middle">here is the diff and the test output</text>
+  <rect x="200" y="192" width="300" height="62" fill="#27272a" stroke="#fbbf24" stroke-width="2" rx="8"/>
+  <text x="350" y="215" fill="#fbbf24" font-size="12" font-weight="bold" text-anchor="middle">PLAN reviews: accept, correct, or re-plan</text>
+  <text x="350" y="236" fill="#a1a1aa" font-size="11" text-anchor="middle">judgment stays on the model that has it</text>
+  <line x1="160" y1="152" x2="230" y2="188" stroke="#52525b" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <line x1="540" y1="152" x2="470" y2="188" stroke="#52525b" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="350" y="278" fill="#e4e4e7" font-size="11" text-anchor="middle">frontier cost tracks the thinking, never the typing</text>
+</svg>`,
+            caption: 'Two dropdowns in Cline. No infrastructure, and it maps onto the 80/20 almost exactly.',
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'The same trick inside Claude Code is rougher today',
+            md: "Claude Code exposes `ANTHROPIC_MODEL` for the main session and `ANTHROPIC_SMALL_FAST_MODEL` for background work, and `CLAUDE_CODE_SUBAGENT_MODEL` sets a default for subagents that don't pick one. What's missing is per-agent-type configuration in settings.json, which is still an open feature request, and some built-in subagents ignore the small-model override entirely. If role-splitting is what you want, Cline does it cleanly right now and Claude Code needs the gateway in the next section.",
+          },
+        ],
+      },
+      {
+        heading: 'Layer 2: Claude Code Router',
+        blocks: [
+          {
+            type: 'text',
+            md: "When you want the routing automatic and invisible, this is the mature option rather than something to write yourself. [Claude Code Router](https://github.com/musistudio/claude-code-router) sits between your agent and every provider as a local gateway, and it picks a model per request type instead of per session.\n\nIt has grown well past its name. One CCR instance fronts Claude Code, Codex, OpenCode, Kilo Code, Grok CLI, and several others, giving all of them one stable local endpoint while you manage providers, routing rules, credentials, and logs in one place.",
+          },
+          {
+            type: 'table',
+            headers: ['Request type', 'Fires when', 'Send it to', 'Why'],
+            rows: [
+              ['background', 'housekeeping: diff summaries, session titles', 'the local box, always', 'pure volume, zero reasoning requirement'],
+              ['default', 'ordinary coding turns', 'your call, per project', 'the rung where your written policy applies'],
+              ['think', 'a reasoning or extended-thinking flag is set', 'frontier', 'the flag is the model telling you it needs depth'],
+              ['longContext', 'estimated token count crosses your threshold', 'frontier, or a long-context local model', 'quality degrades fastest here on local models'],
+              ['webSearch', 'a web tool is in play', 'whichever provider handles it', 'capability routing rather than cost routing'],
+            ],
+          },
+          {
+            type: 'text',
+            md: "It counts tokens with tiktoken to detect the long-context case, supports per-project and per-session overrides, and matches custom rules against request headers or body fields. When a single condition isn't enough, a rule can be a Node.js script that receives the request and returns a routing decision. The script gets `input.tokenCount`, `input.summary.toolNames`, `input.summary.hasImage`, and the last user message, then returns a model and any rewrites.\n\nIt also solves the subagent problem Claude Code hasn't yet. You write a short description for each model on the Models page, describing what it's good for, and CCR injects those descriptions into the Agent and Task tool definitions. When Claude Code spawns a subagent, it picks a model and CCR routes that spawned request accordingly.",
+          },
+          {
+            type: 'code',
+            lang: 'bash',
+            code: `# CLI install (Node 22+). A desktop app exists too.
+npm install -g @musistudio/claude-code-router
+ccr ui
+
+# Management UI:  http://127.0.0.1:3458
+# Model gateway:  http://127.0.0.1:3456
+#
+# Then: Providers → add Ollama (your mini) and your frontier key
+#       Server    → Start
+#       Agent Config → Claude Code → pick a default model
+#       Routing   → send background to the mini, think to frontier`,
+            caption: 'The gateway your agents point at, instead of pointing each one at a provider.',
+          },
+        ],
+      },
+      {
+        heading: 'Layer 3: A Real Gateway, and When It Earns Its Place',
+        blocks: [
+          {
+            type: 'text',
+            md: "[LiteLLM](https://docs.litellm.ai/docs/proxy/configs) is the general answer rather than the coding-specific one. It's an open-source proxy that exposes a hundred-plus providers behind a single OpenAI-compatible endpoint, with request logging, spend tracking, per-key budgets, rate limits, and ordered fallbacks. You supply the routing policy yourself, which is a feature once you have one worth supplying.\n\nIt earns its place when the mini stops being just a coding backend. Once you're also running scheduled classification jobs, a retrieval pipeline over your notes, and a couple of experiments, you want one endpoint that everything talks to and one log that knows what each thing cost. That's the cost-attribution discipline from [Token Economics & AI-Native SDLC · Cost Attribution & Unit Economics](lesson:m7-l6), applied to your own hardware.",
+          },
+          {
+            type: 'code',
+            lang: 'yaml',
+            code: `# config.yaml
+model_list:
+  - model_name: local-coder
+    litellm_params:
+      model: ollama/qwen3-coder
+      api_base: http://mac-mini.local:11434
+  - model_name: frontier
+    litellm_params:
+      model: claude-opus-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+router_settings:
+  fallbacks: [{"local-coder": ["frontier"]}]`,
+            caption: 'One endpoint, two brains, and an automatic escalation path when the local one errors.',
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'Fallback is not the same as routing',
+            md: "A fallback fires when a request fails: the server is down, the context overflowed, the model errored. That's worth configuring and it costs nothing. It will not catch the case that actually matters, which is a local model returning a confident wrong answer. No gateway can detect that. Only a verification step can, which is why [Agents, Harnesses & Loops · Verification: the #1 Quality Lever](lesson:m2-l4) matters more in a hybrid setup than in a single-model one.",
+          },
+        ],
+      },
+      {
+        heading: 'The Rule That Cannot Misfire',
+        blocks: [
+          {
+            type: 'text',
+            md: "Whatever rung you stop on, one rule deserves to be written before any of the clever ones, because it's the only one with no failure mode: **route by repository.**\n\nClient work under an NDA goes to the local box unconditionally. Not because a local model is better at it, and not because the tasks are easier. Because the constraint is legal, and legal constraints don't care how hard the task is. Everything else defaults to frontier.\n\nThat rule needs no classifier, no token count, and no judgment. You know which repository you're in before you type anything. It's the routing equivalent of a hook rather than an instruction: deterministic, unskippable, and it holds on the day you're tired and moving fast.",
+          },
+          {
+            type: 'table',
+            headers: ['Rung', 'Effort', 'What it buys', 'Stop here if'],
+            rows: [
+              ['0: two aliases', '5 minutes', 'most of the value, manual switching', 'you code solo and switch a few times a day'],
+              ['1: Plan/Act split', '2 dropdowns in Cline', 'frontier thinks, local types, inside one task', 'coding is your main workload. Most people stop here.'],
+              ['2: Claude Code Router', 'an afternoon', 'automatic routing by request type, subagent control', 'you switch constantly and want it invisible'],
+              ['3: LiteLLM gateway', 'a day, plus upkeep', 'one endpoint, one log, budgets and fallbacks', 'the box runs scheduled jobs as well as coding'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'Climb only when the rung below annoys you',
+            md: "Each rung removes a manual step and adds a thing that can break at 2am. Layer 0 has no failure mode beyond your own forgetfulness. Layer 3 is a service you now operate. Move up when the friction below is real and measured, never because the higher rung sounds more professional.",
+          },
+        ],
+      },
+    ],
+    lab: {
+      title: 'Measure Your Split, Then Automate It',
+      intro:
+        "Routing policies written from imagination are wrong, because everyone guesses their own workload badly. Spend a week collecting the data first, then build exactly the routing you turn out to need.",
+      steps: [
+        'Add the two aliases from this lesson to your shell config. Confirm `ccl` reaches your server and `cc` reaches the frontier, by watching GPU load on the server for one and not the other.',
+        'Write `hybrid-policy.md` with your first-guess split: at least five task classes on each side, plus the two-strikes escalation trigger.',
+        'For one week, keep a tally file. Every time you start a task, log one line: task class, which alias you used, and whether you had to escalate. Thirty lines is plenty.',
+        'At the end of the week, count. What fraction actually ran local? Which task classes escalated more than once? Those escalations are your policy being wrong, and they are the whole point of the exercise.',
+        'Rewrite hybrid-policy.md from the tally rather than from memory. Move any task class that escalated twice or more to the frontier column permanently.',
+        'Set up the Plan/Act split: install Cline, configure a frontier model for Plan mode and your local coder for Act mode, and run one real feature through the full loop.',
+        'Compare the Plan/Act run against the same task done entirely on frontier and entirely on local. Record wall-clock time, how many correction rounds each needed, and your honest quality verdict.',
+        'Only if the manual switching still annoys you: install Claude Code Router, point `background` at the mini and `think` at the frontier, and run a day of normal work through it. Check the Logs page to confirm requests resolved to the models you expected.',
+        'Add the repository rule wherever it can be enforced: NDA repos to the local box unconditionally. Write it at the top of hybrid-policy.md so it survives every future revision.',
+      ],
+      checklist: [
+        'Both aliases work, verified by watching load on the server',
+        'A week of real task-by-task tallies exists, not a guess',
+        'hybrid-policy.md was rewritten from the tally, with at least one task class moved',
+        'One feature shipped through a Plan/Act split with two different models',
+        'I compared Plan/Act against all-frontier and all-local on the same task and recorded the numbers',
+        'The unconditional repository rule is written down at the top of the policy',
+      ],
+    },
+    checkQuiz: [
+      {
+        q: 'What makes role-based routing (Plan on frontier, Act on local) more reliable than difficulty-based routing?',
+        options: [
+          'Planning models are cheaper per token than implementation models',
+          'The harness already knows which role it is running, so no judgment call is required',
+          'Local models are specifically trained for implementation and cannot plan',
+          'It halves the number of requests, which halves the cost',
+        ],
+        answer: 1,
+        explain:
+          'Role is a fact the harness holds before the request goes out, so routing on it is a lookup rather than a guess. Difficulty has to be inferred from text that does not contain it. The reliability difference comes entirely from knowing versus estimating.',
+      },
+      {
+        q: 'You configure a LiteLLM fallback from your local model to a frontier model. What will that fallback NOT protect you from?',
+        options: [
+          'The Mac mini being asleep or the server being down',
+          'A request whose context overflows the local model\'s window',
+          'The local model returning a confident, plausible, wrong answer',
+          'A transient network error between your laptop and the server',
+        ],
+        answer: 2,
+        explain:
+          'Fallbacks fire on failures, and a wrong answer is not a failure as far as the gateway can see: it got a well-formed 200 response. Only a verification step, meaning a test, a build, or a review, catches quality problems. This is why hybrid setups need verification more than single-model setups do.',
+      },
+      {
+        q: 'When is it worth climbing from Layer 1 (Plan/Act split) to Layer 2 (a routing gateway)?',
+        options: [
+          'Immediately, since automation is always better than manual switching',
+          'When you are switching constantly enough that the manual step is measurably costing you, and you want subagent-level control',
+          'Once your monthly frontier bill exceeds the cost of the hardware',
+          'Never; gateways add latency that outweighs any benefit',
+        ],
+        answer: 1,
+        explain:
+          'Each rung trades a manual step for a service you now operate and can break. Climb on measured friction rather than on principle. The gateway also unlocks per-subagent routing, which Claude Code does not yet offer natively, so that capability can justify the move on its own.',
+      },
+      {
+        q: 'Your tally week shows that "add a small feature to an existing file" escalated to frontier four times out of six. What does the policy change?',
+        options: [
+          'Nothing; a 33% local success rate is acceptable for a cheap model',
+          'Move that task class to the frontier column permanently, since the escalations are the policy being wrong',
+          'Lower the escalation trigger to one attempt so it escalates faster',
+          'Switch to a larger local model and keep the class local regardless',
+        ],
+        answer: 1,
+        explain:
+          'The tally exists to find exactly this. Four escalations out of six means every attempt at that class costs you a local run plus a frontier run plus the context switch, which is worse than going straight to frontier. Moving the class is the cheap fix; a bigger local model is a hypothesis you would have to test separately.',
+      },
+    ],
+    resources: [
+      { label: 'Claude Code Router', url: 'https://github.com/musistudio/claude-code-router', kind: 'repo' },
+      { label: 'Claude Code Router: routing configuration', url: 'https://ccrdesk.top/', kind: 'docs' },
+      { label: 'Cline: Plan & Act modes', url: 'https://docs.cline.bot/core-workflows/plan-and-act', kind: 'docs' },
+      { label: 'Cline discussion: automatic plan/act loop with separate models', url: 'https://github.com/cline/cline/discussions/12959', kind: 'thread' },
+      { label: 'Claude Code model configuration', url: 'https://code.claude.com/docs/en/model-config', kind: 'docs' },
+      { label: 'LiteLLM proxy configuration', url: 'https://docs.litellm.ai/docs/proxy/configs', kind: 'docs' },
+      { label: 'LiteLLM fallbacks and failover', url: 'https://docs.litellm.ai/docs/proxy/reliability', kind: 'docs' },
     ],
   },
 ]

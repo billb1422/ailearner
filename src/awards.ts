@@ -17,12 +17,14 @@ export function checkAwards(p: ProgressState, modules: Module[]): string[] {
     if (awardBadge(id)) earned.push(id)
   }
 
-  const allLessons = modules.flatMap((m) => m.lessons)
-  const doneCount = allLessons.filter((l) => isLessonDone(p, l.id)).length
+  // Bonus modules sit outside the 30-day path, so they never gate the
+  // progress badges (halfway / all-lessons) that measure the core course.
+  const coreLessons = modules.filter((m) => !m.bonus).flatMap((m) => m.lessons)
+  const doneCount = coreLessons.filter((l) => isLessonDone(p, l.id)).length
 
   if (doneCount >= 1) give('first-lesson')
-  if (doneCount >= Math.ceil(allLessons.length / 2)) give('halfway')
-  if (doneCount === allLessons.length) give('all-lessons')
+  if (doneCount >= Math.ceil(coreLessons.length / 2)) give('halfway')
+  if (doneCount === coreLessons.length) give('all-lessons')
 
   if (Object.values(p.lessons).some((lp) => lp.status === 'tested-out')) give('test-out')
   if (Object.values(p.lessons).some((lp) => (lp.checkQuizScore ?? 0) === 1)) give('perfect-quiz')

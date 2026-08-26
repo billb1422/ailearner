@@ -57,7 +57,7 @@ export function LessonView({ lesson: l, module: m, modules, onBack, onBadges }: 
       </button>
       <h1 className="mt-2 text-2xl font-bold text-zinc-100">{l.title}</h1>
       <div className="mt-1 text-sm text-zinc-500">
-        Day {l.day} · ~{l.minutes} min · {l.xp} XP
+        {m.bonus ? 'Bonus' : `Day ${l.day}`} · ~{l.minutes} min · {l.xp} XP
         {already && <span className="ml-2 text-emerald-400">✓ completed</span>}
       </div>
     </div>

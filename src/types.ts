@@ -75,6 +75,7 @@ export interface Module {
   days: string // display string, e.g. 'Days 1–3'
   lessons: Lesson[]
   boss: BossChallenge
+  bonus?: boolean // optional post-course module; excluded from the core lesson count
 }
 
 // Capstone tracks (Day 22): learner picks one in-app.

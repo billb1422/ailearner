@@ -18,9 +18,14 @@ export function Dashboard({ modules, onOpenModule, onOpenLesson, onOpenBadges, o
   const next = nextLevel(p.xp)
   const pct = next ? Math.min(100, Math.round(((p.xp - level.minXp) / (next.minXp - level.minXp)) * 100)) : 100
 
-  const allLessons = modules.flatMap((m) => m.lessons.map((l) => ({ m, l })))
-  const doneCount = allLessons.filter(({ l }) => isLessonDone(p, l.id)).length
-  const nextUp = allLessons.find(({ l }) => !isLessonDone(p, l.id))
+  // The 30-day path is the core modules; bonus modules are counted separately
+  // so finishing the course still reads as 100%.
+  const coreLessons = modules.filter((m) => !m.bonus).flatMap((m) => m.lessons.map((l) => ({ m, l })))
+  const bonusLessons = modules.filter((m) => m.bonus).flatMap((m) => m.lessons.map((l) => ({ m, l })))
+  const doneCount = coreLessons.filter(({ l }) => isLessonDone(p, l.id)).length
+  const bonusDone = bonusLessons.filter(({ l }) => isLessonDone(p, l.id)).length
+  const nextUp = coreLessons.find(({ l }) => !isLessonDone(p, l.id))
+  const nextBonus = bonusLessons.find(({ l }) => !isLessonDone(p, l.id))
   const badgeCount = Object.keys(p.badges).length
   const recentBadges = Object.entries(p.badges)
     .sort((a, b) => b[1].localeCompare(a[1]))
@@ -34,7 +39,13 @@ export function Dashboard({ modules, onOpenModule, onOpenLesson, onOpenBadges, o
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-zinc-50">30 Days to Agent Expert</h1>
             <p className="mt-1 text-zinc-400">
-              {doneCount}/{allLessons.length} lessons · 2 hrs a weekday · learn by building
+              {doneCount}/{coreLessons.length} lessons · 2 hrs a weekday · learn by building
+              {bonusLessons.length > 0 && (
+                <span className="text-teal-400">
+                  {' '}
+                  · +{bonusLessons.length} bonus ({bonusDone} done)
+                </span>
+              )}
             </p>
           </div>
           <div className="flex gap-3 text-center">
@@ -77,6 +88,14 @@ export function Dashboard({ modules, onOpenModule, onOpenLesson, onOpenBadges, o
           <div className="mt-5 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-300 font-semibold">
             🏆 All lessons complete! Finish your boss challenges and capstone to claim full mastery.
           </div>
+        )}
+        {nextBonus && (
+          <button
+            onClick={() => onOpenLesson(nextBonus.m.id, nextBonus.l.id)}
+            className="mt-3 sm:ml-3 w-full sm:w-auto rounded-xl border border-teal-500/50 bg-teal-500/10 text-teal-300 hover:bg-teal-500/20 font-semibold px-5 py-3 transition-colors"
+          >
+            ★ Bonus: {nextBonus.l.title}
+          </button>
         )}
       </div>
 

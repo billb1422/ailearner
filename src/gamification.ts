@@ -48,6 +48,7 @@ export const BADGES: BadgeDef[] = [
   { id: 'badge-m6', emoji: '🧬', name: 'Model Tuner', desc: 'Completed Module 6: Fine-Tuning' },
   { id: 'badge-m7', emoji: '📐', name: 'SDLC Shipper', desc: 'Completed Module 7: Token Economics & AI-Native SDLC' },
   { id: 'badge-m8', emoji: '🏢', name: 'Transformation Strategist', desc: 'Completed Module 8: The AI Transformation Playbook' },
+  { id: 'badge-m9', emoji: '📟', name: 'Model Mechanic', desc: 'Completed the bonus module: Your Own Model Server' },
   // Boss badges
   { id: 'boss-m0', emoji: '🗺️', name: 'Boss: Cartographer', desc: 'Beat the Module 0 boss challenge' },
   { id: 'boss-m1', emoji: '🛠️', name: 'Boss: Toolsmith', desc: 'Beat the Module 1 boss challenge' },
@@ -58,6 +59,7 @@ export const BADGES: BadgeDef[] = [
   { id: 'boss-m6', emoji: '⚗️', name: 'Boss: Alchemist', desc: 'Beat the Module 6 boss challenge' },
   { id: 'boss-m7', emoji: '💰', name: 'Boss: Loop Pricer', desc: 'Beat the Module 7 boss challenge' },
   { id: 'boss-m8', emoji: '🚀', name: 'Boss: Launch Master', desc: 'Beat the Module 8 boss challenge' },
+  { id: 'boss-m9', emoji: '🛰️', name: 'Boss: Server Sovereign', desc: 'Beat the bonus module boss challenge' },
   // Special badges
   { id: 'first-lesson', emoji: '🌱', name: 'First Steps', desc: 'Completed your first lesson' },
   { id: 'test-out', emoji: '🧠', name: 'Already Knew That', desc: 'Tested out of a lesson with the skip quiz' },

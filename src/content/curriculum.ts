@@ -10,6 +10,7 @@ import { lessons as m5Lessons } from './modules/m5'
 import { lessons as m6Lessons } from './modules/m6'
 import { lessons as m7Lessons } from './modules/m7'
 import { lessons as m8Lessons } from './modules/m8'
+import { lessons as m9Lessons } from './modules/m9'
 
 export const MODULES: Module[] = [
   {
@@ -120,6 +121,7 @@ export const MODULES: Module[] = [
         'Three real tasks run on both the local model and a frontier model, outputs compared',
         'Notes on speed, quality, and cost for each',
         'A written hybrid policy: which of your workloads go local vs frontier, and why',
+        'The policy is enforced by something other than memory: shell aliases, a Plan/Act model split, or a routing gateway, plus one unconditional repository rule',
       ],
       xp: 250,
       badgeId: 'boss-m4',
@@ -213,6 +215,32 @@ export const MODULES: Module[] = [
       ],
       xp: 250,
       badgeId: 'boss-m8',
+    },
+  },
+  {
+    id: 'm9',
+    title: 'Bonus: Your Own Model Server',
+    emoji: '🖥️',
+    color: '#2dd4bf',
+    tagline: 'Dense vs MoE, quantization, bandwidth math, and coding against a Mac mini in your closet',
+    days: 'Bonus · after Day 22',
+    bonus: true,
+    lessons: m9Lessons,
+    boss: {
+      title: 'Serve the Brain',
+      description:
+        'Turn a Mac into a real model server and prove it works from a machine that is not it. Stand the server up so it survives a reboot, benchmark what your hardware can actually do, reach it from off your home network, and drive a coding agent against it end to end. The deliverable is a working setup plus an honest verdict on where its edges are.',
+      requirements: [
+        'A sizing table exists for your hardware: RAM budget, bandwidth, and predicted tokens/sec for at least six model shapes',
+        'Measured benchmarks for three models with time-to-first-token and tokens/sec recorded separately, at a short and a 10K-token prompt',
+        'The server binds to the network on boot with no manual start, and a keep-alive and context length set deliberately',
+        'A second machine reached the model over a mesh VPN while off the home network',
+        'One real coding task completed through an agent driving the local model, verified by GPU load on the server',
+        'The same task run on a frontier model, with all timings and quality differences written down',
+        'local-coding-setup.md exists with each tool config, the truncated-context failure signature, and three task classes routed to the server',
+      ],
+      xp: 300,
+      badgeId: 'boss-m9',
     },
   },
 ]
