@@ -302,7 +302,7 @@ export const lessons: Lesson[] = [
     id: 'm7-l2',
     title: 'The AI-Native SDLC',
     day: 22,
-    minutes: 60,
+    minutes: 66,
     xp: 100,
     objectives: [
       'Can describe the shift from AI autocompleting your code to you orchestrating agents that write it, with the 2026 survey numbers to back it up',
@@ -398,7 +398,7 @@ export const lessons: Lesson[] = [
         blocks: [
           {
             type: 'text',
-            md: '**Spec-driven development** is the workflow that fell out of this shift. A spec (short for specification) is a written description of what the software should do, precise enough that someone, or something, could build from it. The old-world version was a ticket in a project tracker that everyone stopped reading after kickoff. The new version is a first-class file: it lives in the repository, it gets version-controlled in [git](https://git-scm.com/) like source code, and everything else derives from it.\n\nThe flow runs in four steps. You write the spec. The spec expands into a plan, meaning the technical approach. The plan breaks down into **atomic tasks**, where atomic means each task is small enough for an agent to finish in one go and small enough for a human to review without dread. Agents then turn those tasks into code.\n\nTooling made this concrete in 2025-2026. [GitHub Spec Kit](https://github.com/github/spec-kit) and [Amazon Kiro](https://kiro.dev) both treat the spec as the thing you write, diff, and review, with code as a derived artifact downstream of it, and [BMAD](https://github.com/bmad-code-org/BMAD-METHOD) runs the same playbook with a whole cast of specialized planning agents. You already practiced the shape in [Claude Code Mastery · The Best-Practices Workflow](lesson:m1-l9) with the interview-to-SPEC.md pattern.',
+            md: '**Spec-driven development** is the workflow that fell out of this shift. A spec (short for specification) is a written description of what the software should do, precise enough that someone, or something, could build from it. The old-world version was a ticket in a project tracker that everyone stopped reading after kickoff. The new version is a first-class file: it lives in the repository, it gets version-controlled in [git](https://git-scm.com/) like source code, and everything else derives from it.\n\nThe flow runs in four steps. You write the spec. The spec expands into a plan, meaning the technical approach. The plan breaks down into **atomic tasks**, where atomic means each task is small enough for an agent to finish in one go and small enough for a human to review without dread. Agents then turn those tasks into code.\n\nTooling made this concrete in 2025-2026. [GitHub Spec Kit](https://github.com/github/spec-kit) and [Amazon Kiro](https://kiro.dev) both treat the spec as the thing you write, diff, and review, with code as a derived artifact downstream of it, and [BMAD](https://github.com/bmad-code-org/BMAD-METHOD) runs the same playbook with a whole cast of specialized planning agents. Both default to EARS syntax for acceptance criteria, which you practiced along with the interview-to-SPEC.md pattern in [Claude Code Mastery · The Best-Practices Workflow](lesson:m1-l9).',
           },
           {
             type: 'diagram',
@@ -410,6 +410,25 @@ export const lessons: Lesson[] = [
             variant: 'insight',
             title: 'Why specs beat prompts',
             md: 'A prompt evaporates when the session ends. A spec sticks around: any agent, in any session, on any model tier, can pick it up and produce consistent work from it. And when the output is wrong, you fix the spec and regenerate, which is the same move as fixing source code instead of patching the compiled binary.',
+          },
+          {
+            type: 'text',
+            md: "Teams land at three different depths with this, and it helps to know which one you're aiming at before you pick tooling. **Spec-first** means you write a spec to seed the work, then let the code drift away from it afterward. Cheap, and fine for a prototype. **Spec-anchored** means the spec and the code stay alive together: you update the spec whenever behavior changes, and tests hold the two honest. **Spec-as-source** means humans only ever edit the spec and the code gets fully regenerated, which is where the tooling vendors are pointing and where almost nobody actually operates yet. Practitioner consensus in 2026 puts the sweet spot at spec-anchored for anything headed to production.",
+          },
+          {
+            type: 'table',
+            headers: ['Level', 'Who edits what', 'Costs you', 'Fits'],
+            rows: [
+              ['Spec-first', 'Spec once, then code only. The spec goes stale on purpose.', 'An hour up front', 'Prototypes, spikes, throwaway work'],
+              ['Spec-anchored', 'Both. Spec updated when behavior changes; tests enforce the match.', 'Ongoing upkeep on one file per feature', 'Most production systems'],
+              ['Spec-as-source', 'Spec only. Code is generated output nobody hand-edits.', 'Mature tooling plus real organizational trust', 'Still mostly aspirational in 2026'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'When the spec overhead is not worth it',
+            md: "Two failure modes show up over and over. **Over-specification** turns the spec into pseudocode, at which point you've written the feature twice and gained nothing. **False confidence** is nastier: the agent hits every criterion perfectly, all the tests pass, and the spec itself was wrong, so a tidy green build ships the wrong behavior. Skip the ceremony entirely for throwaway prototypes, solo short-lived scripts, and exploratory work where you don't yet know what you want. Reach for it when the system is complex, multi-maintainer, integration-heavy, or regulated. Thoughtworks still lists spec-driven development under 'Assess' rather than 'Adopt' on its Technology Radar, and the sharpest critique is worth holding onto: the value comes from the thinking you do while writing the spec, and no amount of tooling can do that part for you.",
           },
           {
             type: 'callout',

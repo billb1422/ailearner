@@ -1166,12 +1166,13 @@ osascript -e "display notification \\"$MSG\\" with title \\"Claude Code\\""`,
     id: 'm1-l9',
     title: 'The Best-Practices Workflow',
     day: 8,
-    minutes: 62,
+    minutes: 74,
     xp: 100,
     objectives: [
       "Can run a feature through the full explore → plan → implement → verify → commit loop",
       "Can pick the right rung on the verification escalation ladder for a task's stakes",
       "Can size a spec to one vertical slice and route any piece of context to its right home",
+      "Can write acceptance criteria in EARS syntax so every requirement maps to one test",
       "Can recognize and name the five failure patterns before they cost an afternoon",
       "Can deploy an adversarial review subagent before declaring any work done",
     ],
@@ -1360,6 +1361,113 @@ osascript -e "display notification \\"$MSG\\" with title \\"Claude Code\\""`,
         ],
       },
       {
+        heading: 'Inside the spec: anatomy and acceptance criteria',
+        blocks: [
+          {
+            type: 'text',
+            md: "Sizing settles how much a spec covers. The next question is what actually goes inside it, and there are two ways to get that wrong that pull in opposite directions.\n\n**Under-specify** and the agent fills the gaps on its own. It picks a data shape, invents an error format, guesses what happens when the input is empty, and none of those guesses ever come back to you for approval. **Over-specify** and the spec turns into pseudocode. You've written the implementation in prose, which takes longer than writing the code and leaves you maintaining two copies of the same thing. Aim for the line between: pin down everything that matters to you, and leave the rest to the agent's discretion.\n\nHow much counts as 'matters to you' scales with the stakes. A settings toggle runs fine on half a page. Anything touching money, auth, or data you can't regenerate earns a thorough spec with the edge cases spelled out.",
+          },
+          {
+            type: 'table',
+            headers: ['Section', 'What it holds', 'Skip it when'],
+            rows: [
+              ['Problem and goal', "One paragraph: what a user can't do today, and what they can do once this ships", 'Never skip this one'],
+              ['Acceptance criteria', 'The behavior itself, written so each line can become a test (EARS, below)', 'Never skip this one'],
+              ['Out of scope', 'An explicit list of what this spec does NOT cover', 'Never skip; this is where scope creep goes to die'],
+              ['User roles', 'Who touches the feature, and what each one is allowed to do', 'Single-role features'],
+              ['Data and API shape', 'Table columns, request and response bodies, field names', 'The feature touches no new data'],
+              ['Non-functional requirements', 'Performance, limits, privacy: anything with a number attached', 'The number already lives in a shared standards file'],
+              ['Edge cases and failure paths', 'Empty states, timeouts, duplicate submits, permission denials', 'Nothing here can fail in a way a user would notice'],
+              ['Guardrails', "Always / ask-first / never rules for this feature's blast radius", 'The feature touches nothing sensitive'],
+            ],
+          },
+          {
+            type: 'code',
+            lang: 'markdown',
+            caption: 'A spec for one vertical slice. Short enough to read in two minutes, specific enough that nothing important is left to a guess.',
+            code: `# Spec: password reset via email
+
+## Problem
+A user who forgets their password has no way back in without emailing support.
+
+## Goal
+Get a locked-out user to a working password in under two minutes, with no human in the loop.
+
+## Out of scope
+- Passwordless login
+- Changing a password while already signed in
+- Admin-initiated resets
+
+## Acceptance criteria
+1. WHEN a user submits a known email, the system shall send a reset link and show "Check your email."
+2. WHEN a user submits an unknown email, the system shall show that same message and send nothing.
+3. The system shall expire a reset token 15 minutes after it is issued.
+4. IF a token is submitted twice, THEN the system shall reject it and show "This link has expired."
+5. WHILE a reset is pending, the system shall keep the existing password valid.
+
+## Data
+reset_tokens(token_hash, user_id, expires_at, used_at)
+
+## Guardrails
+- Always: add a test for each acceptance criterion above.
+- Ask first: any change to the users table.
+- Never: log the raw token or the contents of the email.`,
+          },
+          {
+            type: 'text',
+            md: "Notice what that spec leaves out: which library sends the mail, how the token gets hashed, what the file layout looks like. Those belong in the **plan**, and keeping the two apart is what stops a spec from swelling into pseudocode. The spec says what the feature does and why, and it stays true for as long as the feature exists. The plan says how you'll build it and in what order, and you throw it away once the work lands. When people complain that specs are heavy waterfall documents, they're usually describing a spec with a plan mashed into it.",
+          },
+          {
+            type: 'text',
+            md: "Now the part that does the most work per word: **acceptance criteria**, meaning the specific statements of behavior that decide whether the feature is done. Written loosely, they're where ambiguity hides. 'Handle errors gracefully' reads fine to a human and means nothing to an agent, which will happily invent its own definition of graceful.\n\nThe fix came out of aerospace requirements work: [EARS](https://alistairmavin.com/ears/), the Easy Approach to Requirements Syntax, published by an engineer at Rolls-Royce in 2009 for writing jet-engine requirements that couldn't be misread. EARS gives you five sentence templates, and every requirement you write has to fit one of them. That constraint is the feature: it forces you to name the trigger, the condition, and the response out loud, and it produces sentences that both a person and a model parse the same way. Spec-driven tooling picked it up fast, and it's now the default criteria format in GitHub Spec Kit and Amazon Kiro.",
+          },
+          {
+            type: 'table',
+            headers: ['Pattern', 'Template', 'Example'],
+            rows: [
+              ['Ubiquitous', 'The system shall <behavior>', 'The system shall log every sign-in attempt with a timestamp and an outcome.'],
+              ['Event-driven', 'WHEN <trigger>, the system shall <behavior>', 'WHEN a user submits the reset form, the system shall send a single-use link.'],
+              ['State-driven', 'WHILE <in some state>, the system shall <behavior>', 'WHILE a sync is running, the system shall show progress and disable the Sync button.'],
+              ['Unwanted behavior', 'IF <something goes wrong>, THEN the system shall <response>', 'IF a password fails three times in a row, THEN the system shall lock the account for 15 minutes.'],
+              ['Optional feature', 'WHERE <feature is present>, the system shall <behavior>', 'WHERE two-factor auth is enabled, the system shall require a code before finishing the reset.'],
+            ],
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'Criteria an agent will interpret for you',
+              items: [
+                "'Password reset should be secure'",
+                "'Handle errors gracefully'",
+                "'The link should expire after a while'",
+                "'Make sure it works on mobile'",
+              ],
+            },
+            right: {
+              title: 'Criteria that turn straight into tests',
+              items: [
+                'WHEN a reset is requested for an unknown email, the system shall return the same response as for a known one.',
+                'IF a token has already been used, THEN the system shall return 410 and log the attempt.',
+                'The system shall expire reset tokens 15 minutes after issue.',
+                'WHILE the viewport is under 480px, the form shall stack its fields in one column.',
+              ],
+            },
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'One criterion, one test, one piece of evidence',
+            md: "Each EARS line converts into a test almost mechanically, and that's the whole payoff. It hands you the binary signal the verify stage demands, and it gives the adversarial reviewer something concrete to hold the diff against. It also settles an argument that runs through every spec-driven team: the spec is where intent lives, while the code and its tests remain the source of truth about actual behavior. When the two disagree, the tests are what tell you which one drifted.",
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'Write guardrails in three tiers, never one list',
+            md: "A survey of thousands of agent config files turned up one habit that separated the specs that worked. Guardrails got written in three labeled tiers instead of one flat list. **Always** covers what needs no approval ('always run the test suite before committing'). **Ask first** covers moves with a wide blast radius ('ask before changing a database schema or dropping a migration'). **Never** covers hard prohibitions, and the most common useful rule across the whole sample was some version of 'never commit secrets or API keys'. The tiers work because they show the agent where the boundary between autonomy and permission sits. A single undifferentiated list makes it guess.",
+          },
+        ],
+      },
+      {
         heading: 'Route context to its home',
         blocks: [
           {
@@ -1377,6 +1485,7 @@ osascript -e "display notification \\"$MSG\\" with title \\"Claude Code\\""`,
               ['Anything with side effects that should never auto-trigger', 'A skill with disable-model-invocation: true'],
               ['A rule that must be enforced with zero exceptions', 'A hook'],
               ['The big-picture product vision', 'VISION.md, read occasionally, not loaded every session'],
+              ['A non-functional standard every project shares (uptime, latency, privacy)', 'A shared technical spec that feature specs point at instead of restating'],
               ['A consequential, system-wide architectural choice', 'An ADR in docs/adr/, one file per decision'],
               ['What has already been built, session over session', 'The codebase plus a CHANGELOG or git history'],
             ],
@@ -1486,15 +1595,15 @@ osascript -e "display notification \\"$MSG\\" with title \\"Claude Code\\""`,
         explain: "Ctrl+G pops the plan into your editor. Cutting speculation and tightening scope right there costs seconds, and it beats any amount of corrective prompting after the implementation has already wandered.",
       },
       {
-        q: "Mechanically, how does a Stop hook enforce verification?",
+        q: "Which acceptance criterion is written in EARS syntax?",
         options: [
-          "It appends test results to every response",
-          "It runs a handler when the session tries to stop, and an exit code of 2 blocks completion until the checks pass",
-          "It reverts the last commit if CI fails",
-          "It forces plan mode before any Edit tool call",
+          "The reset flow should be secure and handle errors gracefully",
+          "IF a reset token is submitted twice, THEN the system shall reject it and show an expiry message",
+          "Add tests for the reset flow before merging",
+          "Reset tokens are stored hashed in the reset_tokens table",
         ],
         answer: 1,
-        explain: "Stop hooks fire at the moment Claude claims to be finished. If your handler script exits with code 2, the stop gets rejected and the session has to keep working until the real check finally passes.",
+        explain: "EARS wraps each requirement in one of five templates, and this one uses the unwanted-behavior pattern: IF something goes wrong, THEN the system shall respond in a stated way. The trigger and the response are both named, so the line converts into a test almost word for word. The other three options are a vague wish, a process rule, and a data-model fact.",
       },
       {
         q: "Which transcript shows the kitchen-sink anti-pattern?",
@@ -1525,6 +1634,9 @@ osascript -e "display notification \\"$MSG\\" with title \\"Claude Code\\""`,
       { label: 'Karpathy - Sequoia Ascent 2026 summary', url: 'https://karpathy.bearblog.dev/sequoia-ascent-2026', kind: 'article' },
       { label: 'Simon Willison - Vibe Engineering', url: 'https://simonwillison.net/2025/Oct/7/vibe-engineering/', kind: 'article' },
       { label: 'systematicls - World-Class Agentic Engineer thread', url: 'https://x.com/systematicls', kind: 'thread' },
+      { label: 'Addy Osmani - How to Write a Good Spec for AI Agents', url: 'https://addyosmani.com/blog/good-spec/', kind: 'article' },
+      { label: 'EARS: the Easy Approach to Requirements Syntax (Alistair Mavin)', url: 'https://alistairmavin.com/ears/', kind: 'docs' },
+      { label: 'Allegro Tech - Spec-Driven Development best practices', url: 'https://blog.allegro.tech/2026/06/spec-driven-development-best-practices.html', kind: 'article' },
     ],
   },
 ]
