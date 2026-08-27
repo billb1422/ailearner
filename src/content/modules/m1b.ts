@@ -670,7 +670,7 @@ claude mcp list`,
         blocks: [
           {
             type: 'text',
-            md: "A [git worktree](https://git-scm.com/docs/git-worktree) is a second working copy of your repository that shares the same underlying `.git` history. Normally one repo means one checkout on disk, so only one branch can be open at a time. Worktrees remove that limit: you can have `../myapp-auth` checked out on one branch and `../myapp-flaky` on another, both backed by the same repo, with nothing cloned twice.\n\nWhy does that matter here? Because each worktree can host its **own Claude session**, with its own context and its own branch. The sessions physically can't collide, since each one only sees the files in its own checkout. Boris Cherny, who created Claude Code, calls this the habit that pays off most. While one session implements a feature, another fixes a flaky test and a third regenerates docs. Your job shifts from typing code to supervising diffs.",
+            md: "A [git worktree](https://git-scm.com/docs/git-worktree) is a second working copy of your repository that shares the same underlying `.git` history. Normally one repo means one checkout on disk, so only one branch can be open at a time. Worktrees remove that limit: you can have `../myapp-auth` checked out on one branch and `../myapp-flaky` on another, both backed by the same repo, with nothing cloned twice.\n\nWhy does that matter here? Because each worktree can host its **own Claude session**, with its own context and its own branch. The sessions physically can't collide, since each one only sees the files in its own checkout. Boris Cherny, who created Claude Code, calls this the habit that pays off most. While one session implements a feature, another fixes a flaky test and a third regenerates docs. Your job shifts from typing code to supervising diffs.\n\nYou can set this up by hand with `git worktree add`, or let Claude Code do it: `claude --worktree feature-auth` creates the checkout under `.claude/worktrees/` and starts a session in it, branching from your remote's default branch so every parallel session shares one base. Getting the branches back into `main` afterward is its own skill, covered in [Claude Code Mastery · Landing Parallel Work](lesson:m1-l11).",
           },
           {
             type: 'diagram',
@@ -706,7 +706,10 @@ claude mcp list`,
           {
             type: 'code',
             lang: 'bash',
-            code: `git worktree add ../myapp-auth  -b feat/auth
+            code: `claude --worktree feat-auth        # Claude creates the worktree and starts in it
+
+# or roll it yourself when you need a specific path or an existing branch:
+git worktree add ../myapp-auth  -b feat/auth
 git worktree add ../myapp-flaky -b fix/flaky-e2e
 cd ../myapp-auth  && claude   # terminal tab 1
 cd ../myapp-flaky && claude   # terminal tab 2
@@ -1156,6 +1159,404 @@ osascript -e "display notification \\"$MSG\\" with title \\"Claude Code\\""`,
       { label: 'Claude Code docs: status line', url: 'https://code.claude.com/docs/en/statusline', kind: 'docs' },
       { label: 'Slack incoming webhooks (for the push channel)', url: 'https://api.slack.com/messaging/webhooks', kind: 'docs' },
       { label: 'everything-claude-code: community status lines & monitors', url: 'https://github.com/affaanmustafa/everything-claude-code', kind: 'repo' },
+    ],
+  },
+
+  // ------------------------------------------------------------------
+  // m1-l11 - Landing Parallel Work
+  // ------------------------------------------------------------------
+  {
+    id: 'm1-l11',
+    title: 'Landing Parallel Work',
+    day: 8,
+    minutes: 45,
+    xp: 100,
+    objectives: [
+      "Can freeze one shared base and split tasks so parallel branches own disjoint files",
+      "Can land three agent branches into main one at a time, rebasing each onto the newest main",
+      "Can recognize a semantic conflict that survives green CI on every branch",
+      "Can write a landing gate that checks behavior instead of trusting unit tests",
+    ],
+    skipQuiz: [
+      {
+        q: "A 2026 study of 33,596 agent-authored pull requests measured textual merge conflicts. How did cross-agent PR pairs compare to pairs from the same agent?",
+        options: [
+          "About the same, near 20% either way",
+          "Roughly double: 41.7% cross-agent versus 19.8% same-agent",
+          "Cross-agent conflicts were rarer, around 8%",
+          "Cross-agent conflicts hit more than 90% of pairs",
+        ],
+        answer: 1,
+        explain: "Across 2,807 repositories, cross-agent pairs conflicted 41.7% of the time and same-agent pairs 19.8%, with confidence intervals that don't overlap. Two agents that can't see each other's work in progress collide about twice as often as one agent doing the same volume alone.",
+      },
+      {
+        q: "'Parallel generation, sequential landing' means:",
+        options: [
+          "Agents take turns writing, then every branch merges in one batch",
+          "Agents write at the same time, but branches enter main one at a time with a real check between each",
+          "One agent writes code and a second agent performs the merges",
+          "You generate in parallel and let the merge queue resolve conflicts on its own",
+        ],
+        answer: 1,
+        explain: "Writing is where parallelism pays. Landing is where it costs. Keeping the merge step serial means any breakage traces to exactly one branch, because only one thing changed since the last green check.",
+      },
+      {
+        q: "What is a semantic conflict?",
+        options: [
+          "A merge git halts on until a human picks a side",
+          "Two changes that each pass their own tests, merge with no complaint from git, and still break behavior once combined",
+          "A conflict confined to lockfiles and generated code",
+          "A merge that fails to compile after both branches land",
+        ],
+        answer: 1,
+        explain: "Git compares text, so it catches two branches editing the same lines. It has no opinion about meaning. Change A can be green, change B can be green, and A plus B can still be red with git reporting a clean merge.",
+      },
+      {
+        q: "Handing a merge conflict to an agent to resolve carries a risk that a human resolver doesn't. Which one?",
+        options: [
+          "Agents run three-way merges more slowly than git does",
+          "The agent sees the diff without either side's intent, keeps whichever version reads as more complete, and the losing feature vanishes with no error or failing test",
+          "Agents can't execute git commands while a merge is in progress",
+          "Agents always pick the version with more lines of code",
+        ],
+        answer: 1,
+        explain: "A human resolver usually wrote one of the two sides and knows what it was for. An agent has neither intent, only two blocks of plausible code. It picks the more coherent-looking one, the build stays green, and a feature quietly stops existing.",
+      },
+      {
+        q: "With Claude Code's `worktree.baseRef` left at its default, a new worktree branches from:",
+        options: [
+          "Your current local HEAD, carrying any unpushed commits",
+          "The repository's default branch on the remote, usually origin/main",
+          "The last branch you merged into main",
+          "A detached HEAD at the most recent tag",
+        ],
+        answer: 1,
+        explain: "The default is `fresh`, which branches from the remote default branch and fetches it if the repo hasn't been fetched in 24 hours. Three worktree sessions started hours apart still share one base. Switching to `head` branches from your local HEAD instead, which you want when an agent has to build on work you haven't pushed.",
+      },
+    ],
+    sections: [
+      {
+        heading: 'Generation is parallel. Landing is a queue.',
+        blocks: [
+          {
+            type: 'text',
+            md: "The worktree habit from [Claude Code Mastery · Power Features](lesson:m1-l8) gets three sessions writing code at once. It says nothing about how those three branches get back into `main` without eating each other, and that turns out to be where the day goes.\n\nSome numbers to size the problem. A July 2026 study looked at [33,596 agent-authored pull requests across 2,807 repositories](https://arxiv.org/abs/2607.04697). In 40.2% of those repos, agent PRs were open at literally overlapping times, and those overlapping pairs accounted for 79.4% of all agent PRs. Stretch the window to one week and it's 53.4% of repos covering 95% of PRs. So concurrent agent work isn't an edge case in that data. It's the normal shape.\n\nNow the collision rate. When an overlapping pair came from two **different** agents, 41.7% hit a textual merge conflict. Same agent, two PRs: 19.8%. And 84.4% of the conflicted files were real source code rather than lockfiles or generated output, with about 42% of conflicts structural (one side deleted or renamed what the other side modified).",
+          },
+          {
+            type: 'text',
+            md: "Treat those numbers as a design constraint. Agents can't see each other's uncommitted work, so parallel agents collide roughly twice as often as you working alone at the same volume. You can't prompt your way out of that. You can only structure around it.\n\nThe rule that falls out: **generate in parallel, land in a queue**. Three sessions can write simultaneously all afternoon. The moment code starts moving toward `main`, it goes one branch at a time with a real check between each. When something breaks, exactly one branch changed since the last green check, so the blame is unambiguous.",
+          },
+          {
+            type: 'diagram',
+            svg: `<svg viewBox="0 0 700 350" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect x="0" y="0" width="700" height="350" fill="#18181b" rx="8"/>
+  <defs>
+    <marker id="arrFan" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#fbbf24"/>
+    </marker>
+    <marker id="arrQ" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#38bdf8"/>
+    </marker>
+  </defs>
+  <rect x="250" y="16" width="200" height="50" fill="#27272a" stroke="#fbbf24" rx="8"/>
+  <text x="350" y="38" fill="#e4e4e7" font-size="14" text-anchor="middle" font-weight="bold">main @ a3f9c1</text>
+  <text x="350" y="56" fill="#a1a1aa" font-size="11" text-anchor="middle">one frozen base for all three</text>
+  <line x1="300" y1="66" x2="130" y2="100" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrFan)"/>
+  <line x1="350" y1="66" x2="350" y2="100" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrFan)"/>
+  <line x1="400" y1="66" x2="570" y2="100" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrFan)"/>
+  <rect x="30" y="104" width="200" height="56" fill="#27272a" stroke="#38bdf8" rx="8"/>
+  <text x="130" y="126" fill="#38bdf8" font-size="12" text-anchor="middle">feat/roles</text>
+  <text x="130" y="146" fill="#a1a1aa" font-size="11" text-anchor="middle">owns auth/roles/*</text>
+  <rect x="250" y="104" width="200" height="56" fill="#27272a" stroke="#a78bfa" rx="8"/>
+  <text x="350" y="126" fill="#a78bfa" font-size="12" text-anchor="middle">fix/flaky-e2e</text>
+  <text x="350" y="146" fill="#a1a1aa" font-size="11" text-anchor="middle">owns tests/e2e/*</text>
+  <rect x="470" y="104" width="200" height="56" fill="#27272a" stroke="#34d399" rx="8"/>
+  <text x="570" y="126" fill="#34d399" font-size="12" text-anchor="middle">docs/api</text>
+  <text x="570" y="146" fill="#a1a1aa" font-size="11" text-anchor="middle">owns docs/*</text>
+  <text x="350" y="184" fill="#fbbf24" font-size="12" text-anchor="middle" font-weight="bold">WRITE: all three at once</text>
+  <line x1="30" y1="198" x2="670" y2="198" stroke="#3f3f46" stroke-width="1" stroke-dasharray="4 4"/>
+  <text x="350" y="222" fill="#38bdf8" font-size="12" text-anchor="middle" font-weight="bold">LAND: one at a time</text>
+  <rect x="30" y="238" width="110" height="46" fill="#27272a" stroke="#38bdf8" rx="6"/>
+  <text x="85" y="266" fill="#e4e4e7" font-size="12" text-anchor="middle">roles</text>
+  <line x1="140" y1="261" x2="216" y2="261" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrQ)"/>
+  <text x="180" y="254" fill="#34d399" font-size="10" text-anchor="middle">gate</text>
+  <rect x="222" y="238" width="110" height="46" fill="#27272a" stroke="#a78bfa" rx="6"/>
+  <text x="277" y="266" fill="#e4e4e7" font-size="12" text-anchor="middle">flaky</text>
+  <line x1="332" y1="261" x2="408" y2="261" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrQ)"/>
+  <text x="372" y="254" fill="#34d399" font-size="10" text-anchor="middle">gate</text>
+  <rect x="414" y="238" width="110" height="46" fill="#27272a" stroke="#34d399" rx="6"/>
+  <text x="469" y="266" fill="#e4e4e7" font-size="12" text-anchor="middle">docs</text>
+  <line x1="524" y1="261" x2="596" y2="261" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrQ)"/>
+  <rect x="602" y="238" width="68" height="46" fill="#27272a" stroke="#fbbf24" rx="6"/>
+  <text x="636" y="266" fill="#fbbf24" font-size="12" text-anchor="middle">main</text>
+  <text x="350" y="318" fill="#a1a1aa" font-size="11" text-anchor="middle">Each gate runs the real check. One branch changed since the last green, so breakage has one suspect.</text>
+</svg>`,
+            caption: 'Fan out from a frozen base, land through a serial queue with a check between each merge.',
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'Budget for the landing queue',
+            md: "Three parallel sessions buy you speed in the writing phase and hand you a bill in the landing phase. Budget for it. If a feature takes 40 minutes to write with an agent, plan on the landing queue costing 10 to 15 minutes per branch once you include the rebase, the gate run, and reading the diff. Three branches that all land clean still cost you most of an hour after the writing stops.",
+          },
+        ],
+      },
+      {
+        heading: 'Freeze the base before you fan out',
+        blocks: [
+          {
+            type: 'text',
+            md: "Every parallel branch should start from the same commit. That sounds too obvious to state, and it gets skipped constantly, because the natural way to start a second session is to open a terminal an hour after the first one and go. By then `main` has moved. Now branch two is built on a base that branch one has never seen, and the differences between those two bases are invisible until merge time.\n\nClaude Code has an opinion about this already baked in. Running `claude --worktree feature-auth` creates a worktree under `.claude/worktrees/feature-auth/` on a branch called `worktree-feature-auth`, and with the default `worktree.baseRef` value of `\"fresh\"` it branches from your repository's default branch **on the remote**, fetching that ref if the repo hasn't been fetched in the last 24 hours ([official docs](https://code.claude.com/docs/en/worktrees)). Two sessions started three hours apart still land on the same base commit.",
+          },
+          {
+            type: 'code',
+            lang: 'bash',
+            caption: 'Two isolated sessions, then a one-line proof that they share a base.',
+            code: `claude --worktree feature-auth      # terminal tab 1
+claude --worktree fix-flaky         # terminal tab 2
+
+# confirm both branches descend from the same commit
+git merge-base worktree-feature-auth worktree-fix-flaky
+git log --oneline -1 $(git merge-base worktree-feature-auth worktree-fix-flaky)`,
+          },
+          {
+            type: 'text',
+            md: "Set `worktree.baseRef` to `\"head\"` in settings when you want the opposite: worktrees that carry your unpushed commits and current feature-branch state. That's the right choice when you're isolating subagents that have to operate on work in progress. For independent parallel features, keep the default and let every branch start from a clean remote `main`.\n\nOne practical note that saves an hour the first time. A worktree is a fresh checkout, so gitignored files like `.env` aren't there and your dev server won't boot. Add a `.worktreeinclude` file at the project root listing them, and Claude Code copies them into every worktree it creates.",
+          },
+          {
+            type: 'code',
+            lang: 'text',
+            caption: '.worktreeinclude at your project root. Gitignore syntax; only gitignored matches get copied.',
+            code: `.env
+.env.local
+config/secrets.json`,
+          },
+          {
+            type: 'text',
+            md: "Freezing the base handles the mechanical half. The other half is deciding what each branch is allowed to touch, **before** any of them start. Write the file ownership into each task: \"you own `src/auth/roles/` and the tests under `tests/auth/`; do not edit `src/permissions/service.ts`.\" A task that can't name its files is a task that hasn't been scoped yet.\n\nSome files collide no matter how carefully you split the work. Keep a short list of them and treat anything that touches one as needing your eyes, whatever CI says.",
+          },
+          {
+            type: 'table',
+            headers: ['Hotspot', 'Why parallel branches fight over it', 'Rule'],
+            rows: [
+              ['Database migrations', 'Two branches each add a migration; both apply, ordering is now undefined', 'One branch per release owns migrations, full stop'],
+              ['Shared types and API contracts', 'Branch A adds a field, branch B renames the type; git merges both happily', 'Land the contract change first, alone, then rebase everything onto it'],
+              ['Auth and permissions logic', 'Small edits change who can do what, and tests rarely cover the negative case', 'Human review required regardless of CI'],
+              ['DI container / route registry / barrel files', 'Every feature appends a line to the same spot, so every branch conflicts', 'Expect a conflict; resolve by keeping both lines, then run the app'],
+              ['Lockfiles', 'Two branches add different deps, resolution differs from either', 'Regenerate rather than hand-merge: delete, reinstall, commit'],
+            ],
+          },
+        ],
+      },
+      {
+        heading: 'Land them one at a time',
+        blocks: [
+          {
+            type: 'text',
+            md: "The landing loop is four steps repeated per branch: rebase onto the newest `main`, merge, run the gate, move on. The rebase is what makes it work. Branch two rebases against a `main` that already contains branch one, so conflicts surface one pair at a time against a base that actually exists, while you still know which change caused what.",
+          },
+          {
+            type: 'code',
+            lang: 'bash',
+            caption: 'The landing queue. Notice the second rebase happens against a main that already has the first branch in it.',
+            code: `# branch 1: the widest change goes first
+git checkout feat/roles && git rebase main
+git checkout main && git merge feat/roles
+npm test && npm run e2e          # GATE. Nothing else moves until this is green.
+
+# branch 2: rebases onto a main that now contains feat/roles
+git checkout fix/flaky-e2e && git rebase main
+git checkout main && git merge fix/flaky-e2e
+npm test && npm run e2e          # GATE
+
+# branch 3
+git checkout docs/api && git rebase main
+git checkout main && git merge docs/api
+npm test && npm run e2e          # GATE`,
+          },
+          {
+            type: 'text',
+            md: "Order is a real decision, so make it deliberately. Land the branch with the widest blast radius first: the refactor, the migration, the shared type change. Narrow branches then rebase onto the new shape, and their conflicts are small and local. Reverse the order and every narrow branch lands cleanly, then the wide refactor arrives and fights all three at once.\n\nA quick way to pick the order without guessing: run `git diff --stat main..<branch>` for each and sort by how many distinct directories the branch touches, widest first.",
+          },
+          {
+            type: 'table',
+            headers: ['Move', 'What it gives you', 'When to use it'],
+            rows: [
+              ['`git rebase main` then `git merge`', 'Linear-ish history, conflicts surfaced per branch against a real base', 'The default for landing agent branches'],
+              ['`git merge --squash`', 'One commit per branch, agent commit noise collapsed', "When the agent left 14 commits titled \"fix\" and you want one readable entry"],
+              ['`git merge -X patience`', 'Better hunk alignment on branches that diverged a lot', 'Large refactors where the default diff lines up badly'],
+              ['A merge queue (GitHub, Graphite)', 'CI runs against the combined result, not each branch alone', 'Team repos where more than one person is landing agent work'],
+              ['`git worktree remove`', 'Reclaims the checkout and deletes its branch', 'Only after the branch is merged and the gate went green'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'Merge flags improve the diff, never the correctness',
+            md: "`-X patience` and friends change how git lines up hunks. A cleaner-looking resolution feels like reassurance and provides none. The merge can complete with zero conflict markers and still be logically wrong, which is the whole subject of the next section. Treat merge strategy as a readability tool and put your trust in the gate.",
+          },
+        ],
+      },
+      {
+        heading: 'Green CI, broken product',
+        blocks: [
+          {
+            type: 'text',
+            md: "The conflicts git shows you are the easy ones. It stops, it marks the file, you decide. The expensive class is the one git has no way to see, because git compares text and the problem lives in meaning.\n\nHere's the shape, walked through with three branches on a permissions system.\n\n**Branch A** adds a `billing-viewer` role and the check that gates the invoices page on it. Tests pass. **Branch B** refactors the permissions service behind a new interface, with a lookup table of known roles and a default for anything unrecognized. Tests pass. **Branch C** adds audit logging that fires on every permission denial. Tests pass.\n\nLand all three. Git reports no conflicts anywhere, because B's refactor moved code A never opened, and C attached itself to a callback B kept. The build is green. Every suite is green.\n\nIn production, `billing-viewer` isn't in B's lookup table, because B was written against a `main` where that role didn't exist. B's default for unknown roles is permissive. So the invoices page is open to everyone, and C's audit log is empty, because the denial path it hooks never fires. Every check you own reported success. You find out from a customer.",
+          },
+          {
+            type: 'diagram',
+            svg: `<svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect x="0" y="0" width="700" height="250" fill="#18181b" rx="8"/>
+  <defs>
+    <marker id="arrSem" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#a1a1aa"/>
+    </marker>
+  </defs>
+  <rect x="40" y="24" width="250" height="66" fill="#27272a" stroke="#34d399" rx="8"/>
+  <text x="165" y="48" fill="#34d399" font-size="13" text-anchor="middle">A: adds billing-viewer role</text>
+  <text x="165" y="70" fill="#a1a1aa" font-size="11" text-anchor="middle">tests green, merges clean</text>
+  <text x="350" y="64" fill="#e4e4e7" font-size="24" text-anchor="middle">+</text>
+  <rect x="410" y="24" width="250" height="66" fill="#27272a" stroke="#34d399" rx="8"/>
+  <text x="535" y="48" fill="#34d399" font-size="13" text-anchor="middle">B: rewrites role lookup</text>
+  <text x="535" y="70" fill="#a1a1aa" font-size="11" text-anchor="middle">tests green, merges clean</text>
+  <line x1="165" y1="90" x2="320" y2="132" stroke="#a1a1aa" stroke-width="2" marker-end="url(#arrSem)"/>
+  <line x1="535" y1="90" x2="380" y2="132" stroke="#a1a1aa" stroke-width="2" marker-end="url(#arrSem)"/>
+  <rect x="150" y="140" width="400" height="76" fill="#27272a" stroke="#f472b6" rx="8"/>
+  <text x="350" y="166" fill="#f472b6" font-size="14" text-anchor="middle" font-weight="bold">main: build green, CI green</text>
+  <text x="350" y="188" fill="#e4e4e7" font-size="12" text-anchor="middle">billing-viewer is unknown to B's table</text>
+  <text x="350" y="206" fill="#e4e4e7" font-size="12" text-anchor="middle">unknown roles fall through to allow</text>
+</svg>`,
+            caption: 'Both branches green on their own. Combined, the gate opens and no test notices.',
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'Textual conflict (the cheap one)',
+              items: [
+                'Git halts and writes conflict markers into the file',
+                'You see it immediately, at merge time',
+                'Costs minutes: read both sides, pick or combine',
+                'Roughly 42% of agent conflicts are structural, where one side deleted or renamed what the other changed',
+              ],
+            },
+            right: {
+              title: 'Semantic conflict (the expensive one)',
+              items: [
+                'Git reports success and merges silently',
+                'Compiles, type-checks, and passes both branches’ unit tests',
+                'Surfaces days later, usually from a user, in a code path nobody was watching',
+                'Only a check that exercises real behavior end to end catches it',
+              ],
+            },
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'Never hand a merge conflict to an agent unsupervised',
+            md: "A subagent resolving a conflict sees two blocks of plausible code and neither side's intent. It keeps whichever version looks more complete and more syntactically coherent, which is exactly the wrong criterion. The build stays green, CI stays green, and the losing branch's feature stops existing, with nothing in the logs and nothing red in CI. Reviewing a resolved conflict is cheap. Discovering a deleted feature three days later isn't.",
+          },
+        ],
+      },
+      {
+        heading: 'The gate that actually catches it',
+        blocks: [
+          {
+            type: 'text',
+            md: "Unit tests won't catch a semantic conflict, and your unit tests are fine. Each one checks a unit, every unit here is correct, and the failure lives in how two correct units compose at runtime.\n\nSo the check that runs between merges has to exercise the product. Log in as the restricted role and try to reach the restricted page. Submit the form and read the row that lands in the database. This is the top of the escalation ladder from [Agents, Harnesses & Loops · Verification: the #1 Quality Lever](lesson:m2-l4), applied at the moment of highest risk: right after two independently written changes met for the first time.",
+          },
+          {
+            type: 'text',
+            md: "A landing gate that earns its keep has four parts:\n\n- **A binary result.** Exit code zero or nonzero. \"Looks fine\" is a feeling, and you can't queue on a feeling.\n- **At least one behavioral path per hotspot.** If a branch touched permissions, the gate logs in as a limited user and attempts the thing that user shouldn't be able to do.\n- **A run after every single merge**, never once at the end of the batch. Batching the gate throws away the one advantage the serial queue bought you, which is knowing which branch broke it.\n- **A stop rule you'll honor.** Gate fails, the queue stops. You fix or revert that branch before the next one moves. Landing branch three onto a broken `main` turns one bug into an archaeology project.",
+          },
+          {
+            type: 'text',
+            md: "When the gate does fail, resist the urge to hand the whole mess back to an agent with \"tests are failing, fix it.\" That's how the second bug gets written on top of the first. Identify which merge introduced it, since the queue makes that a one-line answer, then either revert that merge and re-land it properly, or fix forward with the specific diagnosis in hand.\n\nOne more habit worth building. Once a semantic conflict bites you, write the behavioral check that would have caught it and add it to the gate permanently. Do that four or five times and the gate becomes a map of how your particular codebase breaks when two people change it at once. Same instinct as the NOTES.md loop in [Agents, Harnesses & Loops · Agent Memory & State](lesson:m2-l7), pointed at integration instead of prompting.",
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'Where this connects',
+            md: "Everything here scales down to one session and up to a team. Subagents with `isolation: worktree` produce the same landing problem in miniature, and the coordination rules in [Agents, Harnesses & Loops · Agent Teams & Dynamic Workflows](lesson:m2-l6) exist for the same reason: two workers editing one file is merge chaos, and no amount of locking saves you. Split by file ownership up front, and the landing queue stays boring. When more than one person is landing agent work in the same repo, the queue stops being something you run by hand: see [Token Economics & AI-Native SDLC · Stacked PRs & Merge Queues](lesson:m7-l3).",
+          },
+        ],
+      },
+    ],
+    lab: {
+      title: 'Land three branches without breaking main',
+      intro: "Run three parallel worktree sessions on one repo, land them through a serial queue, then deliberately manufacture a semantic conflict so you've seen one with your own eyes before it costs you a real day.",
+      steps: [
+        "Pick a repo with a test suite that runs in under two minutes. Note the current `main` commit: `git rev-parse --short main`. That's your frozen base.",
+        "Start three sessions: `claude --worktree task-a`, `claude --worktree task-b`, `claude --worktree task-c`, each in its own terminal tab. Verify they share a base with `git merge-base worktree-task-a worktree-task-b`.",
+        "Before prompting anything, write the three tasks down with explicit file ownership: each task names the directories it owns and one directory it must not touch. Give each session only its own task.",
+        "While they work, rank the three branches by blast radius: `git diff --stat main..worktree-task-a` for each, widest first. That's your landing order.",
+        "Land them one at a time in that order: rebase onto main, merge, run the full test suite. Do not start the next branch until the suite is green.",
+        "Now force the failure mode on purpose. In two fresh worktrees, have one session rename or change the default behavior of a shared helper function, and the other session add a new caller of that helper. Both will pass their own tests.",
+        "Land both. Run the tests (likely still green), then run the actual feature by hand: start the app and exercise the path that uses the helper. Write down what broke and what a check would have needed to do to catch it.",
+        "Add that check to your gate as a real test, commit it, then clean up: `git worktree remove` every worktree once its branch is merged or abandoned.",
+      ],
+      checklist: [
+        "Three worktree sessions ran in parallel from one verified shared base commit",
+        "Each task named the files it owned before any prompting started",
+        "Landing order was chosen from diff blast radius, not from whichever finished first",
+        "All three branches landed one at a time, with the test suite run and green between each merge",
+        "You reproduced a semantic conflict where both branches were green and the combined result was broken",
+        "A behavioral check that would have caught it is now committed as part of the gate",
+        "Every worktree was removed with git worktree remove after its branch landed",
+      ],
+    },
+    checkQuiz: [
+      {
+        q: "You have three branches to land: a shared-types refactor touching 14 files across 5 directories, a two-file bugfix, and a docs update. What order do you merge them in?",
+        options: [
+          "Docs, bugfix, refactor: get the easy wins in first",
+          "Refactor first, then bugfix, then docs: widest blast radius leads so the narrow branches rebase onto the new shape",
+          "Whichever branch finished first, then the rest in completion order",
+          "All three at once, so git resolves them against each other in a single pass",
+        ],
+        answer: 1,
+        explain: "Landing the wide change first means the two narrow branches rebase onto a main that already has the new shape, and their conflicts stay small and local. Do it the other way and the refactor arrives last to fight all three at once.",
+      },
+      {
+        q: "Every branch had green CI, git reported no conflicts on any merge, and the feature is broken in production. What happened, and what would have caught it?",
+        options: [
+          "A flaky test suite; rerunning CI would have caught it",
+          "A semantic conflict; a behavioral check run after each merge that exercises the real path would have caught it",
+          "A bad rebase; using merge instead of rebase would have caught it",
+          "A lockfile mismatch; regenerating dependencies would have caught it",
+        ],
+        answer: 1,
+        explain: "Both changes were correct in isolation and contradicted each other once combined. Git compares text and had nothing to flag. Only a check that drives the real behavior end to end, run after each individual merge, sees it.",
+      },
+      {
+        q: "Why does running the gate after every single merge beat running it once after all three branches land?",
+        options: [
+          "It's faster overall because the suite caches results between runs",
+          "It preserves the one advantage of the serial queue: when the gate fails, exactly one branch changed since the last green, so the cause is unambiguous",
+          "Git requires a clean test run before it will allow the next merge",
+          "It lets you skip the rebase step on later branches",
+        ],
+        answer: 1,
+        explain: "Batching the gate throws away the reason you serialized in the first place. Three merges then one failure gives you a three-way search. One merge then one failure gives you the answer.",
+      },
+      {
+        q: "Which task description is scoped well enough for parallel agent work?",
+        options: [
+          "\"Improve the permissions system and clean up anything related you find\"",
+          "\"Add a billing-viewer role: you own src/auth/roles/ and tests/auth/; do not edit src/permissions/service.ts\"",
+          "\"Work on auth while the other session works on tests\"",
+          "\"Fix the role bug, coordinate with the other agent if you need shared files\"",
+        ],
+        answer: 1,
+        explain: "It names the outcome, the directories the branch owns, and one file it must not touch. Agents can't negotiate over shared files, since neither can see the other's uncommitted work, so ownership has to be decided before the fan-out.",
+      },
+    ],
+    resources: [
+      { label: 'AI Agent Pull Requests on GitHub: Frequency, Structure, and Merge Conflict Rates (arXiv, 2026)', url: 'https://arxiv.org/abs/2607.04697', kind: 'article' },
+      { label: 'Run parallel sessions with worktrees - official Claude Code docs', url: 'https://code.claude.com/docs/en/worktrees', kind: 'docs' },
+      { label: 'git worktree - official reference', url: 'https://git-scm.com/docs/git-worktree', kind: 'docs' },
+      { label: 'How to Run a Multi-Agent Coding Workspace (Augment Code)', url: 'https://www.augmentcode.com/guides/how-to-run-a-multi-agent-coding-workspace', kind: 'article' },
+      { label: 'How to merge a stack of pull requests (Graphite)', url: 'https://graphite.com/guides/how-to-merge-stack-pull-requests-github', kind: 'article' },
     ],
   },
 

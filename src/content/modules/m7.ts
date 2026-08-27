@@ -1440,4 +1440,418 @@ order by spend desc;`,
       { label: 'Linear: issue tracking the pipeline ships stories to', url: 'https://linear.app', kind: 'docs' },
     ],
   },
+  // ------------------------------------------------------------------
+  // m7-l3 - Stacked PRs & Merge Queues
+  // ------------------------------------------------------------------
+  {
+    id: 'm7-l3',
+    title: 'Stacked PRs & Merge Queues',
+    day: 22,
+    minutes: 55,
+    xp: 100,
+    objectives: [
+      'Can explain why feature-branch throughput rose while main-branch throughput fell, using the 2026 numbers',
+      'Can split one large agent-authored change into a stack of small dependent PRs and merge it bottom-up',
+      'Can describe how a merge queue builds a speculative merge, batches, and bisects a failing batch',
+      'Can decide whether a given team needs a merge queue, from its size and its broken-main rate',
+      'Can route review attention with CODEOWNERS so hotspot files always reach a human',
+    ],
+    skipQuiz: [
+      {
+        q: "CircleCI's 2026 report analyzed 28.7 million workflows. What did it find about throughput?",
+        options: [
+          'Both feature-branch and main-branch throughput rose about 15%',
+          'Feature-branch throughput rose 15% for the median team while main-branch throughput fell 7%',
+          'Main-branch throughput rose while feature branches stalled',
+          'Throughput was flat but build times doubled',
+        ],
+        answer: 1,
+        explain: "Code got written faster and shipped slower. Main-branch success rate fell to 70.8%, the lowest in five years against a recommended benchmark of 90%, and median recovery time hit 72 minutes. Generation stopped being the constraint; integration became it.",
+      },
+      {
+        q: 'LinearB analyzed 8.1 million pull requests across 4,800 teams. How did AI-assisted PRs compare to human-authored ones on merge rate within 30 days?',
+        options: [
+          'AI 84.5%, human 32.7%',
+          'AI 32.7%, human 84.5%',
+          'Both around 60%',
+          'AI 91%, human 88%',
+        ],
+        answer: 1,
+        explain: "Human PRs merged 84.5% of the time inside 30 days. AI-assisted ones managed 32.7%. Two thirds of agent output went nowhere, and the biggest single factor was size: AI PRs ran past 400 lines at the 75th percentile against 157 for human ones.",
+      },
+      {
+        q: 'A stack of pull requests is:',
+        options: [
+          'Several PRs opened against the same branch at the same time',
+          'A chain of branches where each one is based on the previous one, each opened as its own reviewable PR',
+          'A queue of PRs waiting for CI capacity',
+          'A single PR containing several commits',
+        ],
+        answer: 1,
+        explain: 'Branch B starts from branch A instead of from main, C starts from B, and each becomes its own PR. Reviewers get three 150-line diffs to read in sequence rather than one 450-line wall, and the work still lands in the right order.',
+      },
+      {
+        q: 'When a merge queue tests a batch of five PRs together and the batch fails, what happens?',
+        options: [
+          'All five PRs are ejected and their authors are notified',
+          'The queue bisects: it splits the batch, retests the halves, finds the offending PR, ejects it, and lets the rest through',
+          'The queue merges them anyway and opens a revert PR',
+          'The queue falls back to testing each PR against its original base',
+        ],
+        answer: 1,
+        explain: "Bisection is automatic on GitHub's merge queue, no configuration involved. Split, retest, narrow, eject one. The other four keep their place and merge, so one bad change doesn't cost four people their afternoon.",
+      },
+      {
+        q: 'Across 200,000+ merges, broken-main rates scaled sharply with team size. Roughly what did 40+ engineer teams hit?',
+        options: [
+          'About 1%, the same as small teams',
+          'About 12.5%, or one broken main in every eight merges',
+          'About 30%',
+          'Under 0.5%, because large teams have better CI',
+        ],
+        answer: 1,
+        explain: 'Teams of 2 to 5 broke main 0.77% of the time. At 40+ engineers it was 12.5%, one in eight. More people landing work against a base that keeps moving means more pairs of changes that were never tested together, which is exactly the gap a merge queue closes.',
+      },
+    ],
+    sections: [
+      {
+        heading: 'Feature branches sped up. Main did not.',
+        blocks: [
+          {
+            type: 'text',
+            md: "[Token Economics & AI-Native SDLC · The AI-Native SDLC](lesson:m7-l2) made the case that review became the bottleneck once generating code got cheap. This lesson is the plumbing that follows from it: how a team actually moves agent-authored work from branch to `main` without the queue backing up.\n\nThe 2026 data on this is unusually clear. CircleCI looked at [28,738,317 workflow runs](https://circleci.com/blog/five-takeaways-2026-software-delivery-report/) and found feature-branch throughput up 15% for the median team while main-branch throughput fell about 7%. Main-branch success rate landed at 70.8%, the lowest in five years against a recommended benchmark of 90%, and median recovery time after a break rose 13% to 72 minutes. So more code got written, less software got delivered, and the stuff that did land broke more often.\n\nLinearB's read on [8.1 million pull requests across 4,800 teams](https://linearb.io/blog/8-million-prs-engineering-productivity) shows where it piles up. Human-authored PRs merged within 30 days 84.5% of the time. AI-assisted ones: 32.7%. Roughly two thirds of agent output never landed at all.",
+          },
+          {
+            type: 'diagram',
+            svg: `<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect x="0" y="0" width="700" height="300" fill="#18181b" rx="8"/>
+  <text x="30" y="34" fill="#e4e4e7" font-size="13" font-weight="bold">Merged within 30 days (8.1M PRs)</text>
+  <text x="30" y="62" fill="#a1a1aa" font-size="12">human</text>
+  <rect x="110" y="48" width="422" height="22" fill="#34d399" rx="4"/>
+  <text x="546" y="65" fill="#34d399" font-size="13" font-weight="bold">84.5%</text>
+  <text x="30" y="96" fill="#a1a1aa" font-size="12">AI-assisted</text>
+  <rect x="110" y="82" width="163" height="22" fill="#f472b6" rx="4"/>
+  <text x="287" y="99" fill="#f472b6" font-size="13" font-weight="bold">32.7%</text>
+  <line x1="30" y1="126" x2="670" y2="126" stroke="#3f3f46" stroke-width="1" stroke-dasharray="4 4"/>
+  <text x="30" y="156" fill="#e4e4e7" font-size="13" font-weight="bold">PR size at the 75th percentile (lines changed)</text>
+  <text x="30" y="184" fill="#a1a1aa" font-size="12">human</text>
+  <rect x="110" y="170" width="157" height="22" fill="#38bdf8" rx="4"/>
+  <text x="281" y="187" fill="#38bdf8" font-size="13" font-weight="bold">157</text>
+  <text x="30" y="218" fill="#a1a1aa" font-size="12">AI-assisted</text>
+  <rect x="110" y="204" width="400" height="22" fill="#fbbf24" rx="4"/>
+  <text x="524" y="221" fill="#fbbf24" font-size="13" font-weight="bold">400+</text>
+  <rect x="30" y="246" width="640" height="38" fill="#27272a" stroke="#f472b6" rx="6"/>
+  <text x="350" y="270" fill="#e4e4e7" font-size="12" text-anchor="middle">Time before review even starts: over 16 hours for AI PRs, about 200 minutes for human ones.</text>
+</svg>`,
+            caption: 'The gap opens before anyone reads the code. Big diffs sit in the queue while reviewers pick something smaller.',
+          },
+          {
+            type: 'text',
+            md: "One number cuts against the panic, and it's worth holding onto. Mergify's [State of Merge Queues 2026](https://mergify.com/reports/state-of-merge-queues-2026), built from 200,000+ merges across 477 organizations, found AI-assisted PRs broke `main` **less** often than the rest: 1.9% against 4.4%.\n\nBoth findings are true and they fit together. Agent PRs that survive review are fine, sometimes better than average, because they arrive with tests and the reviewer had to work to approve 400 lines. The damage is in the pile that never gets picked up. LinearB clocked the wait before review even begins at over 16 hours for AI PRs against roughly 200 minutes for human ones. Once a human finally starts, the AI diff actually moves faster: 194 minutes to review versus 252.\n\nSo the throughput problem is a queueing problem, and it has two halves. Work arrives in chunks too big to review, and work lands against a base that everyone else is also changing. Stacks fix the first. Merge queues fix the second.",
+          },
+        ],
+      },
+      {
+        heading: 'Cut the work smaller than the agent wants to',
+        blocks: [
+          {
+            type: 'text',
+            md: "An agent handed a feature returns the whole feature. Ask for role-based access control and you get the migration, the service, the middleware, the API changes, and the tests, all in one branch, in about 20 minutes. It's coherent work and it's a terrible review unit.\n\nReview effort doesn't scale linearly with diff size, it scales worse. Somewhere past 300 or 400 lines a reviewer stops tracing logic and starts skimming for style, which is how you get an approval that means nothing. The published guidance lines up: PRs under 200 lines get approved roughly 3x faster, and changes in the 200 to 400 line band show around 40% fewer defects than larger ones.",
+          },
+          {
+            type: 'table',
+            headers: ['Diff size', 'What review actually looks like', 'What to do'],
+            rows: [
+              ['Under 200 lines', 'A reviewer holds the whole change in their head and reasons about it', 'The target. Approved about 3x faster than large PRs'],
+              ['200 to 400 lines', 'Careful reading, one sitting, defect rate still good', 'Acceptable ceiling for a single PR'],
+              ['400 to 800 lines', 'Skimming sets in; comments cluster on naming and formatting', 'Split into a stack before opening it'],
+              ['800+ lines', 'Approval becomes a social act rather than a technical one', 'Split, or expect it to sit for days and then merge unreviewed'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'The split is a planning decision, not a cleanup step',
+            md: "Chopping a finished 900-line branch into pieces afterward is miserable and you won't do it twice. Decide the split when you write the task, the same place you decided file ownership in [Claude Code Mastery · Landing Parallel Work](lesson:m1-l11). \"Migration first, then the service, then the middleware\" is three tasks and three PRs, and each one is a place an agent can stop and you can look.",
+          },
+        ],
+      },
+      {
+        heading: 'Stacked PRs: small reviews for one big change',
+        blocks: [
+          {
+            type: 'text',
+            md: "A **stack** is a chain of branches where each one is based on the branch below it rather than on `main`, and each is opened as its own pull request. Branch `01-migration` comes off `main`. Branch `02-service` comes off `01-migration`. Branch `03-middleware` comes off `02-service`. Three PRs, three small diffs, one coherent feature.\n\nThis solves the thing that makes people write giant PRs in the first place. You can't split dependent work into three independent PRs, because PR 2 doesn't compile without PR 1. Waiting for PR 1 to merge before you start PR 2 costs you a day per step. A stack lets you write all three now and review them in order.\n\nGit itself has no concept of a stack, so the branches need re-pointing every time something below them changes. That operation is called a **restack** (rebase every dependent branch onto its updated base), and doing it by hand across four branches is where people give up. Two tools handle it: [git-spice](https://abhinav.github.io/git-spice/), a free open-source CLI, and [Graphite](https://graphite.com), a hosted product with a review UI on top.",
+          },
+          {
+            type: 'diagram',
+            svg: `<svg viewBox="0 0 700 340" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect x="0" y="0" width="700" height="340" fill="#18181b" rx="8"/>
+  <defs>
+    <marker id="arrStk" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#34d399"/>
+    </marker>
+  </defs>
+  <text x="180" y="30" fill="#34d399" font-size="13" text-anchor="middle" font-weight="bold">A stack of 3 PRs</text>
+  <rect x="40" y="44" width="280" height="48" fill="#27272a" stroke="#38bdf8" rx="6"/>
+  <text x="60" y="64" fill="#38bdf8" font-size="12">PR #3 · 03-middleware</text>
+  <text x="60" y="82" fill="#a1a1aa" font-size="11">118 lines · based on 02-service</text>
+  <rect x="40" y="102" width="280" height="48" fill="#27272a" stroke="#a78bfa" rx="6"/>
+  <text x="60" y="122" fill="#a78bfa" font-size="12">PR #2 · 02-service</text>
+  <text x="60" y="140" fill="#a1a1aa" font-size="11">164 lines · based on 01-migration</text>
+  <rect x="40" y="160" width="280" height="48" fill="#27272a" stroke="#34d399" rx="6"/>
+  <text x="60" y="180" fill="#34d399" font-size="12">PR #1 · 01-migration</text>
+  <text x="60" y="198" fill="#a1a1aa" font-size="11">91 lines · based on main</text>
+  <rect x="40" y="218" width="280" height="40" fill="#27272a" stroke="#fbbf24" rx="6"/>
+  <text x="180" y="243" fill="#fbbf24" font-size="13" text-anchor="middle">main</text>
+  <path d="M 330 238 L 356 238 L 356 68 L 330 68" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#arrStk)"/>
+  <text x="398" y="158" fill="#34d399" font-size="11" text-anchor="middle">merge</text>
+  <text x="398" y="173" fill="#34d399" font-size="11" text-anchor="middle">bottom-up</text>
+  <text x="540" y="30" fill="#f472b6" font-size="13" text-anchor="middle" font-weight="bold">The same work, one PR</text>
+  <rect x="440" y="44" width="200" height="164" fill="#27272a" stroke="#f472b6" rx="6"/>
+  <text x="540" y="112" fill="#e4e4e7" font-size="13" text-anchor="middle">PR #1</text>
+  <text x="540" y="134" fill="#f472b6" font-size="13" text-anchor="middle" font-weight="bold">373 lines</text>
+  <text x="540" y="156" fill="#a1a1aa" font-size="11" text-anchor="middle">picked up in 16 hours,</text>
+  <text x="540" y="172" fill="#a1a1aa" font-size="11" text-anchor="middle">skimmed, approved</text>
+  <rect x="440" y="218" width="200" height="40" fill="#27272a" stroke="#fbbf24" rx="6"/>
+  <text x="540" y="243" fill="#fbbf24" font-size="13" text-anchor="middle">main</text>
+  <text x="350" y="298" fill="#a1a1aa" font-size="12" text-anchor="middle">Same change, same author, same afternoon. One version gets read.</text>
+</svg>`,
+            caption: 'Each PR in the stack is based on the one below it, so every diff stays small enough to actually review.',
+          },
+          {
+            type: 'code',
+            lang: 'bash',
+            caption: 'git-spice: build the stack, submit it as three linked PRs, then keep it in sync as reviews land.',
+            code: `gs repo init                       # one-time setup in the repo
+
+gs branch create 01-migration      # branches from current, tracks the stack
+# agent writes the migration, you commit
+
+gs branch create 02-service        # branches from 01-migration
+gs branch create 03-middleware     # branches from 02-service
+
+gs stack submit                    # opens all three PRs, each targeting the one below
+
+# reviewer asks for a change on PR #1. Amend it, then:
+gs stack restack                   # rebases 02 and 03 onto the new 01
+gs stack submit                    # updates all three PRs
+
+gs repo sync                       # after #1 merges: retarget #2 at main, delete merged branch`,
+          },
+          {
+            type: 'text',
+            md: "Merging goes bottom-up, one at a time, with the rest of the stack restacked onto the new `main` after each merge. That's the same landing queue from [Claude Code Mastery · Landing Parallel Work](lesson:m1-l11), applied to dependent changes instead of independent ones. `gs repo sync` does the retargeting and deletes merged branches for you.\n\nTwo GitHub settings quietly break stacks, and both live in branch protection. **Dismiss stale approvals** wipes the approval on PR #2 every time PR #1 changes underneath it, so a five-PR stack re-requests review five times for edits nobody made. **Require approval of the most recent reviewable push** does the same thing by another route. Turn both off on repos where stacks are the norm, and lean on the merge queue for the safety they were providing.",
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'Stack it when',
+              items: [
+                'The change is over ~400 lines and splits along clean seams',
+                'Later parts genuinely depend on earlier parts compiling',
+                'A migration or shared-type change leads the work',
+                'You want the risky part reviewed carefully and the mechanical part waved through',
+              ],
+            },
+            right: {
+              title: 'Skip the stack when',
+              items: [
+                'The whole change is under 200 lines and reviews in one sitting',
+                'The parts are independent, so plain parallel branches are simpler',
+                'Nobody on the team has the tooling installed, and you would be hand-rebasing four branches',
+                "The seams are arbitrary and PR #2 makes no sense without reading #1 and #3 anyway",
+              ],
+            },
+          },
+        ],
+      },
+      {
+        heading: 'Merge queues: the serial gate, automated',
+        blocks: [
+          {
+            type: 'text',
+            md: "You already know why the landing queue has to be serial. A **merge queue** is that discipline enforced by the forge instead of by your own attention, and it's what makes the pattern survive more than one person.\n\nHere's the mechanic. When you queue a PR, GitHub builds a **speculative merge commit**: your branch on top of the current tip of `main`, a combination that has never existed before and that neither CI run has tested. It runs the required checks against **that** commit. Only if they pass does `main` fast-forward. So the question the queue answers is the right one: does the combined result work, rather than did each branch work on its own.\n\nThat's the whole reason a merge queue exists. It's the automated form of the semantic-conflict gate from [Claude Code Mastery · Landing Parallel Work](lesson:m1-l11), running on every merge, for everyone, without anyone remembering to do it.",
+          },
+          {
+            type: 'diagram',
+            svg: `<svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect x="0" y="0" width="700" height="320" fill="#18181b" rx="8"/>
+  <defs>
+    <marker id="arrMq" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#a1a1aa"/>
+    </marker>
+  </defs>
+  <text x="30" y="28" fill="#e4e4e7" font-size="12" font-weight="bold">1. Batch of 4 queued PRs, tested as one speculative merge</text>
+  <rect x="30" y="40" width="70" height="34" fill="#27272a" stroke="#38bdf8" rx="5"/>
+  <text x="65" y="62" fill="#e4e4e7" font-size="12" text-anchor="middle">A</text>
+  <rect x="108" y="40" width="70" height="34" fill="#27272a" stroke="#38bdf8" rx="5"/>
+  <text x="143" y="62" fill="#e4e4e7" font-size="12" text-anchor="middle">B</text>
+  <rect x="186" y="40" width="70" height="34" fill="#27272a" stroke="#f472b6" rx="5"/>
+  <text x="221" y="62" fill="#e4e4e7" font-size="12" text-anchor="middle">C</text>
+  <rect x="264" y="40" width="70" height="34" fill="#27272a" stroke="#38bdf8" rx="5"/>
+  <text x="299" y="62" fill="#e4e4e7" font-size="12" text-anchor="middle">D</text>
+  <line x1="344" y1="57" x2="392" y2="57" stroke="#a1a1aa" stroke-width="2" marker-end="url(#arrMq)"/>
+  <rect x="400" y="36" width="270" height="42" fill="#27272a" stroke="#f472b6" rx="6"/>
+  <text x="535" y="53" fill="#e4e4e7" font-size="11" text-anchor="middle">main + A + B + C + D</text>
+  <text x="535" y="70" fill="#f472b6" font-size="12" text-anchor="middle" font-weight="bold">CI FAILS</text>
+  <text x="30" y="114" fill="#e4e4e7" font-size="12" font-weight="bold">2. Bisect: split, retest the halves</text>
+  <rect x="30" y="126" width="150" height="38" fill="#27272a" stroke="#34d399" rx="6"/>
+  <text x="105" y="144" fill="#e4e4e7" font-size="11" text-anchor="middle">main + A + B</text>
+  <text x="105" y="159" fill="#34d399" font-size="11" text-anchor="middle">pass</text>
+  <rect x="196" y="126" width="150" height="38" fill="#27272a" stroke="#f472b6" rx="6"/>
+  <text x="271" y="144" fill="#e4e4e7" font-size="11" text-anchor="middle">main + C + D</text>
+  <text x="271" y="159" fill="#f472b6" font-size="11" text-anchor="middle">fail</text>
+  <rect x="362" y="126" width="150" height="38" fill="#27272a" stroke="#f472b6" rx="6"/>
+  <text x="437" y="144" fill="#e4e4e7" font-size="11" text-anchor="middle">main + C</text>
+  <text x="437" y="159" fill="#f472b6" font-size="11" text-anchor="middle">fail: culprit found</text>
+  <text x="30" y="202" fill="#e4e4e7" font-size="12" font-weight="bold">3. Eject C, merge the rest</text>
+  <rect x="30" y="214" width="70" height="34" fill="#27272a" stroke="#34d399" rx="5"/>
+  <text x="65" y="236" fill="#34d399" font-size="12" text-anchor="middle">A</text>
+  <rect x="108" y="214" width="70" height="34" fill="#27272a" stroke="#34d399" rx="5"/>
+  <text x="143" y="236" fill="#34d399" font-size="12" text-anchor="middle">B</text>
+  <rect x="186" y="214" width="70" height="34" fill="#3f1d2b" stroke="#f472b6" rx="5" stroke-dasharray="4 3"/>
+  <text x="221" y="236" fill="#f472b6" font-size="12" text-anchor="middle">C out</text>
+  <rect x="264" y="214" width="70" height="34" fill="#27272a" stroke="#34d399" rx="5"/>
+  <text x="299" y="236" fill="#34d399" font-size="12" text-anchor="middle">D</text>
+  <line x1="344" y1="231" x2="392" y2="231" stroke="#a1a1aa" stroke-width="2" marker-end="url(#arrMq)"/>
+  <rect x="400" y="212" width="270" height="38" fill="#27272a" stroke="#fbbf24" rx="6"/>
+  <text x="535" y="236" fill="#fbbf24" font-size="12" text-anchor="middle">main fast-forwards with A, B, D</text>
+  <text x="350" y="288" fill="#a1a1aa" font-size="12" text-anchor="middle">Bisection is automatic. Three people keep their afternoon; C's author gets told why.</text>
+</svg>`,
+            caption: 'Batching cuts CI spend, bisection makes one bad change cost one person instead of four.',
+          },
+          {
+            type: 'text',
+            md: "**Batching** is the knob that makes this affordable. Set a maximum group size and the queue tests several PRs together in one speculative commit. If the batch is green, all of them merge. Run the arithmetic on a team doing 20 merges a day with a 30-minute pipeline: one at a time is 10 hours of CI, batches of four is 2.5 hours, a 75% cut. You can also set a minimum group size with a wait time, so the queue holds for up to five minutes trying to collect three PRs before it starts burning runners.\n\nWhen a batch fails, the queue **bisects**. Split it, retest the halves, narrow down, eject the one that broke it, and let the rest through. That behavior ships on by default and needs no configuration. Worth knowing that batching is still rare: only about 6% of private merges in Mergify's dataset used it, so 94% of teams with queues are paying full CI price per PR.",
+          },
+          {
+            type: 'table',
+            headers: ['Team size', 'Broken-main rate', 'Reasonable setup'],
+            rows: [
+              ['2 to 5 engineers', '0.77%, about 1 in 130 merges', 'Land by hand with a gate between merges. A queue is overhead you will resent'],
+              ['6 to 15', '0.98%, about 1 in 102', 'Turn a queue on, no batching. Median wait is around 8 minutes'],
+              ['16 to 40', '2.49%, about 1 in 40', 'Queue plus batching. The CI bill is now the argument that wins'],
+              ['40+', '12.5%, about 1 in 8', 'Queue, batching, and required checks that include a behavioral test, not just unit tests'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'A queue makes a flaky test suite unbearable, which is the point',
+            md: "Every flaky required check now blocks a shared queue instead of one person's PR, and a p90 wait of 63 minutes turns into hours. Teams hit this and reach for the wrong fix: marking the flaky check as not required. That deletes the gate you built the queue for. Quarantine the flaky test into its own non-blocking job and put a name and a date on fixing it.",
+          },
+        ],
+      },
+      {
+        heading: 'Routing attention to the changes that deserve it',
+        blocks: [
+          {
+            type: 'text',
+            md: "Stacks and queues handle size and ordering. Neither one decides who looks at what, and with agents filling the queue that decision is where your remaining human attention gets spent.\n\nStart with the hotspot list from [Claude Code Mastery · Landing Parallel Work](lesson:m1-l11), the files where parallel branches fight: migrations, shared types, auth, config. Those same paths belong in a `CODEOWNERS` file, which maps path patterns to the people or teams GitHub auto-requests review from. It's the cheapest mechanism available for guaranteeing that a change to permissions logic can't merge on a green checkmark alone.",
+          },
+          {
+            type: 'code',
+            lang: 'text',
+            caption: '.github/CODEOWNERS. Last matching pattern wins, so order matters and the risky paths go at the bottom.',
+            code: `*                       @team/engineering
+/docs/                  @team/docs
+
+# hotspots: these always pull a named human, whatever CI says
+/migrations/            @bill
+/src/auth/              @bill @team/security
+/src/types/api.ts       @bill
+/.github/workflows/     @bill`,
+          },
+          {
+            type: 'text',
+            md: "Layer the rest of the review the way [Token Economics & AI-Native SDLC · The AI-Native SDLC](lesson:m7-l2) describes: an agent reviewer takes the mechanical pass, CI gates anything red, and humans spend their attention at the top on whether the change matches the spec and the design holds up. The queue sits underneath all of it as the last gate, checking that the combined result works.\n\nOne team rule is worth more than the tooling: **nobody merges agent work they didn't spec**. The person who wrote the task knows what the diff was supposed to do, which is exactly the knowledge a reviewer needs and exactly what a stranger reading 400 generated lines doesn't have. Route the PR back to the person who briefed the agent, and the 16-hour pickup time stops being a mystery to solve.",
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'What to actually turn on, in order',
+            md: "Do these one at a time and measure between each. First, cap PR size and split anything bigger into a stack, since that alone attacks the pickup delay. Second, add `CODEOWNERS` for your hotspot paths. Third, turn the merge queue on with no batching and watch the wait times for a week. Add batching only once CI cost or queue depth makes the case for it. Turning all four on in one afternoon means you learn nothing about which one helped.",
+          },
+        ],
+      },
+    ],
+    lab: {
+      title: 'Measure the queue, then shrink it',
+      intro: "Get real numbers off a repo you work in, split one oversized change into a stack, and drive a merge queue through a deliberate failure so you've watched bisection work before you need it.",
+      steps: [
+        'Pull your own baseline. On a repo with real history, run `gh pr list --state merged --limit 50 --json additions,deletions,createdAt,mergedAt` and work out the 75th-percentile diff size and the median time from open to first review.',
+        "Compare that against the benchmarks: 157 lines at p75 for human work, 400+ for AI-assisted, and roughly 200 minutes to first review versus 16 hours. Write down which number is worst on your repo. That's the one to attack.",
+        'Install git-spice (`brew install git-spice`) and run `gs repo init` in a scratch repo.',
+        'Take one change that would normally be a single 400+ line PR and build it as a three-branch stack with `gs branch create`, letting an agent write each layer. Submit it with `gs stack submit` and read the three diffs as a reviewer would.',
+        'Amend the bottom branch, then run `gs stack restack` and `gs stack submit` again. Confirm the two PRs above it retargeted cleanly without you touching a rebase by hand.',
+        'On a throwaway repo, enable the GitHub merge queue in branch protection with a required check that runs your test suite. Set the maximum group size to 4.',
+        'Queue four PRs where exactly one breaks a test that only fails when combined with another. Watch the batch fail, the queue bisect, and the offender get ejected. Note how long the whole cycle took.',
+        'Write a `.github/CODEOWNERS` covering your hotspot paths, open a PR touching one of them, and confirm the review request auto-assigned.',
+      ],
+      checklist: [
+        'You have real p75 diff size and time-to-first-review numbers for a repo you work in',
+        'One oversized change was shipped as a stack of three PRs, each under 200 lines',
+        'A restack propagated an edit from the bottom branch to the two above it without manual rebasing',
+        'A merge queue ran a batch, failed, bisected, and ejected the right PR while the others merged',
+        'You recorded the wall-clock time from queueing to merge, so you know what a queue costs you',
+        'CODEOWNERS exists and auto-requested review on a hotspot path',
+        'You picked ONE change to keep and can say which number you expect it to move',
+      ],
+    },
+    checkQuiz: [
+      {
+        q: 'AI-assisted PRs merge at 32.7% within 30 days but break main less often than human PRs (1.9% vs 4.4%). How do both hold at once?',
+        options: [
+          'One of the studies must be measuring wrong',
+          'The agent PRs that survive review are genuinely solid; the failure is the large pile that never gets picked up, waiting 16+ hours before review starts',
+          'AI PRs are reverted before they can break main',
+          'Merge queues only measure human-authored PRs',
+        ],
+        answer: 1,
+        explain: 'Getting through review is the filter. A 400-line diff has to earn an approval, and the ones that do are fine. The cost sits in the two thirds that stall out, which is a queueing problem you fix upstream by shipping smaller units.',
+      },
+      {
+        q: 'Your team has 8 engineers, CI takes 12 minutes, and main breaks roughly once a fortnight. What do you turn on first?',
+        options: [
+          'A merge queue with batches of 5, to cut CI spend immediately',
+          'Cap PR size and stack anything larger, since pickup delay is the bigger cost at this size',
+          'Nothing; at 8 engineers the broken-main rate is under 1% and none of this applies',
+          'CODEOWNERS on every directory so nothing merges unreviewed',
+        ],
+        answer: 1,
+        explain: 'At 6 to 15 engineers the broken-main rate is around 0.98%, so integration is not yet your pain. Review latency is. Fix the size of the review unit first, then add a queue without batching and watch the wait times before spending anything else.',
+      },
+      {
+        q: 'You merge PR #1 at the bottom of a four-PR stack. What has to happen next?',
+        options: [
+          'Nothing; the remaining PRs retarget themselves automatically on every host',
+          'The rest of the stack restacks onto the new main, and PR #2 retargets from the merged branch to main',
+          'The stack must be closed and reopened as independent PRs',
+          'All remaining PRs merge automatically since they were approved as a stack',
+        ],
+        answer: 1,
+        explain: 'Each branch above the merged one still points at a base that just moved. `gs repo sync` retargets PR #2 at main and deletes the merged branch, then `gs stack restack` rebases the rest. Doing that chain by hand across four branches is why the tooling exists.',
+      },
+      {
+        q: 'A flaky end-to-end test is blocking your merge queue for hours at a time. Best response?',
+        options: [
+          'Remove it from required checks so the queue moves again',
+          'Quarantine it into a separate non-blocking job with an owner and a date to fix it, keeping the rest of the gate intact',
+          'Increase the batch size so fewer runs hit the flake',
+          'Disable the merge queue until the test is fixed',
+        ],
+        answer: 1,
+        explain: 'Dropping it from required checks deletes the gate the queue exists to enforce, and behavioral tests are exactly the ones that catch semantic conflicts. Quarantine keeps the signal visible, unblocks the queue, and leaves a name on the fix instead of a silent hole.',
+      },
+    ],
+    resources: [
+      { label: 'CircleCI 2026 State of Software Delivery (28.7M workflows)', url: 'https://circleci.com/blog/five-takeaways-2026-software-delivery-report/', kind: 'article' },
+      { label: 'LinearB: 8 million PRs on where productivity breaks down', url: 'https://linearb.io/blog/8-million-prs-engineering-productivity', kind: 'article' },
+      { label: 'Mergify: State of Merge Queues 2026', url: 'https://mergify.com/reports/state-of-merge-queues-2026', kind: 'article' },
+      { label: 'git-spice: manage stacked git branches (docs)', url: 'https://abhinav.github.io/git-spice/', kind: 'docs' },
+      { label: 'Graphite: best practices for reviewing stacks', url: 'https://graphite.com/docs/best-practices-for-reviewing-stacks', kind: 'docs' },
+      { label: 'GitHub docs: merging a pull request with a merge queue', url: 'https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue', kind: 'docs' },
+    ],
+  },
 ]
