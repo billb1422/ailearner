@@ -890,10 +890,10 @@ sampled weekly; three bad weeks triggers a charter review)`,
   },
 
   // ───────────────────────────────────────────────────────────────
-  // m7-l3: Capstone Launch
+  // m8-l3: Capstone Launch
   // ───────────────────────────────────────────────────────────────
   {
-    id: 'm7-l3',
+    id: 'm8-l3',
     title: 'Capstone Launch',
     day: 22,
     minutes: 45,
