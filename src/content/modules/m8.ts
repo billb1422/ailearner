@@ -735,6 +735,15 @@ sampled weekly; three bad weeks triggers a charter review)`,
         ],
       },
       {
+        heading: 'Where the roster comes from',
+        blocks: [
+          {
+            type: 'text',
+            md: "One thing the setup path leaves open: where do the charters and routines actually come from? Writing every teammate from a blank page is slow, and by late August 2026 the community had produced the alternative. A curated list carrying 165 entries, a use-case gallery indexing what people actually attempt, a prompt directory with 300-plus copy-paste routines, and a stack of masterclass writeups. The popular advice is to hand your agent those links, let it read the workflow catalog, and ask it to fold the good parts into your roster.\n\nThat habit is worth having and worth doing carefully, because the fetch-then-write-config move points untrusted text straight at the credentialed shared computer described above. [Bonus: Field Notes · Borrowed Setups](lesson:m10-l3) takes the whole pattern apart: the six-step harvest loop, the clean-room rule that keeps the fetching away from your logins, and the keep-or-kill bar that stops your setup from bloating into a museum of other people's ideas.",
+          },
+        ],
+      },
+      {
         heading: 'God mode, and the lines you do not cross',
         blocks: [
           {
@@ -886,6 +895,8 @@ sampled weekly; three bad weeks triggers a charter review)`,
       { label: 'The A-Z roster setup guide, incl. the Kimi K3 engine swap (Argona)', url: 'https://x.com/Argona0x/status/2091898304900571501', kind: 'thread' },
       { label: 'The Grok Bot Field Manual (3 pages: setup order, swarm patterns, quota lessons)', url: 'https://x.com/Argona0x/status/2092273165053395346', kind: 'thread' },
       { label: 'Official Grok Bot docs (the skills, routines, and approvals pages)', url: 'https://docs.x.ai/grok-bot', kind: 'docs' },
+      { label: 'Building a "lego of teammates" by harvesting other operators\' setups (Av1dlive)', url: 'https://x.com/av1dlive/status/2092923553557746047', kind: 'thread' },
+      { label: 'awesome-grok-bot: the community index (tutorials, field cases, failure modes)', url: 'https://github.com/RongleCat/awesome-grok-bot', kind: 'repo' },
     ],
   },
 
