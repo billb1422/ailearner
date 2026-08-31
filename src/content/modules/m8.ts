@@ -636,6 +636,7 @@ sampled weekly; three bad weeks triggers a charter review)`,
     xp: 100,
     objectives: [
       'Describe what Grok Bot is, what it costs, and where it sits relative to Claude Code on the harness map',
+      'Name the six product primitives (job description, connections, cloud computer, routines, skills, handoffs) and map each one onto a concept you already built by hand',
       'Walk the setup path: context interview, templates, charters, connections, and the first routine',
       'Explain what "god mode" login access actually grants, and apply hard rules for what never gets it',
       'Name the beta limitations and the risks (UI drift, prompt injection, spam-at-scale) an operator must design around',
@@ -722,6 +723,79 @@ sampled weekly; three bad weeks triggers a charter review)`,
               ['Trust posture', 'You watch it work', 'You audit its outputs; monitoring is the job'],
               ['Cost', 'Plan you already pay for', '$120-300/month on top'],
             ],
+          },
+        ],
+      },
+      {
+        heading: 'The six primitives, and one config that uses all of them',
+        blocks: [
+          {
+            type: 'text',
+            md: "Operator threads describe this product from the outside. In August 2026 the vendor published [its own guides](https://x.ai/bot/guides), written by staff who run it every day: a product manager shipping the product itself, an enterprise sales lead, a designer, and an engineer running a mobile game studio on the side. Read them for one thing above everything else, which is that they name the product's actual primitives. Six of them, and every one maps onto something you already built by hand earlier in this course.\n\nLearn the vocabulary before the tactics. When somebody says \"I turned that into a skill and gave it to my Creatives Agent as a handoff,\" you want to hear a sentence about recorded playbooks and scheduled delegation.",
+          },
+          {
+            type: 'table',
+            headers: ['Primitive', 'What it is in the product', 'What you already call it'],
+            rows: [
+              ['Job description', 'A system prompt written as a role: the lane the bot owns, and the work it refuses', 'The charter from the previous lesson (role, scope, boundaries), compressed into one paragraph'],
+              ['Connections', 'The accounts the bot is signed into: Salesforce, Gmail, Figma, GitHub, Sentry, ad platforms', 'Tool grants, the MCP and plugin layer from [Claude Code Mastery · MCP & Plugins](lesson:m1-l7)'],
+              ['Cloud computer', 'Its own Linux machine with a browser and a terminal, running whether or not your laptop is on', 'The sandbox, except persistent and shared across the whole roster'],
+              ['Routines', 'Standing work on a clock, with no app open and nobody typing', 'Scheduled tasks and event triggers'],
+              ['Skills', 'Recorded playbooks. You do the job once while it watches, and it keeps the click-path', 'Agent Skills, learned by demonstration instead of written as a SKILL.md'],
+              ['Handoffs', 'One bot passing work to another bot directly, without routing through you', 'Delegation edges: the orchestrator-to-worker call from [Agents, Harnesses & Loops · Graph Engineering](lesson:m2-l10)'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'Handoffs turn a folder of chatbots into a team',
+            md: "The game-studio guide picks handoffs as the whole differentiator, and the argument holds up without trusting anything else in the post. Six bots that can only talk to you means you are the message bus: every result lands on your screen and gets retyped into the next bot's window. Six bots that can hand off means the analytics finding reaches the creative bot at 7:11 PM while you are at dinner.\n\nThe chief-of-staff pattern from the previous lesson is a handoff graph with one entry point. A platform without handoffs cannot run the design you already drew, however good its individual agents look in a demo.",
+          },
+          {
+            type: 'code',
+            lang: 'text',
+            caption: 'The analytics seat of a six-bot game studio, condensed from the vendor guide. One block per primitive, and most of the boundaries stated as refusals.',
+            code: `JOB DESCRIPTION
+  You own paid acquisition end to end for a mobile game run by six bots.
+  Report what players did, not what we hoped they would do.
+  You are the only bot allowed to declare a finding.
+  You never write creative and you never touch app code.
+
+CONNECTIONS
+  Meta Ads + AppLovin (spend), Adjust (attribution), PostHog + Google Cloud
+  (product data), Apple + Google Play (revenue), Sentry (errors).
+  If a tool you need is not connected, ask me before working around it.
+
+CLOUD COMPUTER
+  Do this work on your own machine. Sign into Meta Ads Manager and click
+  through campaign setup yourself. Run on schedule whether my laptop is on or off.
+
+ROUTINES
+  19:10 CT daily    recap spend, installs, CPI across Meta and AppLovin;
+                    name the winners and the losers
+  06:30 CT daily    read room size and the challenge funnel in PostHog; flag any
+                    sign the ad and the app are describing different games
+  09:00 CT Monday   roll up 7-day and 30-day CPI against store revenue
+
+SKILLS
+  Replay the two recorded playbooks nightly: pull the Meta Ads Manager campaign
+  report, export the AppLovin creative breakdown. I recorded each one once,
+  by hand, while you watched.
+
+HANDOFFS
+  winners and losers      -> Creatives Agent
+  product findings        -> Engineer, written as specs rather than suggestions
+  anything that spends money -> me, first`,
+          },
+          {
+            type: 'text',
+            md: "Score that config against the charter checklist from the previous lesson and it holds up on every line. Scope is a lane with fences on both sides. Boundaries arrive as refusals (\"never write creative\", \"never touch app code\"), which beats a positive scope statement because a refusal survives a vaguely worded request. Escalation gets named twice, once for missing tools and once for money. And the handoff to the engineer carries a phrase worth stealing outright: findings travel as specs rather than suggestions, which settles in four words who decides and who builds.\n\nOne line does organizational work the others cannot. **You are the only bot allowed to declare a finding** hands a single seat the authority to say what is true. Skip it and six bots with access to the same dashboards produce six versions of Tuesday, and your morning goes to refereeing. One source of authority per fact type, written into the job description of the bot that owns it.\n\nThe clock matters too. Every routine carries a time, a timezone, and an output shape (name the winners, flag the gap, roll up the trend). A routine with no stated deliverable produces a wall of text that nobody opens by week three, which is how most abandoned automations die.\n\nThe skills entry documents a workaround worth knowing. The Meta Ads API was unavailable behind an account-verification backlog, so the operator recorded himself uploading one creative through the web interface and the bot replayed that click-path daily, shipping at least one new creative a day. That is the honest position on screen-driving: prefer the API, and when the API sits behind a support queue, a recorded click-path works today at the price of breaking the morning Meta moves a button.",
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'First-party guides are their own source tier, and it has a ceiling',
+            md: "These sit above the hype threads: named authors, real workloads, specific configs, published under the vendor's name. They also sit below independent evaluation, and the gap shows up in what is missing. No guide reports a monthly cost. None mentions a bot that got quietly retired, a routine that produced garbage for three weeks, or a job the roster outright failed at.\n\nThe vendor decides which stories get published. Read these for architecture and vocabulary, then get your failure data from operators with nothing to sell. [The AI Transformation Playbook · Four Real Rosters](lesson:m8-l4) works through all four guides on exactly those terms.",
           },
         ],
       },
@@ -897,6 +971,406 @@ sampled weekly; three bad weeks triggers a charter review)`,
       { label: 'Official Grok Bot docs (the skills, routines, and approvals pages)', url: 'https://docs.x.ai/grok-bot', kind: 'docs' },
       { label: 'Building a "lego of teammates" by harvesting other operators\' setups (Av1dlive)', url: 'https://x.com/av1dlive/status/2092923553557746047', kind: 'thread' },
       { label: 'awesome-grok-bot: the community index (tutorials, field cases, failure modes)', url: 'https://github.com/RongleCat/awesome-grok-bot', kind: 'repo' },
+      { label: 'The vendor\'s own guide index (first-party, staff-written, no failure data)', url: 'https://x.ai/bot/guides', kind: 'docs' },
+      { label: 'Six bots, one mobile game studio: the six primitives and a full analytics config', url: 'https://x.ai/bot/guides/grok-bot-for-mobile-app-development', kind: 'article' },
+    ],
+  },
+
+  // ───────────────────────────────────────────────────────────────
+  // m8-l4: Four Real Rosters (case studies from the vendor's own guides)
+  // ───────────────────────────────────────────────────────────────
+  {
+    id: 'm8-l4',
+    title: 'Four Real Rosters',
+    day: 22,
+    minutes: 50,
+    xp: 100,
+    objectives: [
+      'Compare four working agent rosters (product, enterprise sales, a mobile game studio, product design) and name what stays constant across all four',
+      'Build an attention list: the hourly, work-derived replacement for a priority list, with the setup prompt and the two ways to spend it',
+      'Defend narrow specialists over one omniscient assistant on referenceability, parallelism, and scoped memory',
+      'Teach an agent by demonstration and by voice sample instead of by writing longer instructions',
+      'Scale past one roster with the project-channel pattern: a board, a manager bot, staffing rules, and a blocked column',
+      'Read a vendor case study for its architecture while discounting its numbers',
+    ],
+    skipQuiz: [
+      {
+        q: 'A product manager publishes his seven-agent roster: a chief of staff, an engineering manager, five IC engineers, a data analyst, a product agent, and a recruiter. He labels exactly one of them "the only generalist." Which, and why does the label matter?',
+        options: [
+          'The engineering manager, because it coordinates across the most surfaces',
+          'The chief of staff, because it owns calendar, Slack, and inbox, which cut across every project; everything else on the roster is deliberately narrow so you always know who owns a given mistake',
+          'The data analyst, because warehouse questions come from every team',
+          'The product agent, because product work touches design, engineering, and support',
+        ],
+        answer: 1,
+        explain:
+          'One generalist per roster, sitting on the surfaces that genuinely span everything (calendar, mail, chat). Every other seat gets a lane. The reason is diagnostic: when the morning number is wrong you go to the data agent, and when the build missed the goal you go to the manager. Two generalists and you are back to guessing which conversation broke.',
+      },
+      {
+        q: 'An "attention list" differs structurally from a priority list. How?',
+        options: [
+          'It ranks by urgency instead of importance',
+          'An agent derives it hourly from what you actually touched (email, Slack, meeting transcripts, calendar) rather than you writing it in advance, so it tracks the week that is happening instead of the week you planned',
+          'It only holds items your manager assigned',
+          'It lives in agent memory and you never see it',
+        ],
+        answer: 1,
+        explain:
+          'Monday-morning priorities describe intentions. An incident on Tuesday and a candidate closing on Wednesday make them fiction by Thursday. Deriving the list from your actual traffic inverts that: the list cannot go stale, because staleness is measured against the same behavior it reads from.',
+      },
+      {
+        q: 'Asked why he runs many specialized agents instead of one omniscient one, the PM gives three operational reasons. Which set?',
+        options: [
+          'Cost per token, context limits, and vendor rate limiting',
+          'Referenceability (you know who does what), parallelism (many working at once on discrete tasks), and scoped memory (each learns different things on the job and keeps them relevant)',
+          'Security isolation, audit logging, and compliance',
+          'Model diversity, prompt caching, and retry behavior',
+        ],
+        answer: 1,
+        explain:
+          'None of the three is a technical limit, which is the interesting part. They are the same reasons you split a human team into roles. The one people underrate is scoped memory: an agent that has also been debugging eval harnesses drags eval trivia into every calendar decision it makes.',
+      },
+      {
+        q: 'Across the guides, the single instruction with the best return on making an agent write like you turns out to be:',
+        options: [
+          '"Write in a professional but friendly tone"',
+          '"Read my past messages and build me a style guide," followed by having it sample the actual thread before it drafts into that thread',
+          '"Use shorter sentences and avoid jargon"',
+          '"Rewrite this until it does not sound like AI"',
+        ],
+        answer: 1,
+        explain:
+          'Describing a voice produces an approximation of a voice. Pointing the agent at a few hundred of your real sent messages produces a style guide derived from evidence, and sampling the specific thread before drafting supplies the register that a general guide cannot carry. Same move as pointing a coding agent at the codebase instead of describing the codebase.',
+      },
+      {
+        q: 'One operator scaled from a single roster to many by giving each project its own channel and bot roster. The staffing rules he added were:',
+        options: [
+          'Build a fresh set of purpose-made bots per project so nothing is shared',
+          'Reuse bots already on the bench first; propose at most five besides the project manager bot; create a new bot only when nothing on the bench fits, and only after the human approves',
+          'Let the manager bot hire whoever it wants, silently, and prune later',
+          'One bot per project, wearing whatever hats the project needs',
+        ],
+        answer: 1,
+        explain:
+          'Reuse first, cap the roster, human approves new hires. Exactly what a hiring manager does with a headcount budget, and for the same reason: every new specialist is a thing you have to maintain, brief, and eventually retire. The cap number he chose is arbitrary and he says so; the existence of a cap is what matters.',
+      },
+    ],
+    sections: [
+      {
+        heading: 'Four rooms, one shape',
+        blocks: [
+          {
+            type: 'text',
+            md: "Over eleven days in August 2026, four people published how they actually staff a roster of agents. A product manager shipping the product itself, an enterprise sales lead, a designer, and an engineer running a mobile game studio around a day job. Different work, different tools, and nobody coordinating with anybody.\n\nSo read them as four independent runs of the exercise you did two lessons ago. The rosters rhyme, and where they rhyme is the signal.",
+          },
+          {
+            type: 'table',
+            headers: ['The roster', 'Its coordinator', 'The specialists', 'What the human kept'],
+            rows: [
+              ['Product management', 'Chief of Staff, called out as the only generalist: calendar, Slack, inbox, and the attention list', 'An engineering manager that does not code, five IC engineers under it, a data analyst on the warehouse, a product agent for RFCs and research, a recruiter', 'External sends, purchases, destructive actions, and a final edit on most docs'],
+              ['Enterprise sales', 'Chief of Staff for meeting prep, inbox, and post-call drafts, which calls the other bots as it needs them', 'Daily meeting prep, prospecting, one customer expert per strategic account, usage analytics, a codebase-connected product expert, a 1:1 agent, forecasting, a slides bot, a call coach', 'The relationship: which accounts matter and what gets said on the call'],
+              ['Mobile game studio', 'Mobile Orchestrator, which owns both app store accounts and routes work between the other five', 'Analytics and paid acquisition, creative production, client and backend engineering, deploys and rollbacks, an overnight error-log sweeper', 'Anything that spends money'],
+              ['Product design', 'None. Four bots that huddle, delegate to each other, and bring work back together', 'Repetitive Figma production, motion prototyping, an experiments bot for ideas with no spec yet, a dev bot answering implementation questions', 'The judgment between versions'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'Two of the four hired a manager for the managers',
+            md: "The product roster runs an engineering-manager agent that is explicitly forbidden from coding. It breaks work down, delegates to five IC engineer agents, and checks their output against the goal. The game studio runs an orchestrator that owns the store accounts and routes between five specialists.\n\nThat is two levels of delegation, which is the move a human team makes somewhere around eight people, for the same reason: the coordinator's own working memory fills up. So you get a sizing heuristic with something behind it. One coordinator holds maybe five or six direct reports before their work starts colliding. Past that, add a layer rather than another seat.",
+          },
+          {
+            type: 'text',
+            md: "The designer's roster is the useful outlier. No coordinator at all, four peers that huddle and delegate sideways. His experiments bot took a request for ambient ways to reach an agent (in the laptop notch, peeking from a screen corner, following the cursor), handed the character movement to the motion bot and the desktop-behavior questions to the dev bot, then reassembled three working prototypes he could live with for a day each.\n\nFour peers coordinate fine. Seven do not, which is why the other three rosters all grew a front door. Roster size, again, is the variable that decides your structure.",
+          },
+        ],
+      },
+      {
+        heading: 'The attention list',
+        blocks: [
+          {
+            type: 'text',
+            md: "The most portable idea in the four guides comes from the PM, and trying it costs you nothing.\n\nWeekly priorities go stale by Wednesday. You write five bullets Monday morning, then an incident eats Tuesday, a candidate needs closing Wednesday, and somebody drops a launch post in your DMs for review Thursday. By Friday the list describes a week that did not happen.\n\nSo invert it. Rather than declaring what matters and watching reality drift away from the declaration, have an agent read what you actually touched and report back what you are working on. Every hour it reviews email, Slack, meeting transcripts, and your calendar, then rewrites a short set of live projects with the state of each and the next move.",
+          },
+          {
+            type: 'code',
+            lang: 'text',
+            caption: 'Three prompts. The first stands the list up, the other two are how you spend it.',
+            code: `SET IT UP (once)
+  Create an attention list: every hour, review email, Slack, meeting
+  transcripts, and my calendar, and produce a short set of the projects
+  I am actually focused on, each with its current state and what needs
+  to happen next.
+
+SPEND IT (daily, as a filter)
+  Review my attention list and archive any email that is not relevant
+  to what is on it.
+
+SPEND IT (weekly, as a mirror)
+  Where did I spend time this week that I could hand to an agent
+  going forward?`,
+          },
+          {
+            type: 'text',
+            md: "The list pays off twice, and the second payoff is the one worth the setup.\n\nAs a **filter**, it lets every other agent decide what deserves your screen. Thousands of messages a week arrive; the ones that name you and map to something on the list get through, and an hourly sweep archives the rest. Because the filter comes from your behavior, it re-aims itself the moment your week changes direction, with no maintenance from you.\n\nAs a **mirror**, it exposes the gap between the priorities you wrote down and the work that actually ate your days. Nobody enjoys that comparison the first time they run it. It is also the cheapest management report you will ever run on yourself, and that weekly prompt turns it straight into a delegation queue: whatever sits in the gap and does not need your judgment becomes next week's routine.",
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'A priority list',
+              items: [
+                'You write it in advance, from intention',
+                'Stale the first time the week surprises you',
+                'Gives your agents nothing they can filter on',
+                'Gets revised when you remember to revise it, which is rarely',
+              ],
+            },
+            right: {
+              title: 'An attention list',
+              items: [
+                'An agent derives it hourly from mail, chat, transcripts, and calendar',
+                'Describes the week that is actually happening',
+                'Doubles as the filter every other agent runs inbound noise through',
+                'Shows you the gap between stated goals and spent hours, for free',
+              ],
+            },
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'You can run this tonight, on what you already pay for',
+            md: "Nothing about an attention list needs the product. A scheduled Claude task with read access to your mail and chat, writing to a single markdown file, does the same job. The shadow-versus-subscribe math from [The AI Transformation Playbook · Hands-On: Grok Bot](lesson:m8-l2) applies here more than anywhere else, because this particular routine is cheap to shadow and immediately tells you whether the rest of the roster is worth paying for.",
+          },
+        ],
+      },
+      {
+        heading: 'Why a roster beats one very good assistant',
+        blocks: [
+          {
+            type: 'text',
+            md: "Every guide runs into the same question, and the PM answers it head on: why not one omniscient agent behind one big text box, the way most products want you to work?\n\nThree reasons, none of them technical.\n\n**Referenceability.** You know who does what. When the morning dashboard is wrong you go to the data agent, and when the build missed the goal you go to the manager. Ownership is what makes a mistake fixable rather than merely annoying.\n\n**Parallelism.** Many agents work at once on discrete tasks and coordinate on the shared ones. One agent holding one very long conversation is a single worker with a to-do list, however smart it is.\n\n**Scoped memory.** Agents learn on the job, and what they learn stays valuable only while it stays relevant. His line for it: the chief of staff should not be debugging eval harnesses, and the eval agent should not be archiving mail.",
+          },
+          {
+            type: 'table',
+            headers: ['The operating rule', 'What it prevents', 'How it shows up in the config'],
+            rows: [
+              ['Named agents, separate memory', 'One agent accumulating everybody\'s context until none of what it knows is load-bearing', 'A broad mission per agent with memory scoped to its lane, and a refusal list that keeps it out of neighbouring work'],
+              ['Agents learn on the job', 'Rewriting the same correction into longer and longer instructions, forever', 'Point them at your history. One operator had his engineering-manager agent read a senior human manager\'s entire Slack archive to learn what good looks like'],
+              ['Quiet by default', 'A roster that generates more notifications than it absorbs', 'An explicit instruction to stay silent unless something needs a decision. Bias to action, minimal narration'],
+              ['Human on the important stuff', 'Reputation damage at machine speed, and output that shipped without anyone reading it', 'External sends, purchases, and destructive actions stay manual, plus a human edit on most docs'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'The quiet rule is the one everybody skips',
+            md: "Each roster in these guides carries an instruction to shut up unless something needs attention, and the PM's chief of staff is described as staying quiet if nothing changed. Six enthusiastic agents produce a second inbox, and a second inbox is precisely the thing the roster was hired to eliminate.\n\nWrite the quiet rule into the job description on day one, then treat every unrequested status update as a bug to fix rather than a personality trait to enjoy. His fourth rule pairs with it: he still sends most messages and edits most docs himself, partly to de-slop the output and partly because people want to know the messenger spent some time thinking about the ask.",
+          },
+        ],
+      },
+      {
+        heading: 'Teach it, do not describe it',
+        blocks: [
+          {
+            type: 'text',
+            md: "Writing longer instructions is the beginner's response to a bad output. The four guides converge on two better answers, and both feel more like onboarding a person than configuring software.\n\n**Show it once, on the record.** The sales lead's routine for any new task: hit record, take over the bot's computer, do the job by hand while it watches, then have it turn that recording into a skill. She taught her bot how she researches stakeholders on X exactly once. The game-studio operator did the same for a creative upload when the ads API was stuck behind verification. What gets captured is the click-path, which is worth more than any description of the click-path you could write down.\n\n**Feed it your voice, then make it sample.** The universal complaint about agent prose is that it reads like agent prose. Three of the four guides fix it the same way: have the agent read your sent mail and chat history, write itself a style guide from what it finds, and then pull the actual thread before drafting a reply into that thread. General register from the guide, specific register from the thread.\n\nThen keep a file where the corrections land. One operator maintains an anti-slop skill and appends to it every single time she steers an output. Steering that never gets written down is steering you will repeat on Thursday.",
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'Exact values, never eyeballed ones',
+            md: "The designer's rule for his Figma bot generalizes way past design. Filling twenty onboarding cards from one component template, he refuses to let the bot approximate anything: through the Figma MCP it reads the real file and uses the actual x and y positions, widths, spacing, typography, fills, and component structure. Where a frame already exists, that frame is the source of truth.\n\nHis reasoning is about compounding error. The wrong logo variant, an outdated component, a portrait pulled from somewhere else, the tenth card spaced differently from the first. Each one is small, which is exactly why nobody catches them until all twenty are on a screen together.\n\nSame principle as pointing a coding agent at the codebase instead of describing the codebase to it. Wherever a machine-readable source of truth exists, connect the agent to it and forbid estimation.",
+          },
+          {
+            type: 'text',
+            md: "One more habit from the same guide, and it is the answer to \"how do I get useful feedback out of a design agent.\" He had the motion bot build a localhost playground around the real production animation spec file, so the thing on screen was the shipping asset rather than a recreation of it. Then he directed it the way you would direct a person: hold the look down-left longer, the bounce is too exaggerated.\n\nHis point is that he does not know whether a transition should run 280 or 340 milliseconds until he watches it. Comparative feedback against a live artifact beats specified values, and it only works because the artifact was real. Build the playground around production assets, and the feedback loop gets short enough to use taste in.",
+          },
+        ],
+      },
+      {
+        heading: 'When one roster is not enough',
+        blocks: [
+          {
+            type: 'text',
+            md: "Running bots as separate one-on-one chats works fine until the second project. Then filtering signal from noise across a sidebar of unrelated conversations gets hard, and keeping the bots in sync with each other gets harder.\n\nOne operator's answer, published explicitly as an experiment rather than a finished system: copy what human teams already do. Each project gets a channel, a roster, and a board.\n\nThe machinery is two databases (Projects and Tasks) plus one manager bot that sits above the projects rather than inside any of them. That manager owns a Project Ops skill covering the meta work: create the project, open the channel, staff it with the right bots. One project equals one channel in the sidebar, and the channel holds the roster plus the human.",
+          },
+          {
+            type: 'diagram',
+            caption: 'One manager bot above the projects, two shared databases, and a channel per project holding its own roster and board. Every piece of this was invented for human teams first.',
+            svg: `<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect width="700" height="300" fill="#18181b" rx="8"/>
+
+  <rect x="195" y="14" width="240" height="52" fill="#27272a" stroke="#818cf8" stroke-width="2" rx="8"/>
+  <text x="315" y="36" fill="#818cf8" font-size="13" font-weight="bold" text-anchor="middle">projects MANAGER bot</text>
+  <text x="315" y="54" fill="#a1a1aa" font-size="10" text-anchor="middle">Project Ops skill: open, staff, keep in sync</text>
+
+  <rect x="470" y="12" width="212" height="26" fill="#27272a" stroke="#52525b" stroke-width="1.5" rx="6"/>
+  <text x="576" y="29" fill="#e4e4e7" font-size="10" text-anchor="middle">Projects database</text>
+  <rect x="470" y="44" width="212" height="26" fill="#27272a" stroke="#52525b" stroke-width="1.5" rx="6"/>
+  <text x="576" y="61" fill="#e4e4e7" font-size="10" text-anchor="middle">Tasks database</text>
+  <line x1="435" y1="41" x2="470" y2="41" stroke="#52525b" stroke-width="2" stroke-dasharray="4 3"/>
+
+  <line x1="255" y1="66" x2="116" y2="92" stroke="#52525b" stroke-width="2"/>
+  <line x1="315" y1="66" x2="315" y2="92" stroke="#52525b" stroke-width="2"/>
+  <line x1="375" y1="66" x2="514" y2="92" stroke="#52525b" stroke-width="2"/>
+
+  <g>
+    <rect x="16" y="92" width="200" height="176" fill="#1f1f23" stroke="#3f3f46" stroke-width="1.5" rx="8"/>
+    <text x="30" y="112" fill="#818cf8" font-size="11" font-weight="bold">#launch-alpha</text>
+    <rect x="28" y="120" width="176" height="18" fill="#27272a" rx="4"/><text x="36" y="133" fill="#e4e4e7" font-size="9">PM bot</text>
+    <rect x="28" y="142" width="176" height="18" fill="#27272a" rx="4"/><text x="36" y="155" fill="#a1a1aa" font-size="9">Coder (from the bench)</text>
+    <rect x="28" y="164" width="176" height="18" fill="#27272a" rx="4"/><text x="36" y="177" fill="#a1a1aa" font-size="9">Researcher (from the bench)</text>
+    <rect x="28" y="186" width="176" height="18" fill="#27272a" rx="4"/><text x="36" y="199" fill="#e4e4e7" font-size="9">YOU</text>
+    <line x1="28" y1="214" x2="204" y2="214" stroke="#3f3f46" stroke-width="1"/>
+    <rect x="28" y="222" width="54" height="30" fill="#27272a" rx="4"/><text x="55" y="241" fill="#a1a1aa" font-size="8" text-anchor="middle">Todo</text>
+    <rect x="89" y="222" width="54" height="30" fill="#27272a" rx="4"/><text x="116" y="241" fill="#a1a1aa" font-size="8" text-anchor="middle">Doing</text>
+    <rect x="150" y="222" width="54" height="30" fill="#3f2a2a" stroke="#f87171" stroke-width="1" rx="4"/><text x="177" y="241" fill="#f87171" font-size="8" text-anchor="middle">Blocked</text>
+  </g>
+
+  <g>
+    <rect x="250" y="92" width="200" height="176" fill="#1f1f23" stroke="#3f3f46" stroke-width="1.5" rx="8"/>
+    <text x="264" y="112" fill="#818cf8" font-size="11" font-weight="bold">#pricing-rework</text>
+    <rect x="262" y="120" width="176" height="18" fill="#27272a" rx="4"/><text x="270" y="133" fill="#e4e4e7" font-size="9">PM bot</text>
+    <rect x="262" y="142" width="176" height="18" fill="#27272a" rx="4"/><text x="270" y="155" fill="#a1a1aa" font-size="9">Researcher (reused)</text>
+    <rect x="262" y="164" width="176" height="18" fill="#27272a" rx="4"/><text x="270" y="177" fill="#a1a1aa" font-size="9">Writer (reused)</text>
+    <rect x="262" y="186" width="176" height="18" fill="#27272a" rx="4"/><text x="270" y="199" fill="#e4e4e7" font-size="9">YOU</text>
+    <line x1="262" y1="214" x2="438" y2="214" stroke="#3f3f46" stroke-width="1"/>
+    <rect x="262" y="222" width="54" height="30" fill="#27272a" rx="4"/><text x="289" y="241" fill="#a1a1aa" font-size="8" text-anchor="middle">Todo</text>
+    <rect x="323" y="222" width="54" height="30" fill="#27272a" rx="4"/><text x="350" y="241" fill="#a1a1aa" font-size="8" text-anchor="middle">Doing</text>
+    <rect x="384" y="222" width="54" height="30" fill="#27272a" rx="4"/><text x="411" y="241" fill="#52525b" font-size="8" text-anchor="middle">Blocked</text>
+  </g>
+
+  <g>
+    <rect x="484" y="92" width="200" height="176" fill="#1f1f23" stroke="#3f3f46" stroke-width="1.5" rx="8"/>
+    <text x="498" y="112" fill="#818cf8" font-size="11" font-weight="bold">#hardware-spike</text>
+    <rect x="496" y="120" width="176" height="18" fill="#27272a" rx="4"/><text x="504" y="133" fill="#e4e4e7" font-size="9">PM bot</text>
+    <rect x="496" y="142" width="176" height="18" fill="#27272a" rx="4"/><text x="504" y="155" fill="#a1a1aa" font-size="9">Coder (reused)</text>
+    <rect x="496" y="164" width="176" height="18" fill="#2a3320" stroke="#a3e635" stroke-width="1" rx="4"/><text x="504" y="177" fill="#a3e635" font-size="9">Firmware bot (new, approved)</text>
+    <rect x="496" y="186" width="176" height="18" fill="#27272a" rx="4"/><text x="504" y="199" fill="#e4e4e7" font-size="9">YOU</text>
+    <line x1="496" y1="214" x2="672" y2="214" stroke="#3f3f46" stroke-width="1"/>
+    <rect x="496" y="222" width="54" height="30" fill="#27272a" rx="4"/><text x="523" y="241" fill="#a1a1aa" font-size="8" text-anchor="middle">Todo</text>
+    <rect x="557" y="222" width="54" height="30" fill="#27272a" rx="4"/><text x="584" y="241" fill="#a1a1aa" font-size="8" text-anchor="middle">Doing</text>
+    <rect x="618" y="222" width="54" height="30" fill="#27272a" rx="4"/><text x="645" y="241" fill="#52525b" font-size="8" text-anchor="middle">Blocked</text>
+  </g>
+
+  <text x="350" y="288" fill="#71717a" font-size="10" text-anchor="middle">Reuse the bench first · cap the roster · new hires need your yes</text>
+</svg>`,
+          },
+          {
+            type: 'text',
+            md: "Three staffing rules keep the thing from sprawling, and a hiring manager would recognize all three.\n\n- **Reuse the bench first.** A Coder, a Researcher, and a Writer already exist and already know things. Pull from them before inventing anybody new.\n- **Cap the channel.** At most five bots besides the project manager, six total. He says the number is arbitrary, which is fine; the ceiling is what matters, because past some size the coordination cost eats the parallelism you just bought.\n- **New hires need your approval.** A bot gets created only when nothing on the bench fits, and only after you say yes. Some graduate into reusable specialists, and others get retired with the project that needed them.\n\nThen the board does what boards do. Bots claim tasks and move cards, and a bot that gets stuck marks its task Blocked and pings the channel. Most of the time the human watches cards move and answers the occasional block.\n\nThe striking part of the finished setup is how completely it reinvents machinery built for humans: a board, a manager, specialists claiming work, a blocked column, a channel per project. Which is a decent argument that none of that machinery was ever about humans. It solves coordinating many workers who each hold partial information, and that problem survived the workers ceasing to be people.",
+          },
+        ],
+      },
+      {
+        heading: 'What four case studies prove, and what they do not',
+        blocks: [
+          {
+            type: 'text',
+            md: "Hold the numbers in these guides loosely.\n\nCost per install fell about 15x, from roughly $15 to $1, after the bots read the funnel data, worked out that people were playing in pairs rather than groups, and rewrote the ad to match. Seven-day retention improved roughly 4x after shipping a hint feature, found by correlating score against retention. Agent-written code accounts for a double-digit percentage of one team's merged pull requests.\n\nAll three are real, and none of them is evidence about you. A $15 cost per install on a brand-new game with untested creative has enormous headroom, and the first competent optimization pass on any ad account produces a chart that looks like a miracle. A double-digit share of merged PRs says nothing about how large those PRs were, and the same author notes that a human still reviews and edits most of the output.\n\nGrade these the way the source-tiering habit taught you, and notice that a single guide can be strong evidence for one claim and worthless for another.",
+          },
+          {
+            type: 'table',
+            headers: ['The claim', 'How much weight it carries', 'Why'],
+            rows: [
+              ['Rosters converge on narrow seats plus one coordinator', 'High', 'Four independent authors, four unrelated jobs, same structure, none of them citing each other'],
+              ['Handoffs between bots are what make it a team', 'High', 'A structural argument that stands without trusting anyone\'s numbers, and it matches the orchestrator doctrine you already have'],
+              ['Attention lists beat priority lists', 'Medium', 'One author with strong reasoning, and cheap enough that you can settle it yourself in a week'],
+              ['Six bots per channel is the right cap', 'Low', 'The author says outright that he made the number up'],
+              ['15x cost per install, 4x seven-day retention', 'Low as evidence for you', 'One game, one week, an unoptimized starting point, self-reported and vendor-published'],
+              ['Double-digit percent of merged PRs', 'Low as evidence for you', 'No PR size, no defect rate, no review burden, and humans still edit most of it'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'The transferable asset is the config shape',
+            md: "Strip the vendor out of all four guides and you are left with something that runs anywhere: narrow seats with refusals in the job description, one coordinator per five or six workers, standing work on a clock with a stated output shape, handoffs written as named edges, a quiet rule, and a human fence around money and outbound.\n\nThat list survives the product. Build it in whatever you are already paying for, and the subscription question in [The AI Transformation Playbook · Hands-On: Grok Bot](lesson:m8-l2) becomes a question about convenience rather than capability.",
+          },
+        ],
+      },
+    ],
+    lab: {
+      title: 'Staff your roster against four that already run',
+      intro:
+        "You designed a workforce on paper two lessons ago. Now cross-check it against four rosters that actually run, steal whatever beats yours, and stand up the one primitive that costs nothing to try.",
+      steps: [
+        'Put your workforce design side by side with the four rosters in this lesson. For each agent you designed, find its closest real-world match and write down one thing theirs does that yours does not.',
+        'Find your missing seats. Every roster here has a coordinator, and most have a numbers seat and a writing seat. List what you left out, then decide per seat whether you left it out on purpose.',
+        'Rewrite one agent as a full six-primitive config: job description with at least two explicit refusals, connections, what runs on its own machine, routines with clock times and a stated output shape each, skills you would record rather than write, and named handoffs.',
+        'Stand up an attention list with whatever you already pay for. Point it at the sources you genuinely live in, run it hourly, and let it go for five weekdays.',
+        'On day five, run the mirror pass: compare the attention list against the priorities you would have written that Monday. Write down the three biggest gaps.',
+        'Turn each gap into a decision. Routine, somebody else, or stays yours, with a one-line reason.',
+        'Add the quiet rule and the voice pass to one existing agent: an explicit instruction to stay silent unless a decision is needed, plus a style guide it writes for itself from a real sample of your writing. Keep a before and after draft to compare.',
+      ],
+      checklist: [
+        'Your roster mapped against all four published rosters, with the gaps written down',
+        'One agent rewritten as a full six-primitive config, carrying at least two refusals',
+        'At least one handoff named explicitly: which agent, what triggers it, and what shape the work arrives in',
+        'An attention list ran for five weekdays against sources you actually use',
+        'The Monday-intention versus actual-attention gap recorded, with three items named',
+        'Each gap item assigned: routine, someone else, or yours',
+        'One agent carrying a quiet rule plus a self-written style guide, with a before/after draft to compare',
+      ],
+    },
+    checkQuiz: [
+      {
+        q: 'The engineering-manager agent in the product roster is explicitly told not to code. Why is that restriction useful rather than wasteful?',
+        options: [
+          'Manager agents cost less per token when they cannot execute code',
+          'Its whole value is decomposition, delegation, and comparing output against the goal; an agent that starts coding stops supervising, and then five IC agents run with nobody checking their work against the objective',
+          'The platform blocks code execution for coordinator roles',
+          'Agents that write code cannot perform handoffs',
+        ],
+        answer: 1,
+        explain:
+          'Same reason a human EM who keeps grabbing tickets stops being an EM. The seat exists to hold the comparison against the goal, and holding it needs somebody who is not heads-down in a diff. The restriction also keeps the roster referenceable: when a build misses, you know immediately whether to talk to the manager or the IC.',
+      },
+      {
+        q: 'You have an agent read your sent mail and write itself a style guide. Per the guides, why does the guide alone still produce mediocre drafts?',
+        options: [
+          'Style guides fail because tone cannot be learned from text',
+          'A general style guide sets your register, but any specific reply needs the specific thread; the working recipe is style guide plus sampling the actual conversation right before drafting into it',
+          'The model has to be fine-tuned on the guide first',
+          'Sent mail is the wrong corpus; only chat history works',
+        ],
+        answer: 1,
+        explain:
+          'Two different jobs. The guide carries how you write in general (sentence length, greeting habits, what you never say), and the thread carries how this conversation has been going. Skip the sampling step and you get correctly-styled prose that reads slightly off, because it is answering a thread it never looked at.',
+      },
+      {
+        q: 'An operator caps each project channel at six bots and openly says the number is arbitrary. What should you take from that?',
+        options: [
+          'Ignore the cap; more bots is strictly better',
+          'Take the practice and re-derive the number for yourself: a ceiling exists because coordination cost grows with roster size, but where it sits depends on how much your bots hand off to each other and how narrow the seats are',
+          'Six is a hard platform limit you cannot change',
+          'Caps only make sense for teams of humans',
+        ],
+        answer: 1,
+        explain:
+          'An author who flags his own arbitrary number is doing you a favor. The practice (cap it, reuse the bench, approve new hires) rests on a real mechanism. The specific integer rests on nothing. Copy the mechanism, then find your own ceiling by watching where the coordination starts costing more than the parallelism returns.',
+      },
+      {
+        q: 'A vendor guide reports a 15x drop in cost per install after its bots rewrote an ad. How should that shape your adoption decision?',
+        options: [
+          'It should not; case-study numbers are always fabricated',
+          'It should barely move your math: one game, one week, an unoptimized starting point with huge headroom, self-reported and published by the vendor. Take the workflow it describes, then establish your own baseline before you claim any multiple',
+          'It belongs as the headline number in your business case',
+          'It proves the underlying model outperforms competitors',
+        ],
+        answer: 1,
+        explain:
+          'The workflow is the transferable part: analytics agent reads the funnel, forms a hypothesis about who is actually playing, hands a spec to the creative agent, tests it. That whole loop is copyable and free to evaluate. The multiple attached to it came from one account with an enormous amount of easy improvement available, and it tells you nothing about the ceiling on yours.',
+      },
+    ],
+    resources: [
+      { label: 'The vendor\'s guide index: four first-party rosters, all published in August 2026', url: 'https://x.ai/bot/guides', kind: 'docs' },
+      { label: 'Grok Bot for PMs: attention lists, a seven-agent roster, and why not one omniscient agent', url: 'https://x.ai/bot/guides/grok-bot-for-pms', kind: 'article' },
+      { label: 'Grok Bot for GTM: the full sales roster, plus a weekly media rundown prompt worth stealing', url: 'https://x.ai/bot/guides/grok-bot-for-gtm', kind: 'article' },
+      { label: 'Six bots, one mobile game studio: the six primitives and a complete analytics config', url: 'https://x.ai/bot/guides/grok-bot-for-mobile-app-development', kind: 'article' },
+      { label: 'Designing with agents: production assets, comparative feedback, exact values over eyeballing', url: 'https://x.ai/bot/guides/designing-grok-bot-with-grok-bot', kind: 'article' },
+      { label: 'Running multiple teams: a channel, a roster, and a board per project', url: 'https://x.ai/bot/guides/how-i-run-multiple-teams-of-grok-bots', kind: 'article' },
+      { label: 'Anthropic - Building Effective Agents (the orchestrator-workers pattern these rosters rediscover)', url: 'https://www.anthropic.com/engineering/building-effective-agents', kind: 'article' },
     ],
   },
 
