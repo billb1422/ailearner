@@ -249,14 +249,14 @@ export const MODULES: Module[] = [
     title: 'Bonus: Field Notes',
     emoji: '📼',
     color: '#a3e635',
-    tagline: 'Three arguments worth stealing: a harness where everything is a plugin, a gauntlet that replaces steering with gates, and a way to harvest configs you did not write',
+    tagline: 'Four arguments worth stealing: a harness where everything is a plugin, a gauntlet that replaces steering with gates, a way to harvest configs you did not write, and eleven small fixes with the research behind them',
     days: 'Bonus · after Day 22',
     bonus: true,
     lessons: m10Lessons,
     boss: {
-      title: 'Steal All Three',
+      title: 'Steal All Four',
       description:
-        'Take one idea from each lesson and land it in a repo you actually work in. From the harness lesson: prove you can see what your agent did, end to end, and replace one layer you were told was fixed. From the gauntlet lesson: retire a steering rule by turning it into a check that fails the build, then verify your tests assert rather than merely execute. From the harvest lesson: import one workflow you did not write, through a clean room, and grade it against a bar you set before you went looking.',
+        'Take one idea from each lesson and land it in a repo you actually work in. From the harness lesson: prove you can see what your agent did, end to end, and replace one layer you were told was fixed. From the gauntlet lesson: retire a steering rule by turning it into a check that fails the build, then verify your tests assert rather than merely execute. From the harvest lesson: import one workflow you did not write, through a clean room, and grade it against a bar you set before you went looking. From the small-fixes lesson: measure where your tokens and your stale rules actually went, then run a session through a hand-written handoff and a fresh reviewer instead of a compaction and a self-check.',
       requirements: [
         'One agent run read end to end from an event log or trajectory, with two findings written down that a chat UI would have hidden',
         'One harness layer swapped or disabled deliberately (a provider, a tool, a UI panel), and the config change committed',
@@ -268,7 +268,9 @@ export const MODULES: Module[] = [
         'One harvest cycle completed on a real recurring job: pass conditions written before searching, three sources labeled by tier, fetching done in a session with no credentials and no outbound channel',
         'The adapted config read line by line with anything unrequested marked, then run once on safe inputs with the narrowest tool grant',
         'A keep-or-kill decision recorded with its margin, and a killed import actually deleted',
-        'A one-page verdict naming which of the three philosophies fits your work, and the one thing you rejected from each',
+        'A one-page verdict naming which of the four philosophies fits your work, and the one thing you rejected from each',
+        'A drift audit run on your own rules file, with the count of stale references recorded, at least one of them fixed, and the weekly /usage share spent on four or more parallel sessions written down',
+        'One long session ended with a hand-written handoff instead of a compaction, finished by a fresh session that then reviewed the diff and caught something the writing session had called fine',
       ],
       xp: 300,
       badgeId: 'boss-m10',

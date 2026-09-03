@@ -1039,6 +1039,7 @@ export const lessons: Lesson[] = [
       'Can pick the right event and handler type for a control requirement',
       'Can write a blocking PreToolUse guard and a Stop-hook verification gate',
       'Can use JSON hook output to allow, deny, ask, or rewrite tool input',
+      'Can audit an existing rules file and sort every line into promote, keep, or delete',
     ],
     skipQuiz: [
       {
@@ -1225,11 +1226,84 @@ export const lessons: Lesson[] = [
         ],
       },
       {
-        heading: 'Three recipes that pay rent',
+        heading: 'The audit: is this line an event or a judgment?',
         blocks: [
           {
             type: 'text',
-            md: '**Format-on-write.** A PostToolUse hook matching Edit|Write runs prettier or ruff on every file Claude touches. Formatting stops being a conversation topic at all, because the machine handles it after each edit without anyone asking.\n\n**Destructive-command guard.** A PreToolUse hook on Bash denies rm -rf, force pushes to main, and DROP TABLE, each with a reason Claude can read and act on. You saw the guard.sh version above; teams often grow this into a small policy script.\n\n**Stop-gate.** A Stop hook runs the test suite and exits 2 while anything fails. This one changes day-to-day behavior the most: "claims to be done but the tests fail" becomes "keeps working until the tests pass". Boris Cherny describes verification as the 2-3x quality lever for agent work, and this hook is that lever in mechanical form.',
+            md: "Your rules file already contains hooks you have not written yet. Finding them takes one question, applied line by line: **is this line naming an event, or encoding a judgment?**\n\nA judgment is a fact about how you build software. Money is stored in integer cents. Public API responses are snake_case. Nothing in the model layer imports from the web layer. The agent has to weigh these against whatever it is doing, which is what a model is good at, so they belong in prose.\n\nAn event is an ordering claim. When the session starts, read this. Before you touch that file, read this other one. After implementing, run the suite. Prose can only ask for these, and asking is a coin flip on every turn. Code can guarantee them.",
+          },
+          {
+            type: 'table',
+            headers: ['A line from a real rules file', 'Event or judgment?', 'Where it belongs'],
+            rows: [
+              ['Money is integer cents, never floats', 'Judgment', 'Stays a rule'],
+              ['Public API fields are snake_case', 'Judgment', 'Stays a rule'],
+              ['At the start of every session, run git status and read DECISIONS.md', 'Event', 'SessionStart hook'],
+              ['Before editing anything in routes/, read auth/session.ts first', 'Event', 'PreToolUse on Edit'],
+              ['Never read the .env file', 'Event', 'PreToolUse on Read and Bash'],
+              ['Never run a recursive force delete', 'Event', 'PreToolUse on Bash'],
+              ['Log every shell command you run', 'Event', 'PostToolUse on Bash'],
+              ['When you finish implementing, run the full test suite', 'Event', 'Stop hook'],
+              ['Write clean code and keep it simple', 'Neither', 'Delete it'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'The tell is a time word',
+            md: "Scan for **when**, **before**, **after**, **at the start of**, **once you have**. Every one of those is an ordering claim wearing a sentence, and every ordering claim in prose is a wish. Promote it and the wish becomes a mechanism. The third bucket matters too: a line that names no event and encodes no judgment specific to your project is paying rent on every turn for nothing, and current models already know to keep it simple.",
+          },
+          {
+            type: 'text',
+            md: "Evidence that this split is the right one showed up in 2026 from an unexpected direction. A research team built a closed loop that let a coding agent evolve its own harness (its tools, its hook layer, its memory, its system prompt) and verified each edit against the next round of task outcomes. Ten iterations lifted pass@1 on Terminal-Bench 2 from 69.7% to 77.0%, beating the human-designed Codex-CLI harness at 71.9%. The part worth stealing is the ablation: **the gains localized to tools, middleware, and long-term memory rather than the system prompt.** Middleware is that project's word for the hook layer. The evolved deterministic components even transferred to other model families, while prose-level strategy did not.",
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'Promotion is not eviction',
+            md: "Hooks complement rules; they do not replace them. Run the audit and most of your file should survive as judgment, because judgment is exactly the thing you cannot write a script for. What changes is that the processes leave, the dead weight leaves, and the lines that stay get read in a shorter file where they keep their grip. If your rules file empties out completely, you sorted wrong.",
+          },
+        ],
+      },
+      {
+        heading: 'Five recipes that pay rent',
+        blocks: [
+          {
+            type: 'text',
+            md: '**Format-on-write.** A PostToolUse hook matching Edit|Write runs prettier or ruff on every file Claude touches. Formatting stops being a conversation topic at all, because the machine handles it after each edit without anyone asking.\n\n**Destructive-command guard.** A PreToolUse hook on Bash denies rm -rf, force pushes to main, and DROP TABLE, each with a reason Claude can read and act on. You saw the guard.sh version above; teams often grow this into a small policy script.\n\n**Stop-gate.** A Stop hook runs the test suite and exits 2 while anything fails. This one changes day-to-day behavior the most: "claims to be done but the tests fail" becomes "keeps working until the tests pass". Boris Cherny describes verification as the 2-3x quality lever for agent work, and this hook is that lever in mechanical form.\n\n**Secrets guard that teaches.** A PreToolUse hook on Read and Bash matches .env and friends by regular expression and blocks. Worth doing even though your rules already say not to, because a confused agent three hundred turns deep will read it anyway, and once those keys enter the context they have left your machine. The detail that makes this one shine: have the block name the alternative. "Access to secrets is blocked. Read .env.example for the variable names." A refusal that only says no sends the agent guessing; a refusal that offers the next move gets the right action on the first retry.\n\n**Coupling gate.** Claude Code already refuses to edit a file it has not read in this session. A PreToolUse hook on Edit extends that idea to files it *should* have read: keep a small map of coupled paths, and block an edit to routes/ when auth/session.ts is not in the session yet, with the missing files listed. This is the cheapest fix for the failure where an agent edits something correctly in isolation and wrongly in context.',
+          },
+          {
+            type: 'code',
+            lang: 'python',
+            code: `#!/usr/bin/env python3
+# .claude/hooks/pretooluse_coupling.py
+import json, sys
+
+COUPLED = {
+    "routes/": ["auth/session.ts"],
+    "rag/query.py": ["rag/citations.py", "rag/chunking.py"],
+}
+
+event = json.load(sys.stdin)
+path = event.get("tool_input", {}).get("file_path", "")
+seen = set(event.get("session_files_read", []))
+
+for prefix, required in COUPLED.items():
+    if path.startswith(prefix):
+        missing = [f for f in required if f not in seen]
+        if missing:
+            print(
+                f"Blocked: {path} is coupled to files you have not read "
+                f"this session: {', '.join(missing)}. Read them, then retry.",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+sys.exit(0)`,
+            caption: 'A coupling gate in twenty lines. The stderr message names the missing files, so the block reads as an instruction rather than a wall. Field names vary by agent, so check your own event payload before copying.',
+          },
+          {
+            type: 'text',
+            md: "Writing these by hand gets old, which is why the hook-writing skill exists as a genre. Medin ships [hooks-create](https://github.com/coleam00/skills/blob/main/.claude/skills/hooks-create/SKILL.md): you describe the guarantee in one sentence (\"when the conversation ends, run the full test suite, and if it is not green force the agent to fix it\"), it interviews you for the missing details, picks the event, writes the script, and wires it into settings.json. Paste a promoted line straight out of your audit and you get the hook back. Read what it wrote before you trust it, using the skill-review habits from [Claude Code Mastery · Skill Authoring Doctrine](lesson:m1-l4).",
           },
           {
             type: 'callout',
@@ -1250,13 +1324,15 @@ export const lessons: Lesson[] = [
         'Add a Stop hook running your real test command (npm test, pytest, go test). Exit 2 on failure.',
         'Test the gate: ask for a small change that plausibly breaks a test, and watch Claude get bounced back to fix it before finishing.',
         'Run /hooks to confirm both are registered, then restart the session and verify they persist (they live in settings.json, so they should).',
+        'Run the audit on your own CLAUDE.md: go line by line marking each one E (event), J (judgment), or D (delete). Record the three counts, delete the D lines, and promote the highest-value E line to a hook.',
       ],
       checklist: [
         'guard.sh blocks a destructive command with exit 2',
         'Claude visibly receives the stderr reason and changes approach',
         'Stop hook prevents completion while tests fail, and passes when green',
         'Both hooks survive a session restart',
-        'You can articulate which of your CLAUDE.md lines should be promoted to hooks',
+        'Every line of CLAUDE.md is marked E, J, or D, with the three counts written down',
+        'The D lines are gone and at least one E line now runs as a hook instead of prose',
       ],
     },
     checkQuiz: [
@@ -1285,16 +1361,16 @@ export const lessons: Lesson[] = [
           'Stop is the "am I actually done?" checkpoint. Exit 2 with the failures on stderr sends Claude back to work holding the exact errors, and the loop repeats until the suite is green. A CLAUDE.md sentence expresses the same wish with zero enforcement behind it.',
       },
       {
-        q: 'Auto-formatting every file Claude edits belongs on which event?',
+        q: 'Auditing your rules file, you hit the line "at the start of every session, run git status and read DECISIONS.md". What does the event-or-judgment test say to do with it?',
         options: [
-          'PreToolUse with matcher Edit|Write',
-          'PostToolUse with matcher Edit|Write',
-          'UserPromptSubmit',
-          'PreCompact',
+          'Keep it as a rule but move it to the top of the file so it gets read first',
+          'Promote it to a SessionStart hook, since it names an event rather than encoding a judgment',
+          'Delete it; agents read git status on their own',
+          'Convert it to a skill the agent invokes manually',
         ],
         answer: 1,
         explain:
-          'Formatting operates on the result of a write, so the hook has to fire after the tool completes. At PreToolUse time the file on disk hasn\'t changed yet, so a formatter would be working on stale content.',
+          '"At the start of every session" is an ordering claim, so it is a process, and a process in prose gets followed some of the time. SessionStart fires on every new session with no reliance on the agent noticing the line. Reordering the file changes nothing about the coin flip.',
       },
       {
         q: 'Best event to automatically prepend the current git branch and open ticket to every request?',
@@ -1314,6 +1390,9 @@ export const lessons: Lesson[] = [
       { label: 'Claude Code docs: hooks guide', url: 'https://code.claude.com/docs/en/hooks-guide', kind: 'docs' },
       { label: 'everything-claude-code: community hooks catalog', url: 'https://github.com/affaanmustafa/everything-claude-code', kind: 'repo' },
       { label: 'Claude Code best practices (verification escalation ladder)', url: 'https://www.anthropic.com/engineering/claude-code-best-practices', kind: 'article' },
+      { label: 'Watch This If Your Coding Agent is Ignoring Your Rules (Cole Medin on the rule audit)', url: 'https://youtu.be/msfMqW92Y8Q', kind: 'video' },
+      { label: 'coleam00/skills: hooks-create, plus the hooks used in that video', url: 'https://github.com/coleam00/skills', kind: 'repo' },
+      { label: 'Agentic Harness Engineering: gains localize to tools and middleware, not the system prompt', url: 'https://arxiv.org/abs/2604.25850', kind: 'article' },
     ],
   },
 ]

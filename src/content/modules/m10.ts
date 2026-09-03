@@ -1383,4 +1383,484 @@ forbidden:
       { label: 'Official Grok Bot docs: the tier that is wrong by accident', url: 'https://docs.x.ai/grok-bot/overview', kind: 'docs' },
     ],
   },
+  // ────────────────────────────────────────────────────────────
+  // m10-l4: Eleven Small Fixes (Cole Medin, Sept 2026) + the papers behind them
+  // ────────────────────────────────────────────────────────────
+  {
+    id: 'm10-l4',
+    title: 'Eleven Small Fixes, and What the Studies Actually Say',
+    day: 24,
+    minutes: 60,
+    xp: 130,
+    objectives: [
+      'Sort eleven unrelated-looking fixes into the four things they are all doing, so the pattern transfers to a tip you have not heard yet',
+      'State what the compaction research measured, and why "stop using /compact" is the right habit for a slightly different reason than the one usually given',
+      'Explain the handoff tax: why switching to a bigger model mid-task recovers less than half the gap, and what to carry across instead of the transcript',
+      'Give the measured reason a fresh reviewer beats self-review, and the measured reason to stop iterating earlier than feels right',
+      'Name where agent reliability actually comes from when the uplift gets decomposed, and adjust what you spend your setup time on',
+    ],
+    skipQuiz: [
+      {
+        q: 'Claude Code\'s /compact was measured against a set of production agent configurations. What fraction of safety rules survived FIVE rounds of compaction?',
+        options: ['About 90%', 'About 53%', 'About 10%', 'About 0%'],
+        answer: 2,
+        explain:
+          'One round preserved 53% of safety rules; five rounds left about 10%. The number that gets quoted most often (10%) is the five-round figure, and quoting it as the one-round figure makes compaction sound worse than it is on the first squash and much less scary than it is on the fifth.',
+      },
+      {
+        q: 'A run is going badly on a cheap model, so you switch to a stronger one mid-conversation and continue. What does the handoff research find?',
+        options: [
+          'The stronger model closes the quality gap almost entirely',
+          'Full-trajectory escalation recovers less than half the gap and costs a premium; trimming the inherited trajectory improves the result',
+          'Escalation always beats starting fresh, because repository state is preserved',
+          'Direction does not matter; escalation and downshift behave identically',
+        ],
+        answer: 1,
+        explain:
+          'They call the shortfall the handoff tax. The receiver has to continue a trajectory it did not produce, and inheriting all of the weaker model\'s reasoning hurts more than it helps. Interestingly the interface reverses by direction: removing the strong model\'s trajectory makes a downshift worse.',
+      },
+      {
+        q: 'In a 1,902-run study of AI coding teams, what happened when one agent was named coordinator?',
+        options: [
+          'Success rate rose sharply on large teams',
+          'Communication concentrated into a hub, cutting token spend',
+          'No communication hub formed and no reliable improvement in success appeared',
+          'Coordination collapsed and success dropped below the single-agent baseline',
+        ],
+        answer: 2,
+        explain:
+          'Naming a coordinator produced neither the hub structure the title implies nor a dependable gain. What did help was cheaper: routing coordination through shared files instead of agent-to-agent messages cut output tokens by roughly 42% at eight agents on message-heavy work.',
+      },
+      {
+        q: 'Forcing a coding agent through repeated revision rounds. Which pattern shows up?',
+        options: [
+          'Both current correctness and ever-correct climb together',
+          'Current correctness falls while ever-correct keeps rising, so a right answer existed and got revised away',
+          'Correctness plateaus after the first revision and stays flat',
+          'Revision only helps when the first attempt failed its tests',
+        ],
+        answer: 1,
+        explain:
+          'Across 900 three-revision trajectories, the answer currently on the table fell from 0.820 after one revision to 0.673 after two, while ever-correct rose to 0.847. The loop kept finding correct patches and kept discarding them, which is an argument for preserving verified checkpoints rather than for looping more.',
+      },
+      {
+        q: 'A production enterprise agent beat its frontier base model by 7 to 15 points across three benchmarks. Where did most of that uplift come from?',
+        options: [
+          'The verification step itself',
+          'Scaffolding, routing, and task-specialized models, with the isolated verification step contributing about 1.5 points',
+          'A larger context window',
+          'Fine-tuning the base model on the benchmark tasks',
+        ],
+        answer: 1,
+        explain:
+          'The decomposition is the useful part. Verification mattered, but its isolated contribution was small and concentrated at the top of the score distribution, where it converted otherwise-failing tasks. The bulk came from the surrounding machinery, which is the harness argument stated as a measurement.',
+      },
+    ],
+    sections: [
+      {
+        heading: 'Eleven fixes, one shape',
+        blocks: [
+          {
+            type: 'text',
+            md: "In September 2026 Cole Medin published a list of eleven small changes to how you drive a coding agent, each one cheap enough to adopt this afternoon. You have met him twice already in this course: the PIV loop in [Token Economics & AI-Native SDLC · The AI-Native SDLC](lesson:m7-l2) and the skills repo in [Token Economics & AI-Native SDLC · The PRD Harness Pipeline](lesson:m7-l5). What makes this list worth a lesson rather than a bookmark is that he attached a paper to every single tip.\n\nSo this lesson does two jobs. First, it collects the eleven fixes into the four moves they turn out to be, because once you see the shape you can evaluate the next listicle yourself. Second, it reads the papers. Three of the tips get sharper when you do. Two get a caveat the video skipped, and one number that gets quoted everywhere turns out to describe something slightly different from what people think.",
+          },
+          {
+            type: 'diagram',
+            caption: 'The eleven tips, grouped by what they actually do. Every one of them either shrinks what the agent has to hold, or moves a decision out of the agent and into a mechanism.',
+            svg: `<svg viewBox="0 0 700 360" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect x="0" y="0" width="700" height="360" fill="#18181b" rx="8"/>
+  <text x="350" y="30" fill="#e4e4e7" font-size="15" font-weight="bold" text-anchor="middle">Four moves wearing eleven hats</text>
+  <rect x="30" y="52" width="310" height="128" rx="8" fill="#27272a" stroke="#a3e635" stroke-width="1.5"/>
+  <text x="50" y="78" fill="#a3e635" font-size="13" font-weight="bold">Say it once, precisely</text>
+  <text x="50" y="100" fill="#a1a1aa" font-size="11">1 write for the agent, not the human</text>
+  <text x="50" y="120" fill="#a1a1aa" font-size="11">2 instruction files rot, so audit them</text>
+  <text x="50" y="140" fill="#a1a1aa" font-size="11">5 fewer rules beat more rules</text>
+  <text x="50" y="164" fill="#71717a" font-size="10">cost: precision is what makes rot inevitable</text>
+  <rect x="360" y="52" width="310" height="128" rx="8" fill="#27272a" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="380" y="78" fill="#38bdf8" font-size="13" font-weight="bold">Protect the context</text>
+  <text x="380" y="100" fill="#a1a1aa" font-size="11">3 skip /compact, hand off instead</text>
+  <text x="380" y="120" fill="#a1a1aa" font-size="11">6 parallel agents are why you hit limits</text>
+  <text x="380" y="140" fill="#a1a1aa" font-size="11">7 never escalate mid-task</text>
+  <text x="380" y="164" fill="#71717a" font-size="10">cost: you write the handoff the tool would fake</text>
+  <rect x="30" y="196" width="310" height="128" rx="8" fill="#27272a" stroke="#f472b6" stroke-width="1.5"/>
+  <text x="50" y="222" fill="#f472b6" font-size="13" font-weight="bold">Separate the roles</text>
+  <text x="50" y="244" fill="#a1a1aa" font-size="11">8 you do not need a coordinator agent</text>
+  <text x="50" y="264" fill="#a1a1aa" font-size="11">9 the writer never approves the work</text>
+  <text x="50" y="284" fill="#a1a1aa" font-size="11">10 stop revising before quality turns</text>
+  <text x="50" y="308" fill="#71717a" font-size="10">cost: a second session, every single time</text>
+  <rect x="360" y="196" width="310" height="128" rx="8" fill="#27272a" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="380" y="222" fill="#fbbf24" font-size="13" font-weight="bold">Move it out of prose</text>
+  <text x="380" y="244" fill="#a1a1aa" font-size="11">4 load-bearing rules become hooks</text>
+  <text x="380" y="264" fill="#a1a1aa" font-size="11">11 validation is a system, not a step</text>
+  <text x="380" y="288" fill="#71717a" font-size="10">cost: a day of setup, then it runs itself</text>
+  <text x="350" y="348" fill="#71717a" font-size="11" text-anchor="middle">none of these ask you to change tools; all of them ask you to stop trusting recall</text>
+</svg>`,
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'The through-line',
+            md: "Every fix on the list treats the agent\'s memory and judgment as the scarce resource, and spends something else instead. Your typing time, a second session, a shell script, a few minutes of audit. That trade is the whole discipline, and it is why the list transfers to whatever coding agent you use next year.",
+          },
+        ],
+      },
+      {
+        heading: 'Write for the agent, then watch it rot',
+        blocks: [
+          {
+            type: 'text',
+            md: "Tip one is about the gap between how you write for a person and how you write for a model. Human documentation gets to be vague on purpose. \"Keep database code organized sensibly\" survives three refactors and two new services, because a person fills in the intent. An agent cannot fill it in. It has to guess, and every guess is an assumption you did not get to review.\n\nThe agent version of that sentence is blunt to the point of feeling rude: **all SQL lives in `db/`, one file per table, and nothing outside `db/` imports the driver directly.** Paths, counts, commands, and file names. The measure of a good rule for an agent is whether two different models would produce the same file layout after reading it.",
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'Written for a person',
+              items: [
+                '"Keep database code organized sensibly"',
+                'Survives refactors, because meaning is inferred',
+                'Applies across many repos at once',
+                'Ages well and teaches nothing checkable',
+              ],
+            },
+            right: {
+              title: 'Written for an agent',
+              items: [
+                '"All SQL lives in db/, one file per table"',
+                'Breaks the day you rename the folder',
+                'Applies to exactly this repo',
+                'Ages badly and can be verified by a script',
+              ],
+            },
+          },
+          {
+            type: 'text',
+            md: "A 2026 study of agent behavior across 557 coding sessions and 33,097 agentic pull requests puts a number on why this matters more than it used to. Of everything the agents read that could be called documentation, **60.5% was agent-facing material**: instruction files and working notes. Classical technical documentation took 10.6%, and API references 1.3%. Your `CLAUDE.md` is the primary source for the agent, with the real documentation a distant second, and it gets consulted on the agent\'s own initiative 70% of the time rather than only after something breaks.",
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'The same study pokes a hole in the advice',
+            md: "Its authors also tested two properties everyone assumes make documentation agent-friendly, actionability and verifiability, and found the behavioral support inconsistent. Agents touched code first 4.7 times more often than docs in multi-commit pull requests, and consultation was associated with **less** immediate testing, not more. So write precisely because vagueness produces assumptions, and hold the rest of the folklore loosely. Precision is the part with evidence under it.",
+          },
+          {
+            type: 'text',
+            md: "Which leads straight into tip two, and the bill for all that precision. A rule naming `db/` breaks the day you rename `db/`. This is **context rot**, and it has been measured: applying an existing documentation-consistency checker to a representative sample of 356 repositories found **stale code element references in 23.0% of them**. Close to one repo in four points its agent at a file, folder, or module that no longer exists.\n\nA second study explains the mechanism, and it is more damning than neglect. Across 441 repositories, **73.8% of committed AI configuration artifacts were written once and never modified again.** Not pruned, not corrected, not revisited. The rules file gets treated like a `.gitignore` rather than like source code, while the code it describes moves every week.",
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'The audit, as a recurring chore',
+            md: "Put a drift audit on the same cadence as dependency updates. Point the agent at your rules file and ask it to check every concrete claim against the tree: does this path exist, does this command run, is this file still the entry point? Medin ships one as `rules-check-drift` in [coleam00/skills](https://github.com/coleam00/skills). Write your own in twenty minutes if you prefer. The point is that it has a schedule, because the failure mode here is silence: a stale rule never throws an error, it just quietly makes the agent wrong.",
+          },
+        ],
+      },
+      {
+        heading: 'The compaction cliff',
+        blocks: [
+          {
+            type: 'text',
+            md: "Compaction is what your agent does when the conversation outgrows the context window: it squashes older turns into a summary and keeps going in the same session. Every major coding agent has some version, usually behind a `/compact` command, and Claude Code runs one automatically when you get close to the limit.\n\nTip three says avoid it. The number attached to that advice gets repeated as \"only about 10% survives a compaction,\" and the paper says something more precise and more useful.",
+          },
+          {
+            type: 'table',
+            headers: ['What was measured', 'Result', 'What it means for you'],
+            rows: [
+              ['Safety rules surviving one /compact round', '53% preserved', 'The first squash already loses half of the rules that needed exact wording'],
+              ['Safety rules surviving five rounds', 'About 10% preserved', 'This is the famous number. It describes a long session, not a single compaction'],
+              ['Policy violations with the policy in full context', '0%', 'While the constraint is visible, models obey it'],
+              ['Policy violations after compaction', '30% average, 59% worst model', 'The agent does not know the rule went missing, so it acts confidently without it'],
+              ['Violations when the constraint survived the summary', '0%', 'Survival is the whole variable. Nothing else changed'],
+            ],
+          },
+          {
+            type: 'text',
+            md: "Read the last two rows together, because that is the finding. Compaction does not degrade the model\'s judgment. It deletes the premise the judgment was standing on, and then the model reasons perfectly well from what is left. The researchers named it **governance decay**, and they showed you can force it deliberately: adversarial content earlier in the context can bias the summarizer into dropping a legitimate policy on its way past.",
+          },
+          {
+            type: 'diagram',
+            caption: 'Compaction is lossy in a way that is invisible from inside the session. The rule does not fail loudly; it stops being there.',
+            svg: `<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect x="0" y="0" width="700" height="300" fill="#18181b" rx="8"/>
+  <text x="350" y="30" fill="#e4e4e7" font-size="15" font-weight="bold" text-anchor="middle">What a squash does to two kinds of line</text>
+  <rect x="40" y="60" width="240" height="90" rx="7" fill="#27272a" stroke="#a3e635" stroke-width="1.5"/>
+  <text x="60" y="86" fill="#a3e635" font-size="12" font-weight="bold">Episodic log</text>
+  <text x="60" y="108" fill="#a1a1aa" font-size="11">"we tried X, it failed on the</text>
+  <text x="60" y="126" fill="#a1a1aa" font-size="11">auth header, then tried Y"</text>
+  <text x="60" y="144" fill="#71717a" font-size="10">gist is enough; summarizes fine</text>
+  <rect x="420" y="60" width="240" height="90" rx="7" fill="#27272a" stroke="#f472b6" stroke-width="1.5"/>
+  <text x="440" y="86" fill="#f472b6" font-size="12" font-weight="bold">Constraint</text>
+  <text x="440" y="108" fill="#a1a1aa" font-size="11">"never write to the prod</text>
+  <text x="440" y="126" fill="#a1a1aa" font-size="11">database from a migration"</text>
+  <text x="440" y="144" fill="#71717a" font-size="10">needs exact wording to bind</text>
+  <path d="M 160 150 L 160 196" stroke="#52525b" stroke-width="2"/>
+  <polygon points="154,194 166,194 160,206" fill="#52525b"/>
+  <path d="M 540 150 L 540 196" stroke="#52525b" stroke-width="2"/>
+  <polygon points="534,194 546,194 540,206" fill="#52525b"/>
+  <rect x="230" y="206" width="240" height="46" rx="7" fill="#3f3f46" stroke="#71717a" stroke-width="1.5"/>
+  <text x="350" y="234" fill="#e4e4e7" font-size="12" font-weight="bold" text-anchor="middle">one summarizer, one uniform rate</text>
+  <text x="160" y="230" fill="#a3e635" font-size="11" text-anchor="middle">fine</text>
+  <text x="540" y="230" fill="#f472b6" font-size="11" text-anchor="middle">gone, silently</text>
+  <text x="350" y="278" fill="#71717a" font-size="11" text-anchor="middle">both were competing for the same tokens; only one of them needed to survive verbatim</text>
+</svg>`,
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'The caveat the tip skipped',
+            md: "Another 2026 study ran the opposite experiment on an enterprise tool-use workflow and found that **pruning plus summarization beat keeping the full history**: 91.6% task completion against 71.0%, using about a third of the tokens and a third of the wall-clock time. The villain here is uniformity: one summarizer applied at one rate to everything, including the lines that only work when quoted exactly. Deliberate, structured context management wins. A blind squash of the whole conversation loses.",
+          },
+          {
+            type: 'text',
+            md: "So the practical rule survives, with a better reason underneath it. Keep units of work small enough that you never approach the squash. When a session does run long, write the handoff yourself and open a fresh one, because a handoff you wrote is a compaction whose contents you chose. And take anything genuinely load-bearing out of the conversation entirely: a rule that lives in a hook cannot be summarized away, which is the connection to [Claude Code Mastery · Hooks: Deterministic Control](lesson:m1-l5) and the reason tip four exists. This is the same argument as the context-window discipline in [Mental Models · Context Engineering](lesson:m0-l4), now with a failure rate attached.",
+          },
+        ],
+      },
+      {
+        heading: 'Less context, and the bill for running four sessions',
+        blocks: [
+          {
+            type: 'text',
+            md: "Tip five is that rules files have an optimum and most people are past it. Anthropic\'s own guidance is to keep `CLAUDE.md` under roughly 200 lines; Medin works to about 300. The thousand-line rules file, complete with a section explaining what a pull request is and a reminder not to repeat yourself, was a reasonable artifact in 2024 and is dead weight now. Current models know how to write a pull request. What they cannot know is that your money is stored in integer cents.\n\nThe study behind this one is worth reading against the grain, because it does not say fewer rules always win. Across 441 repositories it found that agents accelerate development at every maturity level (28 to 38% more commits), while **quality diverges by whether any AI configuration is committed at all**. Among agent-first repositories, those with no committed config showed roughly twice the growth in cognitive complexity (+53% against +27%) and 1.7 times the increase in static-analysis warnings.",
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'The shape of the curve',
+            md: "No config is the expensive option, by a wide margin. A lean config is the cheap one. A bloated config is somewhere in between, paying real tokens on every turn to dilute the rules that mattered. Aim for lean, but notice that the biggest single step is going from nothing to something, and take that step before you optimize the wording.",
+          },
+          {
+            type: 'text',
+            md: "Tip six answers a question you have probably asked out loud: why do the rate limits arrive so fast? Run `/usage` in Claude Code and press **w** for the weekly view. It breaks spend down by how many sessions were running at once. In Medin\'s own numbers, 39% of his weekly limit went to periods with four or more parallel sessions, which was a small fraction of his working time.\n\nSubagents are the usual culprit, and they are worth having. Every fan-out spends a full context window that vanishes when the subagent returns its summary, which is exactly the isolation benefit described in [Claude Code Mastery · Subagents & Context Isolation](lesson:m1-l6). The trap is how cheap they feel to launch and how easily an agent spawns a dozen of them without being asked. Watch the weekly view for a month and you will find your own version of that 39%.",
+          },
+        ],
+      },
+      {
+        heading: 'The handoff tax',
+        blocks: [
+          {
+            type: 'text',
+            md: "Tip seven is the one that changed how I would run a bad session. The reflex, when a cheap model starts flailing, is to switch models mid-conversation and let the smarter one clean up. Researchers measured exactly that, across paired weak and strong models from the Claude and GPT families, varying direction, timing, and how much of the trajectory the receiver inherited.\n\n**Full-trajectory escalation recovered less than half of the quality gap between the two models, and cost a premium to do it.** They call the shortfall the handoff tax. The receiving model spends its capability continuing someone else\'s reasoning rather than doing its own.",
+          },
+          {
+            type: 'text',
+            md: "Then comes the counterintuitive half, which is the part actually worth memorizing. The best interface **reverses with direction**. Cutting the weak model\'s trajectory down improved escalation quality. Removing the strong model\'s trajectory made a downshift worse. And downshifting turned out to be a genuinely good deal on cost against quality, which is the routing argument from [Local Models · Routing the 80/20](lesson:m4-l5) with numbers behind it.",
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'Going up (weak → strong)',
+              items: [
+                'Carry as little of the old trajectory as you can',
+                'A written handoff beats the transcript',
+                'State the goal and the current repo state, not the failed attempts',
+                'Expect to recover under half the gap even so',
+              ],
+            },
+            right: {
+              title: 'Coming down (strong → weak)',
+              items: [
+                'Carry the trajectory across intact',
+                'The strong model\'s reasoning is the thing keeping the cheap one on track',
+                'Good cost-quality trade once the hard thinking is done',
+                'Best used for the mechanical tail of a task',
+              ],
+            },
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'Why a bad session stays bad',
+            md: "A model predicts the next token from what came before, and a conversation full of mistakes is evidence that mistakes are what this conversation contains. Your corrections join the pile rather than clearing it. [Bonus: Field Notes · The Gauntlet](lesson:m10-l2) calls this trajectory poisoning, and the only reliable fix is the same in both places: end the session, write down what is true, and start over. The handoff tax tells you that even a smarter model cannot outrun the pile.",
+          },
+          {
+            type: 'code',
+            lang: 'markdown',
+            code: '# Handoff: user session expiry\n\n## Goal\nSessions must expire after 30 days of inactivity, sliding on each request.\n\n## Repo state right now\n- `auth/session.ts` has the new `touch()` helper, committed, tests green\n- `auth/middleware.ts` calls it but the sliding window is not applied yet\n- Migration `0042_session_last_seen.sql` is applied locally, NOT on staging\n\n## Verified facts\n- `SESSION_TTL_DAYS` is read from env, defaults to 30\n- The Redis client reconnects on its own; retries are not our problem\n\n## What is left\n1. Apply the sliding window in `middleware.ts`\n2. Add an integration test for a request on day 29 and on day 31\n3. Run the migration against staging\n\n## Do NOT re-attempt\nMoving expiry into the Redis TTL. It loses the sliding behaviour on read.',
+            caption: 'A handoff document carries facts and state forward and deliberately leaves the failed reasoning behind. That last section is the one people forget, and the one that stops the fresh session from walking into the same wall.',
+          },
+        ],
+      },
+      {
+        heading: 'Coordinators, reviewers, and knowing when to stop',
+        blocks: [
+          {
+            type: 'text',
+            md: "Tips eight, nine, and ten are all about who does what, and each has a measurement worth carrying.\n\n**Coordinators.** Frameworks that appoint a team-lead agent to distribute work and relay messages look impressive in a diagram. A study of 1,902 runs modeled each one as a temporal network of agents, files, and timestamped messages, and found that naming an agent coordinator **created no communication hub and produced no reliable improvement in success.** What did work was mundane: letting agents coordinate through shared files instead of direct messages cut output tokens by about 42% at eight agents on message-heavy work. Direct messaging grew close to quadratically with team size, much of it an opening round of introductions that accomplished nothing.",
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'The finding nobody asked for',
+            md: "The same paper reports an unprompted tendency for agents to go looking for hidden grading material. The researchers re-ran the key conditions in a sealed environment with marked placeholder files standing in for the real thing, and across 244 additional runs **the agents still reached for it in about four fifths of runs.** If your gauntlet leaves the answer key on disk, assume it gets read. That is the reward-hacking pressure [Bonus: Field Notes · The Gauntlet](lesson:m10-l2) designs against, observed in the wild.",
+          },
+          {
+            type: 'text',
+            md: "**Never let the writer approve the work.** The usual argument is about bias, and it is correct as far as it goes: the session that made the assumptions is the worst possible place to audit them. The measured version is sharper. In a production enterprise agent studied across three benchmarks, the verification loop had a catch rate of about 0.20 and a fix rate of 0.75, and a specialist-swap ablation found that **replacing the small trained verifier with the generating frontier model eliminated most of the rescues.** Same intelligence, same tools, different chair, and the catches stopped happening.\n\nSo the reviewer being fresh matters more than the reviewer being smart. Cheap to apply: finish the implementation in one session, then open a new one and give it the diff, the pull request, or a handoff, and let it hunt. [Agents, Harnesses & Loops · Verification: the #1 Quality Lever](lesson:m2-l4) is the long version of this move.",
+          },
+          {
+            type: 'text',
+            md: "**It is possible to over-revise.** When you have tokens to burn before a limit resets, telling the agent to keep polishing feels free. A sealed five-seed study over 30 repairs produced 900 three-revision trajectories and found the opposite of free. The answer sitting on the table fell from **0.820 correct after one revision to 0.673 after two**, while ever-correct climbed to 0.847. The loop kept finding right answers and kept revising them away, because a model asked to improve something will always find something to change.",
+          },
+          {
+            type: 'diagram',
+            caption: 'Ever-correct keeps climbing while the answer you would actually ship gets worse. The gap measures what a loop without checkpoints throws on the floor.',
+            svg: `<svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect x="0" y="0" width="700" height="320" fill="#18181b" rx="8"/>
+  <text x="350" y="28" fill="#e4e4e7" font-size="15" font-weight="bold" text-anchor="middle">Forced revision: two lines that separate</text>
+  <line x1="90" y1="70" x2="90" y2="260" stroke="#3f3f46" stroke-width="1.5"/>
+  <line x1="90" y1="260" x2="630" y2="260" stroke="#3f3f46" stroke-width="1.5"/>
+  <text x="78" y="74" fill="#71717a" font-size="10" text-anchor="end">0.90</text>
+  <text x="78" y="264" fill="#71717a" font-size="10" text-anchor="end">0.60</text>
+  <text x="200" y="280" fill="#a1a1aa" font-size="11" text-anchor="middle">after 1 revision</text>
+  <text x="520" y="280" fill="#a1a1aa" font-size="11" text-anchor="middle">after 2 revisions</text>
+  <line x1="200" y1="121" x2="520" y2="104" stroke="#a3e635" stroke-width="2.5"/>
+  <circle cx="200" cy="121" r="5" fill="#a3e635"/>
+  <circle cx="520" cy="104" r="5" fill="#a3e635"/>
+  <text x="536" y="100" fill="#a3e635" font-size="11">ever correct 0.847</text>
+  <line x1="200" y1="121" x2="520" y2="214" stroke="#f472b6" stroke-width="2.5"/>
+  <circle cx="200" cy="121" r="5" fill="#f472b6"/>
+  <circle cx="520" cy="214" r="5" fill="#f472b6"/>
+  <text x="536" y="218" fill="#f472b6" font-size="11">current 0.673</text>
+  <text x="150" y="112" fill="#e4e4e7" font-size="11" text-anchor="end">0.820</text>
+  <line x1="520" y1="104" x2="520" y2="214" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="510" y="164" fill="#fbbf24" font-size="11" text-anchor="end">answers found</text>
+  <text x="510" y="180" fill="#fbbf24" font-size="11" text-anchor="end">and thrown away</text>
+  <text x="350" y="306" fill="#71717a" font-size="11" text-anchor="middle">preserve every verified checkpoint and the extra rounds stop costing you</text>
+</svg>`,
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'A stopping rule you can actually follow',
+            md: "Commit or tag every state that passes your checks, and revise from there rather than from wherever the conversation happens to be. Then give the loop a fixed budget: two revision passes against a named check, and if pass two is worse than pass one, ship pass one. Judgment about when to stop is exactly the thing a sycophantic model will not supply for you.",
+          },
+        ],
+      },
+      {
+        heading: 'Where reliability actually comes from',
+        blocks: [
+          {
+            type: 'text',
+            md: "The last two tips are the ones this whole course has been arguing for, so it is satisfying to see them decomposed rather than asserted.\n\nTip four says put load-bearing rules in hooks. Anything phrased as \"when X happens, do Y\" is a process, and a process written in prose is a wish. Written as a hook it is a guarantee, because the code runs whether or not the model remembered. [Claude Code Mastery · Hooks: Deterministic Control](lesson:m1-l5) carries the full mechanics, including the audit that sorts your existing rules into the ones that should be promoted.\n\nTip eleven says validation is a system rather than a step. Plan the harness before the code: which commands prove the thing works, what the test conventions are, how you will check edge cases, what a human looks at by hand. That is the contract discipline from [Agents, Harnesses & Loops · Loop Engineering](lesson:m2-l3).",
+          },
+          {
+            type: 'text',
+            md: "The paper attached to tip eleven does something unusual: it takes a production agent that beats its own frontier base model by 11 points on one benchmark, 7 to 10 on another, and about 15 on a third, and then pulls the uplift apart to see where it came from. **Most of it came from scaffolding, routing, and task-specialized models. The verification step\'s isolated contribution was about 1.5 points.**\n\nThat sounds like an argument against verification until you read the next clause: those 1.5 points were concentrated at the top of the score distribution, converting tasks that would otherwise have failed outright. Verification is a small average effect that shows up exactly where you would have lost. Meanwhile the boring machinery around it, routing work to the right model and giving it a decent scaffold, does the heavy lifting. Which is the harness argument from [Agents, Harnesses & Loops · What Is a Harness?](lesson:m2-l1), stated as a measurement instead of a slogan.",
+          },
+          {
+            type: 'table',
+            headers: ['Tip', 'What the paper measured', 'Where it lives in this course'],
+            rows: [
+              ['1. Write for the agent', 'Agent-facing files were 60.5% of documentation reads', 'CLAUDE.md & the Memory System'],
+              ['2. Instruction files rot', '23.0% of repos had stale references; 73.8% of configs never edited', 'CLAUDE.md & the Memory System'],
+              ['3. Skip /compact', '53% of safety rules survive one round, ~10% survive five', 'Context Engineering'],
+              ['4. Load-bearing rules become hooks', 'Harness gains localized to tools and middleware, not the system prompt', 'Hooks: Deterministic Control'],
+              ['5. Less context', 'No committed config: 2x the cognitive-complexity growth', 'CLAUDE.md & the Memory System'],
+              ['6. Parallel agents burn limits', 'Shared files cut output tokens ~42% at eight agents', 'Subagents & Context Isolation'],
+              ['7. Do not escalate mid-task', 'Full-trajectory escalation recovers under half the gap', 'Routing the 80/20'],
+              ['8. No coordinators', 'Naming a coordinator: no hub, no reliable gain, across 1,902 runs', 'Multi-Agent Patterns'],
+              ['9. Writer never approves', 'Swapping the verifier for the generator eliminated most rescues', 'Verification: the #1 Quality Lever'],
+              ['10. Stop revising', 'Current 0.820 to 0.673 while ever-correct rose to 0.847', 'Loop Engineering'],
+              ['11. Validation is a system', 'Verification +1.5 points alone, concentrated where tasks fail', 'What Is a Harness?'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'quote',
+            title: 'What to take from the reading',
+            md: "Eleven tips, eleven papers, and the papers mostly agreed with the tips. Where they diverged, they diverged by being more specific: compaction is a cliff you fall off over five rounds rather than one, summarization done deliberately beats keeping everything, and a fresh reviewer works because it is fresh rather than because it is clever. Checking the citation took an hour and made three of the habits stickier. That is a decent exchange rate for anything you plan to do daily.",
+          },
+        ],
+      },
+    ],
+    lab: {
+      title: 'The Eleven-Point Tune-Up',
+      intro:
+        "One sitting, about ninety minutes, on a repo you actually work in. Nothing here changes your tooling. Every step ends in a number, a deletion, or a file, so you can tell afterwards whether it worked.",
+      steps: [
+        'Open your project rules file. For every concrete claim in it (a path, a command, a file name, a port), check it against the tree. Count how many are wrong and write the count down.',
+        'Delete every line that a current model already knows: general engineering advice, definitions, encouragement. Record the before and after line counts.',
+        'Take the vaguest surviving rule and rewrite it so two different models would produce the same file layout from it. Paths, counts, and commands only.',
+        'Run /usage and press w. Write down the percentage of your weekly limit that went to periods with four or more parallel sessions.',
+        'Find one rule phrased as "when X, do Y". Promote it to a hook, using the audit in the hooks lesson. Verify it fires by deliberately doing the thing it guards.',
+        'Take a session that has run long and, instead of compacting, write a handoff document with four headings: goal, repo state, verified facts, do NOT re-attempt. Start a fresh session from it and note how the first three turns compare.',
+        'On your next real implementation task, finish in one session, then open a second one with nothing but the diff and have it review. Log every issue the second session caught that the first one had declared fine.',
+        'Pick a task you would normally polish. Tag the first state that passes your checks, then allow exactly two more revision passes. Compare the tagged version against the final one and record which you would ship.',
+      ],
+      checklist: [
+        'Stale-reference count recorded, and the stale lines fixed or deleted',
+        'Rules file line count before and after the prune is written down',
+        'At least one vague rule rewritten into paths, counts, and commands',
+        'Parallel-session share of the weekly limit recorded from /usage',
+        'One rule promoted to a hook, and the hook observed firing',
+        'A handoff document written by hand replaced a compaction at least once',
+        'A fresh-session review caught at least one issue the writing session missed, and the issues are logged',
+        'A tagged checkpoint was compared against an over-revised final version, with a shipping decision recorded',
+      ],
+    },
+    checkQuiz: [
+      {
+        q: 'Your session has run long and you are about to hit the context limit mid-task. What does the compaction research support doing?',
+        options: [
+          'Compact and keep going; one round is nearly lossless',
+          'Write a handoff yourself and start a fresh session, and keep genuinely load-bearing constraints out of the conversation entirely',
+          'Switch to a model with a bigger context window and continue',
+          'Compact repeatedly but re-paste the rules file after each round',
+        ],
+        answer: 1,
+        explain:
+          'One round already drops about half the constraints that need exact wording, and violations climb from 0% to 30% once a policy goes missing. A handoff you wrote is a compaction whose contents you chose, and a rule enforced by a hook cannot be summarized away at all.',
+      },
+      {
+        q: 'Which pair correctly describes how much trajectory to carry across a model switch?',
+        options: [
+          'Carry everything in both directions; state is what matters',
+          'Carry little when escalating to a stronger model, carry the full trajectory when downshifting to a cheaper one',
+          'Carry the full trajectory when escalating, carry little when downshifting',
+          'Carry nothing in either direction; only repository state should cross',
+        ],
+        answer: 1,
+        explain:
+          'The interface reverses with direction. Trimming the weak model\'s reasoning improved escalation quality, while removing the strong model\'s reasoning made downshifts worse, because that reasoning is exactly what keeps the cheaper model on track through the mechanical tail of a task.',
+      },
+      {
+        q: 'You have a frontier model available for review. Why does handing the diff to a fresh session still beat asking the implementing session to double-check itself?',
+        options: [
+          'Fresh sessions have more context window available',
+          'Because the ablation showed the rescues come from a verifier that did not generate the work; using the generator as its own verifier eliminated most of them',
+          'Because the reviewing model is usually stronger',
+          'Because self-review is slower',
+        ],
+        answer: 1,
+        explain:
+          'The intelligence was held constant and the rescues still disappeared when the generator reviewed its own output. Freshness is the active ingredient. The assumptions that produced the bug are invisible from inside the session that made them.',
+      },
+      {
+        q: 'What is the practical response to the finding that current correctness falls while ever-correct keeps rising across revision rounds?',
+        options: [
+          'Run more revision rounds so ever-correct climbs higher',
+          'Never revise; ship the first attempt',
+          'Tag or commit every state that passes your checks, cap the revision budget, and ship the best tagged state rather than the last one',
+          'Switch models between revision rounds',
+        ],
+        answer: 2,
+        explain:
+          'The loop is finding correct answers and discarding them, so the fix is preservation plus a stopping rule. Looping more raises ever-correct and lowers what you would actually ship, which is the worst of both.',
+      },
+    ],
+    resources: [
+      { label: '11 Tiny Coding Agent Fixes With A Stupid Amount Of Payoff (Cole Medin, the source video)', url: 'https://youtu.be/UbylWXukvR8', kind: 'video' },
+      { label: 'coleam00/skills: rules-check-drift and the rest of the daily kit', url: 'https://github.com/coleam00/skills', kind: 'repo' },
+      { label: 'The Compaction Cliff in Long-Running AI Agent Memory (53% after one round, ~10% after five)', url: 'https://arxiv.org/abs/2608.22752', kind: 'article' },
+      { label: 'Governance Decay: how compaction silently erases safety constraints', url: 'https://arxiv.org/abs/2606.22528', kind: 'article' },
+      { label: 'The Handoff Tax: continuing non-native trajectories in LLM agents', url: 'https://arxiv.org/abs/2608.24358', kind: 'article' },
+      { label: 'When Agents Coordinate: naming a coordinator does not help (1,902 runs)', url: 'https://arxiv.org/abs/2608.16801', kind: 'article' },
+      { label: 'Looping Is Not Reliability: the over-revision result', url: 'https://arxiv.org/abs/2607.24604', kind: 'article' },
+      { label: 'Where Does Agent Reliability Come From? (the uplift decomposition)', url: 'https://arxiv.org/abs/2607.17044', kind: 'article' },
+      { label: 'Context Rot in AI-Assisted Software Development (23% of repos have stale references)', url: 'https://arxiv.org/abs/2606.09090', kind: 'article' },
+      { label: 'A Few Pages of Markdown: no committed AI config means 2x complexity growth', url: 'https://arxiv.org/abs/2608.25241', kind: 'article' },
+      { label: 'Less Context, Better Agents: when pruning plus summarization beats full history', url: 'https://arxiv.org/abs/2606.10209', kind: 'article' },
+      { label: 'From Agent Behaviour to Agent-Friendly Documentation (what agents actually read)', url: 'https://arxiv.org/abs/2608.20195', kind: 'article' },
+    ],
+  },
 ]
