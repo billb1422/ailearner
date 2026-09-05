@@ -1231,6 +1231,10 @@ forbidden:
             title: 'The convenience is the attack surface',
             md: "\"It's VERY easy for agents to run a Bot once they have the setup\" is true, and it's true for whoever wrote the setup too. The easier it is to pipe a stranger's configuration into a credentialed agent, the more attractive it becomes to publish a stranger's configuration.",
           },
+          {
+            type: 'text',
+            md: "That post was written while harvesting still took effort. You found a repository, fetched it, read it, adapted it by hand. Within a couple of weeks xAI shipped an official [template marketplace](https://x.ai/bot/marketplace) and the loop collapsed into a link that opens the app with an Add button. An install carries the author's instructions, boundaries, skills, routines, and whatever memories they chose to bundle, and it lands on the shared cloud computer already holding every login your other bots use.\n\nThe three rules above survive the change. One of them gets harder, because the reading step lost its diff. No config file gets shown to you; you get a listing preview and a confirm screen. So do the reading in the two places the product actually gives you: open the skills and routines in the preview before adding, then open them again inside the app before the first run. Connect the minimum accounts, run one reversible task while watching it, and write your own approval boundary into the description before anything touches a schedule. [The AI Transformation Playbook · Hands-On: Grok Bot](lesson:m8-l2) has the full table of what a template carries and what stays behind.\n\nPoint the same suspicion inward when you publish. The platform holds back the half it can identify as private (logins, browser sessions, chat history) and ships the rest, which is your instructions, skills, and selected memories. Nothing can tell that the string you pasted into step four is an API key, so read your own teammate before you hand it out.",
+          },
         ],
       },
       {
@@ -1381,6 +1385,7 @@ forbidden:
       { label: 'BotDirectory: 300+ copy-paste prompts, submitted by pull request', url: 'https://botdirectory.ai', kind: 'article' },
       { label: 'Grok Bot Masterclass (Avi Chawla): architecture and the six context layers', url: 'https://blog.dailydoseofds.com/p/grok-bot-masterclass', kind: 'article' },
       { label: 'Official Grok Bot docs: the tier that is wrong by accident', url: 'https://docs.x.ai/grok-bot/overview', kind: 'docs' },
+      { label: 'The Bot Marketplace: harvesting reduced to one click', url: 'https://x.ai/bot/marketplace', kind: 'docs' },
     ],
   },
   // ────────────────────────────────────────────────────────────

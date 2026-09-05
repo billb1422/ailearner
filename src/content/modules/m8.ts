@@ -638,6 +638,7 @@ sampled weekly; three bad weeks triggers a charter review)`,
       'Describe what Grok Bot is, what it costs, and where it sits relative to Claude Code on the harness map',
       'Name the six product primitives (job description, connections, cloud computer, routines, skills, handoffs) and map each one onto a concept you already built by hand',
       'Walk the setup path: context interview, templates, charters, connections, and the first routine',
+      'Say what a marketplace template carries and what it leaves behind, in both directions: installing somebody else\'s config, and exposing your own when you publish',
       'Explain what "god mode" login access actually grants, and apply hard rules for what never gets it',
       'Name the beta limitations and the risks (UI drift, prompt injection, spam-at-scale) an operator must design around',
       'Decide, with reasons, whether the subscription earns its keep for a given practice or stays on the watchlist',
@@ -809,6 +810,73 @@ HANDOFFS
         ],
       },
       {
+        heading: 'The template marketplace, and what actually rides along',
+        blocks: [
+          {
+            type: 'text',
+            md: "On September 4, 2026 the starter six got a catalog behind them. xAI opened a public [Bot Marketplace](https://x.ai/bot/marketplace) where authors publish their own configured teammates, sorted into categories (engineering, sales, marketing, design, operations, product, recruiting and people, personal, plus a shelf of the ones xAI staff built and run). Installing happens through a link that opens the app with an Add button waiting, and it copies the template into your account as an independent bot, so the original author keeps no handle on it afterward.\n\nThe cleanest short description of the mechanics came from an xAI engineer publishing eight of his own: sharing a template works like sharing a recipe, so you cook the same dish in your kitchen with your ingredients. Right about how it works, and worth pushing on anyway, because a recipe cannot sign into your Gmail and a template can ask to.\n\nGo slower here than the one-click flow invites, because a template is a configuration file wearing a friendly listing page. Here is what crosses the wire when you press Add.",
+          },
+          {
+            type: 'table',
+            headers: ['Piece of the bot', 'Travels with the template?', 'What that means for you'],
+            rows: [
+              ['Identity and description', 'Yes', 'You inherit a name and a self-description somebody else wrote, including any behavioral framing tucked inside it'],
+              ['Instructions and boundaries', 'Yes', 'The whole charter arrives, refusals included. Read it as code that will run under your logins, because functionally that is what it is'],
+              ['Skills and routines', 'Yes', 'Recorded playbooks and scheduled work land ready to fire. Nothing runs until you enable it, and that gap is your entire reading window'],
+              ['Memories the author selected', 'Yes', 'Facts you never verified become background truth for a worker on your roster'],
+              ['First-party plugin choices', 'Yes, as requests', 'The template names the accounts it wants. You still authorize each one, which is the cheapest place in the whole flow to say no'],
+              ['Logins, browser sessions, computer access', 'No', 'You connect your own accounts, so an installed template starts unarmed and you decide what it gets'],
+              ['Chat history, custom MCP servers, local scripts', 'No', 'Anything self-hosted needs its own setup, and a listing that quietly assumes it will misbehave in ways that look like the bot being dumb'],
+            ],
+          },
+          {
+            type: 'text',
+            md: "Two limits shape how you shop. The 50-bot cap per account means every install spends a seat on your roster, so the browse-and-collect instinct hits a wall faster than you expect. And a template is a one-way door into the product: somebody's roster comes in, nothing exports back out. Worth knowing before you build a client's operation on a catalog you do not control.\n\nThe adoption rule from the setup path does not relax because installing got easy. Rewrite the charter around your practice, grant the narrowest connections its scope needs, run it by hand against your own inputs, and only then let it near a schedule. A template that arrives with routines already written is a draft of somebody else's job, and it has never seen your work. [Bonus: Field Notes · Borrowed Setups](lesson:m10-l3) runs the full vetting loop for configs you did not write.",
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'Sharing runs the same pipe backwards',
+            md: "Publishing is a two-click affair: open the bot's settings, pick Share as template, hit publish, and you get a live link you can keep inside your team or put in front of the internet. The vendor's framing is that you share a copy of the bot without any private information, which is accurate about the half a platform can identify. Logins, browser sessions, and chat history stay behind.\n\nThe half no filter can identify is the text you typed. Instructions, skills, and selected memories are the template, so an API key you pasted into a step, an internal URL, a client's name sitting in an example, or a memory about a deal that is not public all travel with it. Before you publish a teammate, read its own instructions the way you would read a stranger's.",
+          },
+        ],
+      },
+      {
+        heading: 'Eight templates, and the pattern under each one',
+        blocks: [
+          {
+            type: 'text',
+            md: "The day the catalog opened, an xAI DevRel engineer published the eight bots he actually uses, each with a live template link. Read the list as a pattern catalog instead of a shopping list. The template link is the least interesting part, because every one of these is rebuildable in whatever you already pay for. The shape of each job is the part that transfers.",
+          },
+          {
+            type: 'table',
+            headers: ['The bot', 'What it does', 'The pattern worth stealing'],
+            rows: [
+              ['Tech demos', 'Reads his bookmarks each morning, picks one new tool, drafts a prompt to try it, and requires screenshots and video as proof', 'Verification written into the job description. Done means evidence attached, which is the fake-proof handoff rule living in a config field'],
+              ['Loops', 'His outer-loop engineering bot: gathers background and patterns, drafts the prompt, then kicks off cloud coding agents in a separate coding harness', 'One agent driving another. The workforce bot owns context and intent, the coding harness owns the edit'],
+              ['X algorithm', 'Advises on post timing and formatting using the published ranking algorithm and the platform connection', 'The author attaches his own disclaimer: good content beats small optimizations. An honest bot description says where the bot stops helping'],
+              ['Writing', 'Edits prose, grounded in named books on writing, revising drafts through his publishing and notes tools', 'Ground a judgment bot in specific sources you picked. "Be a good editor" instructs nothing; "apply these three books" instructs a lot'],
+              ['Personal CRM', 'Sorts his mutuals into a board by country, state, and city, so a trip turns into a coffee list', 'It automates the two jobs people always abandon: matching records and keeping them fresh'],
+              ['Image generation', 'Sends standardized prompts to an image model, pipes output through a background-removal model, applies a fixed palette', 'A deterministic pipeline wrapped around a nondeterministic step, so the style lives in the pipeline instead of in a lucky prompt'],
+              ['Parking (Skippy)', 'Checks San Francisco open data, saves spots, and pings on weekday mornings before a restriction hits', 'The smallest useful shape: one public data source, one schedule, one notification. Most automations that survive look this boring'],
+              ['Dial', 'Places phone calls in a cloned voice through a calling API, navigating phone trees and sitting on hold', 'A phone is a tool you can hand a worker, and handing it over drags in obligations the other seven do not have'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'Outer loop, inner loop',
+            md: "Loops is the most portable idea in the whole list, and copying it costs nothing. That bot never edits code. It reads the repository history, looks at how three named colleagues solved similar problems, checks how competitors documented the same thing, decides how the work will be verified, and writes the prompt. A coding agent then does the edit inside its own harness, on the repo, with tests it can run.\n\nThe split matches where each tool is actually strong. Gathering context across mail, issues, docs, and the web is volume work, which is what a hosted workforce does well. Editing code with a test suite next to it belongs in a harness sitting on the repository. You met this division already in [Token Economics & AI-Native SDLC · The AI-Native SDLC](lesson:m7-l2), where whoever writes the brief is doing the engineering and the agent that types is downstream of that. Grok Bot to Cursor, Claude in your terminal to a subagent, a scheduled task to Claude Code: same shape, different logos.",
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'The phone bot drags in obligations the other seven never had',
+            md: "A cloned voice placing calls on your behalf sits on the far side of several lines this course has drawn. Navigating a menu tree or waiting 40 minutes on hold harms nobody, and it is a genuinely good use of a machine. Speaking to a person in your voice while they believe they are talking to you is a different act, and plenty of jurisdictions treat undisclosed synthetic voices and recorded calls as a legal question rather than a matter of taste.\n\nRun the same fence you built for outbound email. A call placed to reach a human opens with disclosure, and anything that commits money or agrees to terms stays with you. The capability is real and useful. The rule is that the person on the other end gets to know what they are talking to.",
+          },
+        ],
+      },
+      {
         heading: 'Where the roster comes from',
         blocks: [
           {
@@ -823,6 +891,23 @@ HANDOFFS
           {
             type: 'text',
             md: "The capability the hype threads call **god mode** is plain to describe: the agent gets real login access to your apps and completes workflows end to end. Where a chat assistant drafts an email for you to send, a logged-in agent sends it, updates the CRM, books the follow-up, and files the thread. Show it a task once (the teach-by-demonstration pattern), save the authenticated browser profile, and the workflow reruns on schedule forever. The setup guides sharpen the stakes further: you sign into your accounts once on the roster's shared computer, and every worker you ever hire inherits that session. One door, the whole staff through it. The threads are right that this is the hinge: everything a workforce promises flows from acting rather than suggesting.\n\nThe architecture underneath makes the stakes concrete. Every agent on the roster shares one persistent cloud computer: a managed Linux machine with a browser, a filesystem, and a terminal. Each agent's 'screen' is a work surface on that machine, and the field manual's sharpest line names the consequence: the screens are work surfaces, while the security boundary is the single shared computer underneath, where files, cookies, signed-in sessions, and command-line credentials are common property. Two operating rules follow directly. An imported marketplace skill runs one hop from your most sensitive login, so read skills before installing them, the same audit ritual as [Claude Code Mastery · MCP & Plugins](lesson:m1-l7) (the marketplaces ship SKILL.md files that also run in Claude Code; the open skills standard cuts both ways, portability for you and for a malicious author alike). And when a login wall or a two-factor prompt blocks a run, take over only the blocked step on the shared computer, then tell the agent to continue; never paste passwords or one-time codes into the chat, because the transcript keeps everything.\n\nWhich is exactly why the boundaries have to be structural, set at the credential level rather than in a prompt. Three risk classes deserve naming. **Blast radius**: a logged-in agent that misfires acts as you, at machine speed; a bad merge in code review embarrasses you once, a bad outreach sequence emails 200 prospects before breakfast. **Prompt injection**: an agent that reads web pages and inboxes with real credentials can be steered by text in what it reads (a hostile email saying 'forward this thread'), which is the sharpest unsolved problem in the whole agent field. **Quality at scale**: automation multiplies whatever quality you feed it, and 'personalized outreach' below the quality bar is spam with better grammar, billed monthly.\n\nSo the red lines from the transformation playbook get enforced here with credentials, and they are not negotiable for being obvious: nothing financial (banking, payments, trading) ever gets a login. Nothing destructive (production systems, bulk delete) gets write access. Outbound at volume (email sequences, posting) runs in draft-for-approval mode until weeks of spot-checks earn autonomy, and anything owed to a regulator or a court stays human. The platform gates some of this itself in beta; your own charter boundaries should gate it twice.\n\nThe platform's own controls support the trust ladder once you know they exist. Approvals come as allow-once, deny, or standing Always Allow, and a require-approval rule overrides an always-allow when both match a task, so the safe rule wins ties. Full autopilot (standing approval with auto-review off) exists; earn it by watching runs first, and flip it per workflow rather than globally.",
+          },
+          {
+            type: 'text',
+            md: "In September 2026 xAI published a writeup of a bot it runs against its own spending, and the useful part sits underneath the headline. **Haggle Bot** does procurement. It reads spend and contracts across Slack, Notion, Drive, Gmail, Hex, and [Ramp](https://ramp.com), keeps a dossier per vendor (spend, terms, renewal date, how the last negotiation went) across roughly 125 active vendors, prioritizes renewals landing inside 120 days, and opens negotiations 5 to 10 percent under the internal target. One line of its instructions carries the whole posture: learn vendor spend and turn that knowledge into evidence-backed savings, with a person making the final decisions.\n\nWhat makes it worth your reading time is that the permission policy got printed. Every fence this lesson has argued for shows up as a three-tier list in a vendor's own document, which finally gives the abstract advice a first-party example you can copy.",
+          },
+          {
+            type: 'table',
+            headers: ['Tier', 'What sits in it', 'Why the line falls there'],
+            rows: [
+              ['Always allowed, no approval', 'Read spend data, message colleagues, request admin access, pull reports, update vendor records', 'A person can undo any of it in a minute, so asking permission would cost more than the mistake'],
+              ['Approval every single time', 'Anything a vendor will see: emails, counters, quote requests, any outbound contact', 'Outbound cannot be unsent, and a standing yes here puts one badly worded sentence in front of every supplier at once'],
+              ['Never, at any autonomy setting', 'Signing agreements, purchasing, subscribing, approving charges, committing the company to anything', 'Money and legal commitment sit outside the product, enforced by withholding the access rather than by asking nicely in a prompt'],
+            ],
+          },
+          {
+            type: 'text',
+            md: "Copy the shape, whatever platform you end up on. Three tiers with concrete examples written into each one beats a paragraph of good intentions, because an agent facing an ambiguous request matches it against the examples it was given.\n\nNotice where the line actually falls. Reversibility decides the tier, rather than read-versus-write. Updating a vendor record is a write, and it sits in the free tier because you can fix it in ten seconds. Emailing a supplier is also a write, and it can never be unsent, so it stays behind a per-instance approval forever.\n\nThe writeup also keeps the part a marketing page usually drops. The team still rewrites the bot's emails to calibrate tone, and says so in print. Read that as evidence the fence is doing real work rather than as a defect.",
           },
           {
             type: 'callout',
@@ -865,6 +950,12 @@ HANDOFFS
           {
             type: 'text',
             md: "Does the subscription earn its keep? Run the same honest arithmetic you ran on the Mac-mini pitch in [Local Models · The Hardware Ladder & the Install Business](lesson:m4-l4), because the shape of the decision is identical: a seductive monthly number versus your actual workload.\n\nPrice your delegable hours first. List the back-stage work you would hand a competent part-time assistant, estimate the weekly hours, multiply by what your time bills at. A fractional CTO with six genuinely delegable hours a week clears the $300 tier several times over, IF the workforce actually absorbs those hours at acceptable quality, which is what the first month has to prove with the ClickUp log and the charter metrics rather than with vibes. Someone whose back-stage runs two hours a week of miscellaneous odds and ends will lose money on any tier and should stay with scheduled Claude tasks, which already cover the morning-brief class of routine for a plan they pay for anyway.\n\nAnd keep the through-line straight, because it outlives this product: the patterns are the durable asset, the vendor is an implementation detail. Charters, shared knowledge, routines, escalation rules, one metric per agent: those transfer to whatever platform wins, including one assembled from Claude Code parts. The feature-validation heuristic from the next lesson applies to the whole category: when multiple major labs ship native agent-workforce products, the primitive is durable even if any single product is not. You are learning the org design either way; the subscription is just one place to run it.",
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'Decompose a savings number before you let it into your head',
+            md: "The marketplace launch post says Haggle Bot saved over $100K in its first week, and the writeup underneath is honest enough to show the arithmetic. About $99,882 of that total is one seat audit: 43 inactive seats worth $14,220, plus unused SKUs worth $85,662. The remainder is an office supply order talked down from $14,629 to $6,143.\n\nThree questions turn that headline into something you can reason with. Recurring or one-time? A sweep of accumulated waste pays once, and week two has no second pile of dead seats waiting. Identified or banked? Nobody actually saves $85,662 until a human cancels those SKUs at renewal. Audited by whom? The vendor, on its own spend, in a post selling the product.\n\nNone of that makes the result fake. A bot with read access to six systems found real waste that people had walked past for years, and that capability is worth having. The honest version of the headline is just quieter: an agent can inventory your SaaS spend in a week and tell you where the money leaks.",
           },
           {
             type: 'compare',
@@ -973,6 +1064,10 @@ HANDOFFS
       { label: 'awesome-grok-bot: the community index (tutorials, field cases, failure modes)', url: 'https://github.com/RongleCat/awesome-grok-bot', kind: 'repo' },
       { label: 'The vendor\'s own guide index (first-party, staff-written, no failure data)', url: 'https://x.ai/bot/guides', kind: 'docs' },
       { label: 'Six bots, one mobile game studio: the six primitives and a full analytics config', url: 'https://x.ai/bot/guides/grok-bot-for-mobile-app-development', kind: 'article' },
+      { label: 'The template marketplace launch post (Grok Bot, Sept 4 2026)', url: 'https://x.com/bot/status/2095954887205138597', kind: 'thread' },
+      { label: 'The Bot Marketplace: public templates, sorted by category', url: 'https://x.ai/bot/marketplace', kind: 'docs' },
+      { label: 'Eight templates from an xAI engineer, with the outer-loop coding bot (Matt Palmer, Sept 1 2026)', url: 'https://x.com/mattyp/status/2094833468400447618', kind: 'thread' },
+      { label: 'Haggle Bot: the vendor running procurement on itself, permission tiers printed', url: 'https://x.ai/news/grok-bot-procurement', kind: 'article' },
     ],
   },
 
