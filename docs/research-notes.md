@@ -81,6 +81,17 @@ Consolidated findings from 12 research agents covering ~146 user-supplied links,
 - `ANTHROPIC_BASE_URL=http://localhost:11434/v1` → Claude Code on local Ollama. Hybrid: local for 80%, one frontier sub for 20%.
 - Obsolete: "Llama is default" (Qwen/DeepSeek/GLM/gpt-oss lead), "GGUF only path on Mac" (MLX), Qwen 2.5/Mixtral/Phi-3 era advice.
 
+### E2. Local models refresh (September 2026; used for the Open-Model Landscape lesson)
+- **Qwen3.8-27B** (Alibaba): dense 27B, Apache 2.0, announced Aug 3, weights on HF Aug 14 2026 (slipped past the promised week). Native image+video input, 262K context (1M w/ YaRN), thinking on by default (`reasoning_effort`). Hybrid attention: 64 layers = 16 × (3 Gated DeltaNet + 1 gated full attention), so only 16 layers keep a growing KV cache. Model card vs Qwen3.6-27B: SWE-bench Pro 61.7 vs 53.5, Terminal-Bench 73.0 vs 63.4, OSWorld 84.3 vs 63.9, WebArena 64.8 vs 48.8. Sizes: BF16 51.8GiB, Q8_0 27.1, Q6_K 21.3, Q4_K_M 15.9 + 0.9 vision projector. Measured 5-6 tok/s on base M4 mini 32GB (MLX 4-bit).
+- **Qwen3.6-35B-A3B**: MoE 35B/3B active, Apache 2.0, ~20GB Q4, 73.4% SWE-bench Verified; 61.2 vs 16.7 tok/s (MoE vs dense 27B) on M1 Max 64GB.
+- **Qwen3.8-Max** open-weighted as Qwen3.8-2.4T-A95B (mid-Aug 2026), custom license (display model name above 100M MAU or $20M monthly revenue; no territorial restriction). >1TB to load. SWE-bench 87.3% (vendor). BenchLM open ranking #1 (71.8).
+- **Gemma 4** (Apr 2 2026): now **Apache 2.0**. 31B dense (~18-20GB Q4), 26B-A4B MoE (~15-18GB), 12B, E2B/E4B. Multimodal, 256K ctx, 140+ languages.
+- **DeepSeek V4** (Apr 24 2026, MIT): V4-Pro 1.6T/49B active; V4-Flash 284B/13B active, 1M ctx, ~100-170GB by quant, 18-22 tok/s on 256GB M3 Ultra; ~97GB quant squeezes on 128GB.
+- **GLM-5.3** (Z.ai, weights Aug 28 2026): 753B MoE, bespoke GLM-5.3 license (security review above $10B MaaS threshold); tops open coding (Terminal-Bench 2.1, DeepSWE). **GLM-5.3-Flash**: 320B/18B active, MIT, 4-bit MLX ~178GB (192GB+ Mac).
+- **Kimi K3** (Moonshot, Jul 16 2026): 2.8T/50B active, modified MIT, 1M ctx, multimodal, ~16× B200.
+- **gpt-oss**: still no successor (120B ~65GB MXFP4 does NOT fit a 64GB Mac; needs 96GB+).
+- **Splash** (Inco AI, Sep 17 2026, Apache 2.0): Mac inference engine, supports only Qwen3.8-27B-Splash and Qwen3.6-35B-A3B. Shape-specialized Metal kernels, 8-bit KV, paged KV + prefix reuse, continuous batching, DFlash 2 speculative decoding with a per-model draft (~1.2GiB; 27B weights ~15GiB). Req: M3+, macOS 26.4+, 36GB min / 48GB rec. Vendor numbers on 48GB M5 Pro vs oMLX: 74 vs 38 tok/s short, 54 vs 28 @32K, prefill 363 vs 110 tok/s, cached 32K replay 282 vs 2,049 ms, 4 parallel 170 vs 43 tok/s. OpenAI Chat/Responses + Anthropic Messages APIs. `brew install incoai/tap/splash` → `splash serve --model incoai/Qwen3.8-27B-Splash` (localhost:8000).
+
 ### F. RAG (mid-2026)
 - Pipeline: ingest → chunk (200-800 tok) → embed → vector store → hybrid retrieve (BM25 + dense + RRF) → rerank (cross-encoder) → generate w/ citations → evaluate (RAGAS, 50-200 real-query eval set).
 - Embeddings: text-embedding-3-large / Cohere v4 / Voyage (hosted); BGE-M3, Qwen3-Embedding (open). Same model for index+query.

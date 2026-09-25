@@ -8,26 +8,27 @@ export const lessons: Lesson[] = [
     id: 'm4-l1',
     title: 'The Open-Model Landscape 2026',
     day: 17,
-    minutes: 50,
+    minutes: 60,
     xp: 100,
     objectives: [
-      'Name the leading open-weight models of mid-2026 and describe what each one is good at',
+      'Name the leading open-weight models of September 2026 and sort them into the ones a Mac can run and the ones that need a data center',
       'Work out whether a model fits a given Mac by doing the RAM arithmetic yourself: parameter count, quantization level, and KV cache',
-      'Explain why a 235B mixture-of-experts model needs about 132GB of RAM even though it runs at the speed of a 22B model',
-      'Spot which 2024-25 local-model advice has gone stale, and explain why it expired',
+      'Explain why a mixture-of-experts model pays RAM for every parameter but compute only for its active ones, and when a dense 27B is still the better pick',
+      'Explain what an inference engine like Splash does, and how speculative decoding lets it generate faster than the memory-bandwidth math predicts',
+      'Spot which local-model advice from 2024 through early 2026 has gone stale, and explain why it expired',
     ],
     skipQuiz: [
       {
-        q: 'Qwen 3 235B-A22B is a mixture-of-experts model with 22B active parameters. What determines how much RAM it needs?',
+        q: 'DeepSeek V4-Flash is a mixture-of-experts model with 284B total parameters and 13B active. What determines how much RAM it needs?',
         options: [
-          'Only the 22B active parameters; the rest stream in from disk whenever they are needed',
-          'All 235B parameters, because every expert has to sit in memory the whole time (about 132GB at Q4)',
+          'Only the 13B active parameters; the rest stream in from disk whenever they are needed',
           'The KV cache size, which is the biggest memory cost in mixture-of-experts models',
+          'All 284B parameters, because every expert has to sit in memory the whole time (roughly 150-170GB at Q4)',
           'Roughly half the total, because the router automatically pages out the experts it is not using',
         ],
-        answer: 1,
+        answer: 2,
         explain:
-          'The router picks a different set of experts for every single token, so every expert has to be loaded into RAM and waiting the whole time. You pay for all 235B in memory, but each token only runs through about 22B worth of math. Memory cost and compute cost are two separate bills.',
+          'The router picks a different set of experts for every single token, so every expert has to be loaded into RAM and waiting the whole time. You pay for all 284B in memory, but each token only runs through about 13B worth of math. Memory cost and compute cost are two separate bills.',
       },
       {
         q: 'Why is GGUF Q4_K_M the default quantization recommendation rather than Q2 or Q3?',
@@ -42,76 +43,124 @@ export const lessons: Lesson[] = [
           'Q4_K_M keeps output quality very close to the original full-precision model for most models, at roughly a quarter of the size. Below 4 bits per weight the damage stops being gradual: outputs get noticeably dumber in a hurry. That cliff is why nobody recommends Q2 or Q3 as a default.',
       },
       {
-        q: 'Rough RAM estimate for running a 30B model at Q4 with a working context?',
+        q: 'Qwen3.8-27B at Q4_K_M is about 16GB of weights plus a 0.9GB vision add-on. Does it fit a 32GB Mac for everyday chat?',
         options: [
-          'About 8GB, since Q4 means a quarter of the parameter count in gigabytes',
-          'About 30GB, since one gigabyte per billion parameters is the rule of thumb',
-          'About 60GB, since quantization doubles the effective footprint',
-          'About 18-21GB: parameter count times 0.5-0.6 GB per billion, plus 10-30% extra for the KV cache',
+          'No: a 27B model needs 27GB at minimum, one gigabyte per billion parameters',
+          'Yes: about 17GB of weights plus a few GB of KV cache lands near 20GB, inside the ~22GB left after macOS',
+          'No: vision models need a separate graphics card that Macs do not have',
+          'Only at Q2, which is the smallest file that leaves room for macOS',
         ],
-        answer: 3,
+        answer: 1,
         explain:
-          'At Q4, weights take roughly 0.5 to 0.6 GB per billion parameters, so a 30B model needs about 16-18GB for the weights alone. The KV cache (the working memory the model keeps for your conversation) adds another 10-30% depending on how long the chat gets. The total fits comfortably on a 32GB Mac.',
+          'Start from 32GB, set aside about 10GB for macOS and your apps, and you have roughly 22GB to spend. The weights and vision add-on come to about 17GB, and a normal-length conversation adds 2-3GB of KV cache. Around 20GB total: it fits with a little room to spare, at the quality-safe Q4 level.',
       },
       {
-        q: 'Which license pairing is correct for the mid-2026 open leaders?',
+        q: 'Which license pairing is correct for September 2026?',
         options: [
-          'Qwen 3 is Apache 2.0, and the DeepSeek R1 line is MIT',
-          'Qwen 3 is MIT, and DeepSeek R1 is research-only non-commercial',
-          'Both Qwen 3 and DeepSeek R1 use the restrictive Llama Community License',
-          'Qwen 3 is GPL-3, and DeepSeek R1 is Apache 2.0',
+          'Qwen3.8-27B is Apache 2.0, and GLM-5.3 ships under its own custom GLM-5.3 license',
+          'Qwen3.8-27B is research-only, and GLM-5.3 is MIT like every GLM before it',
+          'Both use the Llama Community License',
+          'Gemma 4 still uses the restrictive Gemma terms, and DeepSeek V4 is Apache 2.0',
         ],
         answer: 0,
         explain:
-          'Qwen 3 ships under Apache 2.0 and DeepSeek R1 ships under MIT. Both licenses are genuinely permissive: you can use the models commercially, modify them, and ship products built on them. That also matters later if you ever train a smaller model from a bigger one, since open teachers avoid the terms-of-service headaches that come with closed models.',
+          'Qwen3.8-27B shipped under Apache 2.0, a genuinely permissive license. GLM-5.3 broke from its MIT-licensed predecessors with a bespoke license that adds conditions for the very largest cloud providers, while its smaller sibling GLM-5.3-Flash stayed MIT. Gemma 4 moved to Apache 2.0, and DeepSeek V4 is MIT. The lesson: read each license, because the word open no longer tells you the terms.',
       },
       {
-        q: 'Which piece of 2024-25 advice is now obsolete in mid-2026?',
+        q: 'What is Splash, released by Inco AI in September 2026?',
         options: [
-          'Quantize to roughly 4 bits for the best size and quality trade-off',
-          'Leave RAM headroom for the operating system when sizing a local model',
-          'Reach for Llama by default, since it is the reference open model',
-          'Prefer permissive licenses when you plan to ship derivatives',
+          'A new 27B open-weight model that beats Qwen3.8 on coding benchmarks',
+          'A quantization format that replaces GGUF on Apple Silicon',
+          'A public leaderboard that ranks local models by speed',
+          'A Mac inference engine built around two specific Qwen models, using per-model speculative decoding to roughly double generation speed',
         ],
-        answer: 2,
+        answer: 3,
         explain:
-          'Qwen, DeepSeek, GLM, and gpt-oss sit at the top of most open leaderboards now. Any guide that says "reach for Llama by default" is quietly telling you it was written in 2024. The other three pieces of advice have aged fine.',
+          'Splash is software that runs models, in the same family as Ollama and LM Studio. Its bet is specialization: it supports only Qwen3.8-27B and Qwen3.6-35B-A3B, with GPU code written for their exact shapes and a small draft model trained for each. The maker reports about 2x the single-request speed of the next-fastest Mac engine.',
       },
     ],
     sections: [
       {
-        heading: "Who's Who in Open Weights",
+        heading: "Who's Who in Open Weights (September 2026)",
         blocks: [
           {
             type: 'text',
-            md: "Quick vocabulary before the map. A model's **weights** are the billions of numbers that make up its trained brain. **Parameters** means the same thing, and model sizes like 27B just count them (27 billion). An **open-weight model** is one where the maker publishes those numbers, so anyone can download the file and run the model on their own computer. Claude keeps its weights private, which is why you can only reach it over the internet.\n\nHere's the surprise if you skipped the last hype cycle: open models got good. The best open models in mid-2026 sit only a few months behind the frontier, and for everyday work like drafting, summarizing, and classifying, that gap barely shows. The names worth knowing today are Qwen, DeepSeek, GLM, Gemma, gpt-oss, Devstral, and Phi.\n\nOne more term you'll see constantly: **inference** just means running a model to get answers out of it, as opposed to training it. When someone says 'local inference', they mean the model does its thinking on your Mac instead of in a data center.",
+            md: "Quick vocabulary before the map. A model's **weights** are the billions of numbers that make up its trained brain. **Parameters** means the same thing, and model sizes like 27B just count them (27 billion). An **open-weight model** is one where the maker publishes those numbers, so anyone can download the file and run the model on their own computer. Claude keeps its weights private, which is why you can only reach it over the internet.\n\nOne more term you'll see constantly: **inference** means running a model to get answers out of it, as opposed to training it. When someone says 'local inference', they mean the model does its thinking on your Mac instead of in a data center.\n\nHere's the headline if you skipped the summer: open models kept closing the gap. Alibaba's biggest open release, Qwen3.8-Max, scores 87.3% on the SWE-bench coding test (vendor-reported), within a couple of points of the best closed models. The flip side is size. The top of the open field has gone trillion-scale, so the most capable open models are now downloadable by anyone and runnable by almost nobody at home. That splits the landscape into two very different lists.",
           },
           {
             type: 'text',
-            md: "The table reads left to right: how big the model is, what the license lets you do, why you'd care, and how much Mac it takes. In the size column, **dense** means the plain design where the whole model works on every word. **Active** will make full sense in the next section; for now, know that some models only use a small slice of themselves per word they generate, and that slice is what 'active' counts.",
+            md: "The first list is what actually runs on a Mac you might own. Read it left to right: how big the model is, what the license lets you do, why you'd care, and how much Mac it takes. In the size column, **dense** means the plain design where the whole model works on every word. **Active** will make full sense in the MoE section below; for now, know that some models only use a small slice of themselves per word they generate, and that slice is what 'active' counts.",
           },
           {
             type: 'table',
             headers: ['Model', 'Size (total and active)', 'License', 'Why it matters', 'Min Mac RAM at Q4'],
             rows: [
-              ['Qwen 3 235B-A22B', '235B total, 22B active', 'Apache 2.0', 'The open flagship; the closest thing to frontier quality you can download', '128GB+ (needs ~132GB)'],
-              ['DeepSeek R1 line', '671B total, 37B active, plus distills', 'MIT', 'Top of the reasoning benchmarks; its distills (small student copies taught by the big model) run on modest Macs', '16GB (for the distills)'],
-              ['GLM-4.7', 'Large MoE', 'Open weights', 'The standout for agentic coding, meaning AI that edits code through tools', '128-192GB'],
-              ['Gemma 3 27B', '27B dense', 'Gemma terms', 'Understands images as well as text, and still fits a 32GB Mac', '32GB'],
-              ['Qwen3 30B-A3B', '30B total, 3B active', 'Apache 2.0', 'The sweet spot: fast generation with real quality', '32GB'],
-              ['gpt-oss 120B / 20B', 'MoE, 5.1B / 3.6B active', 'Apache 2.0', "OpenAI's open-weight pair; strong reasoning for the size", '64GB / 16GB'],
-              ['Devstral', '24B dense', 'Apache 2.0', 'Built specifically to be a local coding agent', '32GB'],
-              ['Phi-4', '14B dense', 'MIT', 'The small-footprint workhorse for modest hardware', '16GB (tight)'],
+              ['Qwen3.8-27B', '27B dense', 'Apache 2.0', 'The new local quality leader (August 14, 2026). Reads images and video, 262K-token context, big jumps on coding and computer-use tests', '32GB (~17GB of weights)'],
+              ['Qwen3.6-35B-A3B', '35B total, 3B active', 'Apache 2.0', 'The speed pick: 73.4% on SWE-bench Verified while running 3-4x faster than a dense 27B', '32GB (~20GB)'],
+              ['Gemma 4 31B', '31B dense', 'Apache 2.0', "Google's multimodal model, 256K context, 140+ languages. Its license got much friendlier with this release", '32GB (~18-20GB)'],
+              ['Gemma 4 26B-A4B', '26B total, 4B active', 'Apache 2.0', 'The faster Gemma: MoE layout, same image skills', '32GB (~15-18GB)'],
+              ['Devstral 24B', '24B dense', 'Apache 2.0', 'Built to be a local coding agent; dependable at tool calls', '32GB (~14GB)'],
+              ['gpt-oss 20B', '21B total, 3.6B active', 'Apache 2.0', "OpenAI's small open model, still the best reasoning per gigabyte at the low end. No successor a year after launch", '16GB (~12GB)'],
             ],
+          },
+          {
+            type: 'text',
+            md: "The second list is the big leagues. Everything here can be downloaded, and the smaller half runs on a high-end Mac Studio. The rest needs a rack of data-center GPUs (graphics processors like NVIDIA's H100 and B200, which cost tens of thousands of dollars each). You'll still meet these names constantly, because cloud providers host them cheaply and they set the bar the small models chase.",
+          },
+          {
+            type: 'table',
+            headers: ['Model', 'Size (total and active)', 'License', 'Why it matters', 'What it takes'],
+            rows: [
+              ['gpt-oss 120B', '117B total, 5.1B active', 'Apache 2.0', 'Strong reasoning, fast for its size', 'About 65GB of weights: a 96-128GB Mac. It does NOT fit 64GB, whatever older guides say'],
+              ['DeepSeek V4-Flash', '284B total, 13B active', 'MIT', '1M-token context and a permissive license', '~100-170GB depending on quantization; 18-22 tok/s measured on a 256GB Mac Studio'],
+              ['GLM-5.3-Flash', '320B total, 18B active', 'MIT', "Z.ai's coding family in a size a very large Mac can hold, despite the name", '~178GB at 4-bit: a 192GB+ Mac'],
+              ['GLM-5.3', '753B MoE', 'Custom GLM-5.3 license', 'Tops the open coding benchmarks (Terminal-Bench 2.1, DeepSWE). Released August 28, 2026', 'Eight data-center GPUs'],
+              ['DeepSeek V4-Pro', '1.6T total, 49B active', 'MIT', "DeepSeek's full-strength model", 'A multi-GPU cluster'],
+              ['Kimi K3', '2.8T total, 50B active', 'Modified MIT', "Moonshot AI's July 16 release: the largest open-weight model yet, 1M context, reads images", 'Around 16 B200 GPUs'],
+              ['Qwen3.8-Max', '2.4T total, 95B active', 'Custom Qwen license', 'Leads the open rankings at BenchLM (71.8). Weights published mid-August as Qwen3.8-2.4T-A95B', 'Over 1TB just to load: 8+ data-center GPUs'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: "'Open' no longer means one license",
+            md: "A year ago almost every serious open model shipped under Apache 2.0 or MIT, both of which let you use, modify, and sell anything you build. The biggest 2026 releases added strings. GLM-5.3 has its own license that adds a security review for cloud providers above a $10 billion threshold. Qwen3.8-Max requires products with more than 100 million monthly users or $20 million in monthly revenue to display the model's name. Kimi K3 uses a 'modified MIT'. None of that bites a solo consultant, but if you ever build a product on one of these for a client, the license column matters as much as the benchmark column.",
           },
         ],
       },
       {
-        heading: 'MoE Math: Why 235B Runs Like 22B',
+        heading: 'Spotlight: Qwen3.8-27B',
         blocks: [
           {
             type: 'text',
-            md: "**Mixture-of-experts** (MoE) is the design trick that made huge open models runnable on a Mac, so it's worth understanding properly. In a normal dense model, every parameter does work on every token. An MoE model instead splits most of its bulk into dozens of specialist sub-networks called **experts**, plus a small **router** that reads each incoming token and wakes up only two or three experts to handle it.\n\nPicture a hospital that keeps every specialist on staff around the clock but only pages a couple of them per patient. Each patient sees just two doctors, so care is fast. The hospital still needs a room for every specialist, though, because the next patient might need any of them. MoE models work the same way: the router picks different experts for every token, so **all** the experts must sit in RAM, ready to go. You only pay compute for the few that actually got woken up.\n\nThat's why the name Qwen 3 235B-A22B decodes as '235 billion parameters total, about 22 billion active per token'. Memory cost: all 235B. Speed: roughly that of a 22B model. Big brain, small effort per word.",
+            md: "Alibaba announced the Qwen3.8 family on August 3, 2026 and promised open weights within a week. The 27B slipped past that date, which set off a few days of 'is it coming at all?' chatter, then landed on [Hugging Face](https://huggingface.co/Qwen/Qwen3.8-27B) on August 14 under Apache 2.0. It's the most important local release of the year for a Mac owner, and the reasons are worth unpacking one at a time.\n\n**It's dense, and 27B is the size that fits.** At Q4 the weights come to about 16GB, which lands comfortably on a 32GB Mac and leaves a 64GB Mac room for a second model alongside it.\n\n**It sees.** Qwen3.8-27B reads images and video natively, so you can hand it a screenshot of an error dialog or a photo of a whiteboard. A year ago you needed a separate vision model for that.\n\n**Long conversations cost less memory than they used to.** Most models keep a growing record of the whole conversation in every layer; that record is the KV cache you'll meet in the quantization section. Qwen3.8-27B uses a hybrid design: only 16 of its 64 layers keep that growing record, and the other 48 use a compact fixed-size memory instead. The practical upshot is a 262K-token context window that doesn't swallow your RAM at ordinary lengths.\n\n**It thinks before answering by default.** Like most 2026 models, it writes out hidden reasoning before its final answer. You can dial that effort down per request when you want speed over depth.",
+          },
+          {
+            type: 'text',
+            md: "The jump over its predecessor, Qwen3.6-27B, is large for a four-month gap. The four tests below all measure agent-style work, meaning the model has to take actions and check results instead of answering a single question:\n\n- [SWE-bench Pro](https://scale.com/leaderboard/swe_bench_pro_public) hands the model real bugs from real open-source projects and checks whether its fix passes the project's tests. It's the harder successor to SWE-bench Verified.\n- [Terminal-Bench](https://www.tbench.ai) gives it jobs to finish at a command line.\n- [OSWorld](https://os-world.github.io) makes it operate a real desktop computer from screenshots, clicking and typing.\n- [WebArena](https://webarena.dev) has it complete tasks on working websites.",
+          },
+          {
+            type: 'table',
+            headers: ['Test (higher is better)', 'Qwen3.6-27B', 'Qwen3.8-27B', 'Change'],
+            rows: [
+              ['SWE-bench Pro (fix real bugs)', '53.5', '61.7', '+8.2'],
+              ['Terminal-Bench (command-line jobs)', '63.4', '73.0', '+9.6'],
+              ['OSWorld (operate a desktop)', '63.9', '84.3', '+20.4'],
+              ['WebArena (use websites)', '48.8', '64.8', '+16.0'],
+            ],
+          },
+          {
+            type: 'text',
+            md: "Those numbers come from Alibaba's own model card, so treat them as the vendor's best case. Independent reviewers have broadly agreed it's the model to beat in its size class, though nobody has run a clean same-harness comparison against Gemma 4 31B yet.\n\nNow the catch, and it's a big one on a Mac. A dense model reads all of its weights from memory for every single token it writes. The speed limit is your memory bandwidth (how many gigabytes per second the chip can pull out of RAM) divided by the size of the weights. Walk it on two real machines:\n\n- A base M4 Mac mini moves about 120GB/s. Divide by 16GB of weights and you get about 7 passes per second, and real-world overhead drags that down. One independent test measured 5-6 tokens per second, fine for drafting and painful for an agent loop.\n- An M5 Pro moves 307GB/s. 307 divided by 16 is about 19, and at a typical 70% efficiency you land around 13-16 tokens per second, roughly a comfortable reading pace.\n\nThat arithmetic is walked in full, with every model on the shortlist, in [Bonus: Your Own Model Server · Picking Models for a 64GB Mac mini](lesson:m9-l2). Hold on to the 13-16 number, because the Splash section below is going to beat it by a wide margin, and you'll want to know how.",
+          },
+        ],
+      },
+      {
+        heading: 'MoE Math: Why 35B Runs Like 3B',
+        blocks: [
+          {
+            type: 'text',
+            md: "**Mixture-of-experts** (MoE) is the design trick that made big models runnable on a Mac, so it's worth understanding properly. In a normal dense model, every parameter does work on every token. An MoE model instead splits most of its bulk into dozens of specialist sub-networks called **experts**, plus a small **router** that reads each incoming token and wakes up only a few experts to handle it.\n\nPicture a hospital that keeps every specialist on staff around the clock but only pages a couple of them per patient. Each patient sees just two doctors, so care is fast. The hospital still needs a room for every specialist, though, because the next patient might need any of them. MoE models work the same way: the router picks different experts for every token, so **all** the experts must sit in RAM, ready to go. You only pay compute for the few that actually got woken up.\n\nThat's why the name Qwen3.6-35B-A3B decodes as '35 billion parameters total, about 3 billion active per token'. Memory cost: all 35B, about 20GB at Q4. Speed: roughly that of a 3B model. On the same Mac, the speed gap is dramatic. One tester on a 64GB M1 Max measured the 35B-A3B at 61 tokens per second and its dense 27B sibling at 17, a 3.7x difference.",
           },
           {
             type: 'diagram',
@@ -119,7 +168,7 @@ export const lessons: Lesson[] = [
   <rect x="0" y="0" width="700" height="340" fill="#18181b" rx="8"/>
   <text x="350" y="30" fill="#e4e4e7" font-size="16" font-weight="bold" text-anchor="middle">MoE: RAM pays for ALL experts, compute pays for ACTIVE ones</text>
   <rect x="30" y="55" width="420" height="200" fill="#27272a" stroke="#52525b" rx="8"/>
-  <text x="240" y="80" fill="#a1a1aa" font-size="13" text-anchor="middle">Unified memory: every expert resident (~132 GB at Q4)</text>
+  <text x="240" y="80" fill="#a1a1aa" font-size="13" text-anchor="middle">Unified memory: every expert resident (the TOTAL count)</text>
   <rect x="55" y="100" width="80" height="55" fill="#38bdf8" rx="6"/>
   <text x="95" y="132" fill="#18181b" font-size="12" font-weight="bold" text-anchor="middle">E1 active</text>
   <rect x="150" y="100" width="80" height="55" fill="#27272a" stroke="#52525b" rx="6"/>
@@ -141,21 +190,21 @@ export const lessons: Lesson[] = [
   <text x="585" y="140" fill="#a1a1aa" font-size="11" text-anchor="middle">picks experts per token</text>
   <rect x="500" y="185" width="170" height="70" fill="#27272a" stroke="#34d399" stroke-width="2" rx="8"/>
   <text x="585" y="213" fill="#34d399" font-size="13" font-weight="bold" text-anchor="middle">Per-token compute</text>
-  <text x="585" y="235" fill="#a1a1aa" font-size="11" text-anchor="middle">scales with 22B active</text>
+  <text x="585" y="235" fill="#a1a1aa" font-size="11" text-anchor="middle">scales with ACTIVE params</text>
   <line x1="500" y1="125" x2="455" y2="125" stroke="#a78bfa" stroke-width="2"/>
   <polygon points="455,125 465,120 465,130" fill="#a78bfa"/>
   <line x1="585" y1="160" x2="585" y2="185" stroke="#34d399" stroke-width="2"/>
   <polygon points="585,185 580,175 590,175" fill="#34d399"/>
-  <text x="350" y="300" fill="#fbbf24" font-size="13" text-anchor="middle" font-weight="bold">Qwen 3 235B-A22B: 132 GB of RAM, but generates like a 22B model</text>
-  <text x="350" y="322" fill="#a1a1aa" font-size="12" text-anchor="middle">Qwen3 30B-A3B: 30B in RAM (~19 GB), 3B compute: why it flies on a 32GB Mac</text>
+  <text x="350" y="300" fill="#fbbf24" font-size="13" text-anchor="middle" font-weight="bold">DeepSeek V4-Flash (284B-A13B): ~160GB of RAM, but generates like a 13B model</text>
+  <text x="350" y="322" fill="#a1a1aa" font-size="12" text-anchor="middle">Qwen3.6-35B-A3B: ~20GB in RAM, 3B of compute per token: why it flies on a 32GB Mac</text>
 </svg>`,
             caption: 'The MoE bargain: memory cost follows total parameters, speed follows active parameters.',
           },
           {
             type: 'callout',
             variant: 'insight',
-            title: 'How to read MoE model names',
-            md: "Read the name as **total/active**. 235B-A22B means 235B parameters resident in RAM with about 22B doing work per token. 30B-A3B means roughly 19GB sitting in memory with the speed of a tiny 3B model. This trade is also why Macs punch above their weight for local AI: the real bottleneck is how much memory you have, and Apple happens to sell a lot of it in one shared pool.",
+            title: 'How to read MoE model names, and when dense still wins',
+            md: "Read the name as **total/active**. 284B-A13B means 284B parameters resident in RAM with about 13B doing work per token. 35B-A3B means roughly 20GB sitting in memory with the speed of a tiny 3B model.\n\nSo why is the dense Qwen3.8-27B the headline and not the faster MoE? Answer quality. For the same memory footprint, a dense model puts every parameter to work on every word, and in 2026 the best 27B dense models give noticeably better answers than the 35B-A3B class. The usual split: dense for the answer you'll read carefully, MoE for bulk work and long agent loops where speed compounds.",
           },
         ],
       },
@@ -164,21 +213,22 @@ export const lessons: Lesson[] = [
         blocks: [
           {
             type: 'text',
-            md: "Models are trained with each weight stored as a 16-bit number, a format called **fp16** that costs two bytes per weight. At that precision a 30B model needs about 60GB just for its weights. **Quantization** shrinks each weight down to fewer bits, the way a photo exported at lower quality takes less disk space. Squash every weight to about 4 bits and that same 30B model drops to roughly 17GB. The wild part is how little quality you lose on the way down.\n\nTwo bits of jargon you'll meet the moment you go download something. [GGUF](https://huggingface.co/docs/hub/gguf) is the standard file format for quantized models; think of it as the zip file of local AI, readable by most Mac tools. **Q4_K_M** is the name of the most popular quantization recipe inside that format: about 4.5 bits per weight, with outputs nearly indistinguishable from the full-precision original for most models.",
+            md: "Models are trained with each weight stored as a 16-bit number, a format called **fp16** (or its close cousin **BF16**) that costs two bytes per weight. At that precision a 27B model needs about 52GB just for its weights. **Quantization** shrinks each weight down to fewer bits, the way a photo exported at lower quality takes less disk space. Squash every weight to about 4 bits and that same 27B model drops to roughly 16GB. The wild part is how little quality you lose on the way down.\n\nTwo bits of jargon you'll meet the moment you go download something. [GGUF](https://huggingface.co/docs/hub/gguf) is the standard file format for quantized models; think of it as the zip file of local AI, readable by most Mac tools. **Q4_K_M** is the name of the most popular quantization recipe inside that format: about 4.5 bits per weight, with outputs nearly indistinguishable from the full-precision original for most models.\n\nHere are the real published file sizes for Qwen3.8-27B at each level:",
           },
           {
             type: 'table',
-            headers: ['Precision', 'Bits per weight', 'A 30B model weighs', 'Quality'],
+            headers: ['Precision', 'Bits per weight', 'Qwen3.8-27B weighs', 'Quality'],
             rows: [
-              ['fp16 (as trained)', '16', '~60GB', 'The reference point; full quality'],
-              ['Q8_0', '8', '~32GB', 'Basically indistinguishable from fp16'],
-              ['Q4_K_M', '~4.5', '~17GB', 'The default: tiny quality loss for most models'],
-              ['Q2_K', '~2.5', '~11GB', 'Noticeably dumber; avoid unless desperate'],
+              ['BF16 (as trained)', '16', '~52GB', 'The reference point; full quality'],
+              ['Q8_0', '8', '~27GB', 'Basically indistinguishable from BF16'],
+              ['Q6_K', '~6.5', '~21GB', 'A comfortable middle if you have the room'],
+              ['Q4_K_M', '~4.5', '~16GB (+0.9GB for vision)', 'The default: tiny quality loss for most models'],
+              ['Q2_K', '~2.5', '~10GB', 'Noticeably dumber; avoid unless desperate'],
             ],
           },
           {
             type: 'text',
-            md: "Now the arithmetic. Three ingredients decide whether a model fits your Mac:\n\n- Weights: parameter count times 0.5-0.6 GB per billion at Q4. A 30B model lands around 16-18GB.\n- **KV cache**: the model's scratch memory for the current conversation. The attention mechanism keeps a record (the 'keys' and 'values') for every token in the context window, so this grows as the chat grows. Budget an extra 10-30% on top of the weights.\n- Everything else on your Mac: macOS plus your browser and apps want 8-12GB for themselves.\n\nLet's walk one example on a 32GB Mac. Start with 32GB, subtract 10GB for the system, and you have about 22GB of budget. Qwen3 30B-A3B at Q4 is about 17GB of weights, plus maybe 3GB of KV cache for a decent-length session. Total: around 20GB. It fits, with a little breathing room. A dense 70B model at Q4 wants about 40GB for weights alone, so on this machine it's out of the question.",
+            md: "Now the arithmetic. Three ingredients decide whether a model fits your Mac:\n\n- Weights: parameter count times 0.5-0.6 GB per billion at Q4. A 27B model lands around 15-16GB.\n- **KV cache**: the model's scratch memory for the current conversation. The attention mechanism keeps a record (the 'keys' and 'values') for every token in the context window, so this grows as the chat grows. Budget an extra 10-30% on top of the weights. Hybrid designs like Qwen3.8's sit at the low end of that range.\n- Everything else on your Mac: macOS plus your browser and apps want 8-12GB for themselves.\n\nLet's walk one example on a 32GB Mac. Start with 32GB, subtract 10GB for the system, and you have about 22GB of budget. Qwen3.8-27B at Q4_K_M is about 17GB once you include the vision add-on, plus maybe 3GB of KV cache for a decent-length session. Total: around 20GB. It fits, with a little breathing room. A dense 70B model at Q4 wants about 40GB for weights alone, so on this machine it's out of the question.",
           },
           {
             type: 'callout',
@@ -193,41 +243,146 @@ export const lessons: Lesson[] = [
         blocks: [
           {
             type: 'text',
-            md: "Here's the Apple-specific piece. On a typical PC, the graphics card has its own separate memory (VRAM), and models have to fit inside that. Apple Silicon Macs use **unified memory** instead: one pool of RAM shared by the CPU and the GPU. So your Mac's RAM number is also your model ceiling, full stop. No separate graphics card to upgrade, no workaround.\n\nThe ladder below shows what genuinely runs well in each tier at Q4. 'Genuinely runs' means it loads AND leaves room for the system to breathe. Plenty of models will technically load one tier below where they belong, and then grind your machine to a halt swapping memory to disk.",
+            md: "Here's the Apple-specific piece. On a typical PC, the graphics card has its own separate memory (VRAM), and models have to fit inside that. Apple Silicon Macs use **unified memory** instead: one pool of RAM shared by the CPU and the GPU. So your Mac's RAM number is also your model ceiling, full stop. No separate graphics card to upgrade, no workaround.\n\nThe ladder below shows what genuinely runs well in each tier at Q4. 'Genuinely runs' means it loads AND leaves room for the system to breathe. Plenty of models will technically load one tier below where they belong, and then grind your machine to a halt swapping memory to disk. The classic trap is gpt-oss 120B on a 64GB Mac: its file is about 65GB, which is more than the whole machine before macOS takes its share.",
           },
           {
             type: 'diagram',
-            svg: `<svg viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
-  <rect x="0" y="0" width="700" height="400" fill="#18181b" rx="8"/>
+            svg: `<svg viewBox="0 0 700 470" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect x="0" y="0" width="700" height="470" fill="#18181b" rx="8"/>
   <text x="350" y="30" fill="#e4e4e7" font-size="16" font-weight="bold" text-anchor="middle">The unified-memory ladder: RAM tier sets your model ceiling</text>
-  <rect x="110" y="60" width="560" height="70" fill="#27272a" stroke="#34d399" stroke-width="2" rx="8"/>
-  <text x="98" y="100" fill="#34d399" font-size="14" font-weight="bold" text-anchor="end">128-192GB</text>
-  <text x="130" y="87" fill="#e4e4e7" font-size="12">Qwen 3 235B-A22B (~132GB), GLM-4.7</text>
-  <text x="130" y="112" fill="#a1a1aa" font-size="11">the 235B-class MoE flagships live here</text>
-  <rect x="110" y="145" width="450" height="70" fill="#27272a" stroke="#a78bfa" stroke-width="2" rx="8"/>
-  <text x="98" y="185" fill="#a78bfa" font-size="14" font-weight="bold" text-anchor="end">64GB</text>
-  <text x="130" y="172" fill="#e4e4e7" font-size="12">70B dense (~40GB), gpt-oss 120B</text>
-  <text x="130" y="197" fill="#a1a1aa" font-size="11">big dense models start to fit; gpt-oss 120B runs fast here</text>
-  <rect x="110" y="230" width="340" height="70" fill="#27272a" stroke="#38bdf8" stroke-width="2" rx="8"/>
-  <text x="98" y="270" fill="#38bdf8" font-size="14" font-weight="bold" text-anchor="end">32GB</text>
-  <text x="130" y="257" fill="#e4e4e7" font-size="11">Qwen3 30B-A3B, Gemma 3 27B, Devstral</text>
-  <text x="130" y="282" fill="#a1a1aa" font-size="11">the sweet spot for price vs capability</text>
-  <rect x="110" y="315" width="240" height="70" fill="#27272a" stroke="#f472b6" stroke-width="2" rx="8"/>
-  <text x="98" y="355" fill="#f472b6" font-size="14" font-weight="bold" text-anchor="end">16GB</text>
-  <text x="130" y="342" fill="#e4e4e7" font-size="11">R1 distill 8B, Gemma 3 12B</text>
-  <text x="130" y="367" fill="#a1a1aa" font-size="11">small models, real work</text>
+  <rect x="110" y="50" width="560" height="62" fill="#27272a" stroke="#fbbf24" stroke-width="2" rx="8"/>
+  <text x="98" y="86" fill="#fbbf24" font-size="14" font-weight="bold" text-anchor="end">192-256GB</text>
+  <text x="130" y="75" fill="#e4e4e7" font-size="12">GLM-5.3-Flash (~178GB at 4-bit), DeepSeek V4-Flash (~160GB)</text>
+  <text x="130" y="98" fill="#a1a1aa" font-size="11">Mac Studio territory: 300B-class MoE at 18-22 tok/s</text>
+  <rect x="110" y="122" width="460" height="62" fill="#27272a" stroke="#34d399" stroke-width="2" rx="8"/>
+  <text x="98" y="158" fill="#34d399" font-size="14" font-weight="bold" text-anchor="end">96-128GB</text>
+  <text x="130" y="147" fill="#e4e4e7" font-size="12">gpt-oss 120B (~65GB), 70B dense at Q8</text>
+  <text x="130" y="170" fill="#a1a1aa" font-size="11">V4-Flash squeezes in at an aggressive ~97GB quant</text>
+  <rect x="110" y="194" width="380" height="62" fill="#27272a" stroke="#a78bfa" stroke-width="2" rx="8"/>
+  <text x="98" y="230" fill="#a78bfa" font-size="14" font-weight="bold" text-anchor="end">64GB</text>
+  <text x="130" y="219" fill="#e4e4e7" font-size="11">Qwen3.8-27B at Q8, Qwen3-Coder-Next 80B-A3B</text>
+  <text x="130" y="242" fill="#a1a1aa" font-size="11">two models loaded at once; NOT gpt-oss 120B</text>
+  <rect x="110" y="266" width="310" height="62" fill="#27272a" stroke="#38bdf8" stroke-width="2" rx="8"/>
+  <text x="98" y="302" fill="#38bdf8" font-size="14" font-weight="bold" text-anchor="end">32GB</text>
+  <text x="130" y="291" fill="#e4e4e7" font-size="11">Qwen3.8-27B, Qwen3.6-35B-A3B, Gemma 4</text>
+  <text x="130" y="314" fill="#a1a1aa" font-size="11">where 2026's best local models live</text>
+  <rect x="110" y="338" width="230" height="62" fill="#27272a" stroke="#f472b6" stroke-width="2" rx="8"/>
+  <text x="98" y="374" fill="#f472b6" font-size="14" font-weight="bold" text-anchor="end">16GB</text>
+  <text x="130" y="363" fill="#e4e4e7" font-size="11">gpt-oss 20B, Gemma 4 E4B</text>
+  <text x="130" y="386" fill="#a1a1aa" font-size="11">small models, real work</text>
+  <text x="350" y="432" fill="#e4e4e7" font-size="12" text-anchor="middle">Above the ladder: Kimi K3, GLM-5.3, DeepSeek V4-Pro, Qwen3.8-Max</text>
+  <text x="350" y="452" fill="#a1a1aa" font-size="11" text-anchor="middle">downloadable, but they need racks of data-center GPUs</text>
 </svg>`,
-            caption: 'Each bar is a Mac RAM tier; wider bar, bigger models. Sizes assume Q4 quantization.',
+            caption: 'Each bar is a Mac RAM tier; wider bar, bigger models. Sizes assume Q4 unless noted.',
           },
           {
             type: 'table',
-            headers: ['Mac RAM', 'What genuinely runs at Q4', 'Examples'],
+            headers: ['Mac RAM', 'What genuinely runs', 'Examples'],
             rows: [
-              ['16GB', '7-8B dense models, small MoE', 'DeepSeek R1 distill 8B; Phi-4 is a tight fit'],
-              ['32GB', '14-30B dense, 30B-class MoE', 'Qwen3 30B-A3B, Gemma 3 27B, Devstral'],
-              ['64GB', '70B dense, or gpt-oss 120B', 'gpt-oss 120B (5.1B active) runs surprisingly fast'],
-              ['128-192GB', '235B-class MoE', 'Qwen 3 235B-A22B (~132GB), GLM-4.7'],
+              ['16GB', '7-14B dense, small MoE', 'gpt-oss 20B (~12GB), Gemma 4 E4B'],
+              ['32GB', '24-31B dense, 30B-class MoE', 'Qwen3.8-27B, Qwen3.6-35B-A3B, Gemma 4 31B and 26B-A4B, Devstral'],
+              ['64GB', 'The 32GB models at Q8, two at once, or an 80B-A3B MoE', 'Qwen3-Coder-Next 80B-A3B (~45GB). A 70B dense fits but crawls at 5-7 tok/s'],
+              ['96-128GB', '120B-class MoE', 'gpt-oss 120B (~65GB); DeepSeek V4-Flash at an aggressive quant'],
+              ['192-256GB', '300B-class MoE', 'GLM-5.3-Flash (~178GB), DeepSeek V4-Flash (~160GB)'],
             ],
+          },
+          {
+            type: 'text',
+            md: "Your M5 Pro Mac mini sits on the 64GB rung, which in September 2026 is a very good place to be. Every model in the 32GB row runs at a higher-quality 8-bit setting, or you can keep a quality model and a speed model loaded side by side. The 70B dense is the trap on this rung: it loads, and then the bandwidth math gives you 5-7 tokens per second. For the rungs above this one, and why buying your way up them rarely pays, see [Local Models · The Hardware Ladder & the Install Business](lesson:m4-l4).",
+          },
+        ],
+      },
+      {
+        heading: 'The Engine Matters Too: Splash',
+        blocks: [
+          {
+            type: 'text',
+            md: "Everything so far has been about the model file. The other half of local AI is the **inference engine**: the program that loads those weights into memory and runs the math that turns your prompt into words. Ollama, LM Studio, llama.cpp, and Apple's MLX are all engines, and [Local Models · Running Models on Your Mac](lesson:m4-l2) walks through them. Until this month, the engine felt like a detail. They all read the same files, and the speed differences were modest.\n\n[Splash](https://inco.ai/blog/splash/), released by Inco AI on September 17, 2026, makes the engine the headline. It's free and open source (Apache 2.0), and it makes the opposite bet from every other Mac engine. Ollama tries to run thousands of models reasonably well. Splash runs exactly two, Qwen3.8-27B and Qwen3.6-35B-A3B, and tries to run them as fast as the hardware allows. Two things make that possible.\n\n**Hand-fitted GPU code.** The small programs that do the math on the GPU are called **kernels**. General engines use kernels written to handle any model shape. Splash generates kernels for the exact dimensions of its two models, the way a tailored suit fits better than one off the rack.\n\n**Speculative decoding, built in.** This is the big one, and it's the answer to the question the Qwen3.8 spotlight left hanging: how can anything beat the bandwidth speed limit?",
+          },
+          {
+            type: 'text',
+            md: "Recall the limit: a dense model has to read all of its weights once for every token it writes, and reading 16GB takes time. The trick is that one read can **check** many tokens almost as cheaply as it can **write** one. So you add a tiny, fast **draft model** (about 1.2GB for Splash's Qwen3.8-27B) whose only job is to guess what the big model is about to say.\n\nWalk one round. The big model has written 'The meeting is'. The draft model races ahead and guesses the next six words: 'moved to Thursday at noon because'. The big model then reads its weights once and checks all six guesses in that single pass. It agrees with 'moved to Thursday at' and disagrees at 'noon', where it would have said '3pm'. So it keeps the four words it agreed with, adds its own '3pm', and throws the rest away. Result: five words of output for the price of one weight read. The words are exactly what the big model would have written on its own, so quality doesn't change at all; only the speed does.\n\nSplash's version of this is called DFlash 2, which guesses a whole block of tokens at once, and every supported model ships with its own draft trained specifically to imitate it. Better imitation means more guesses survive each check, and more surviving guesses means more speed.",
+          },
+          {
+            type: 'diagram',
+            svg: `<svg viewBox="0 0 700 330" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect x="0" y="0" width="700" height="330" fill="#18181b" rx="8"/>
+  <text x="350" y="30" fill="#e4e4e7" font-size="16" font-weight="bold" text-anchor="middle">Speculative decoding: guess cheap, check in bulk</text>
+  <rect x="30" y="60" width="180" height="80" fill="#27272a" stroke="#a78bfa" stroke-width="2" rx="8"/>
+  <text x="120" y="88" fill="#a78bfa" font-size="13" font-weight="bold" text-anchor="middle">1. Draft model</text>
+  <text x="120" y="108" fill="#a1a1aa" font-size="11" text-anchor="middle">tiny (~1.2GB), very fast</text>
+  <text x="120" y="126" fill="#a1a1aa" font-size="11" text-anchor="middle">guesses the next 6 words</text>
+  <rect x="260" y="60" width="180" height="80" fill="#27272a" stroke="#38bdf8" stroke-width="2" rx="8"/>
+  <text x="350" y="88" fill="#38bdf8" font-size="13" font-weight="bold" text-anchor="middle">2. Big model checks</text>
+  <text x="350" y="108" fill="#a1a1aa" font-size="11" text-anchor="middle">reads its 16GB of weights ONCE</text>
+  <text x="350" y="126" fill="#a1a1aa" font-size="11" text-anchor="middle">scores all 6 guesses together</text>
+  <rect x="490" y="60" width="180" height="80" fill="#27272a" stroke="#34d399" stroke-width="2" rx="8"/>
+  <text x="580" y="88" fill="#34d399" font-size="13" font-weight="bold" text-anchor="middle">3. Keep the agreed run</text>
+  <text x="580" y="108" fill="#a1a1aa" font-size="11" text-anchor="middle">keep guesses up to the first miss,</text>
+  <text x="580" y="126" fill="#a1a1aa" font-size="11" text-anchor="middle">then add the big model's word</text>
+  <line x1="210" y1="100" x2="252" y2="100" stroke="#a1a1aa" stroke-width="2"/>
+  <polygon points="258,100 248,95 248,105" fill="#a1a1aa"/>
+  <line x1="440" y1="100" x2="482" y2="100" stroke="#a1a1aa" stroke-width="2"/>
+  <polygon points="488,100 478,95 478,105" fill="#a1a1aa"/>
+  <path d="M580 140 L580 165 L120 165 L120 146" fill="none" stroke="#a1a1aa" stroke-width="2" stroke-dasharray="5,4"/>
+  <polygon points="120,140 115,150 125,150" fill="#a1a1aa"/>
+  <text x="350" y="160" fill="#a1a1aa" font-size="11" text-anchor="middle">repeat from the new end of the text</text>
+  <text x="30" y="200" fill="#e4e4e7" font-size="12">Draft guesses after 'The meeting is':</text>
+  <rect x="30" y="212" width="85" height="32" fill="#34d399" rx="4"/>
+  <text x="72" y="233" fill="#18181b" font-size="12" font-weight="bold" text-anchor="middle">moved</text>
+  <rect x="122" y="212" width="85" height="32" fill="#34d399" rx="4"/>
+  <text x="164" y="233" fill="#18181b" font-size="12" font-weight="bold" text-anchor="middle">to</text>
+  <rect x="214" y="212" width="85" height="32" fill="#34d399" rx="4"/>
+  <text x="256" y="233" fill="#18181b" font-size="12" font-weight="bold" text-anchor="middle">Thursday</text>
+  <rect x="306" y="212" width="85" height="32" fill="#34d399" rx="4"/>
+  <text x="348" y="233" fill="#18181b" font-size="12" font-weight="bold" text-anchor="middle">at</text>
+  <rect x="398" y="212" width="85" height="32" fill="#f87171" rx="4"/>
+  <text x="440" y="233" fill="#18181b" font-size="12" font-weight="bold" text-anchor="middle">noon</text>
+  <rect x="490" y="212" width="85" height="32" fill="#3f3f46" rx="4"/>
+  <text x="532" y="233" fill="#a1a1aa" font-size="12" text-anchor="middle">because</text>
+  <rect x="582" y="212" width="88" height="32" fill="#27272a" stroke="#38bdf8" stroke-width="2" rx="4"/>
+  <text x="626" y="233" fill="#38bdf8" font-size="12" font-weight="bold" text-anchor="middle">+ 3pm</text>
+  <text x="30" y="270" fill="#34d399" font-size="11">green: accepted</text>
+  <text x="150" y="270" fill="#f87171" font-size="11">red: first miss</text>
+  <text x="270" y="270" fill="#a1a1aa" font-size="11">grey: discarded</text>
+  <text x="390" y="270" fill="#38bdf8" font-size="11">blue: the big model's own word</text>
+  <text x="350" y="300" fill="#fbbf24" font-size="13" font-weight="bold" text-anchor="middle">One weight read, five words out.</text>
+  <text x="350" y="320" fill="#a1a1aa" font-size="12" text-anchor="middle">Bandwidth still caps passes per second; each pass now yields several words.</text>
+</svg>`,
+            caption: 'The output is identical to what the big model would write alone. Only the number of weight reads changes.',
+          },
+          {
+            type: 'text',
+            md: "Here are Inco AI's published numbers for Qwen3.8-27B. They were measured on a 48GB M5 Pro, the same chip family as your Mac mini. The comparison engine, **oMLX**, is a popular general-purpose MLX server that already does its own speed tricks, so these gaps are over a strong baseline. Two new terms in the table: **prefill** is the model reading your prompt before it writes anything (it sets how long you wait for the first word), and **cache reuse** is the engine remembering a prompt it has already read, so an agent that resends the same long context doesn't pay to read it again.",
+          },
+          {
+            type: 'table',
+            headers: ['Test (Qwen3.8-27B, 48GB M5 Pro)', 'Splash', 'oMLX', 'Gap'],
+            rows: [
+              ['Writing speed, short prompt', '74 tok/s', '38 tok/s', '2.0x'],
+              ['Writing speed, 32K-token context', '54 tok/s', '28 tok/s', '1.9x'],
+              ['Prefill (reading a 32K prompt)', '363 tok/s', '110 tok/s', '3.3x'],
+              ['Replaying a cached 32K prompt', '282 ms', '2,049 ms', '7.3x'],
+              ['Four requests at once (total)', '170 tok/s', '43 tok/s', '3.9x'],
+            ],
+          },
+          {
+            type: 'text',
+            md: "Put the first row next to the bandwidth math. Plain decoding predicted 13-16 tokens per second on an M5 Pro. Splash claims 74. That's roughly five words kept per weight read, which is exactly the sort of number speculative decoding produces when the draft is good. The last row matters most for agent work: Claude Code's subagents fire several requests at once, and Splash is built to batch them.\n\nThe practical bits:\n\n- It needs an M3 or newer Mac on macOS 26.4 or later, with at least 36GB of unified memory; 48GB or more is recommended. Your 64GB M5 Pro clears every bar.\n- It speaks both the OpenAI and Anthropic API dialects, including tool calls and image input, so Claude Code can point at it the way [Local Models · Local Agents & the Hybrid Split](lesson:m4-l3) points it at Ollama.\n- It installs through Homebrew and starts with one command.",
+          },
+          {
+            type: 'code',
+            lang: 'bash',
+            code: `brew install incoai/tap/splash
+splash serve --model incoai/Qwen3.8-27B-Splash
+# serves on http://localhost:8000`,
+            caption: 'Install Splash and start the tuned Qwen3.8-27B build.',
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'Measure before you switch',
+            md: "Every number above comes from the company that built Splash, and the engine was a week old when this lesson was written. Two models, no fallback, nothing to tune: if you want Gemma or a coder model, you still need Ollama or LM Studio alongside it. The honest move is to run the same prompt through Splash and your current engine on your own Mac and compare tokens per second yourself. That takes ten minutes, and the lab below includes it.",
           },
         ],
       },
@@ -236,28 +391,32 @@ export const lessons: Lesson[] = [
         blocks: [
           {
             type: 'text',
-            md: "If you google 'best local LLM for Mac' you'll land on guides from 2024-25, and most of their advice has quietly expired. The comparison below works as a stale-guide detector: when an article leans on anything in the left column, check its publication date before trusting anything else it says.",
+            md: "If you google 'best local LLM for Mac' you'll land on guides from 2024-25 and early 2026, and much of their advice has quietly expired. The comparison below works as a stale-guide detector: when an article leans on anything in the left column, check its publication date before trusting anything else it says.",
           },
           {
             type: 'compare',
             left: {
-              title: '2024-25 advice (obsolete)',
+              title: 'Older advice (now obsolete)',
               items: [
                 'Llama is the default open model',
-                'GGUF is the only real path on a Mac',
-                'The dense 70B is the prize to chase',
-                'Pick a model once and settle in',
-                'Mixtral / Qwen 2.5 / Phi-3 era rankings',
+                'Qwen 3 235B-A22B is the open flagship to aim for',
+                'DeepSeek R1 is the open reasoning model to beat',
+                'Gemma comes with its own restrictive terms',
+                "'Open weights' means Apache or MIT",
+                'gpt-oss 120B fits a 64GB Mac',
+                'The engine is a detail; any of them will do',
               ],
             },
             right: {
-              title: 'Mid-2026 reality',
+              title: 'September 2026 reality',
               items: [
-                'Qwen, DeepSeek, GLM, and gpt-oss lead most boards',
-                'MLX is native on Apple Silicon and often faster',
-                'MoE gives 70B-class quality at 3-22B compute cost',
-                'Model half-life is about 6 months; re-check quarterly',
-                'All superseded; read old guides as history',
+                'Qwen, DeepSeek, GLM, and Kimi lead the open rankings',
+                'Flagships went trillion-scale; the Mac story moved to 27-35B',
+                'DeepSeek V4 replaced it; thinking modes are now standard',
+                'Gemma 4 ships under Apache 2.0',
+                'GLM-5.3, Qwen3.8-Max, and Kimi K3 carry custom terms',
+                'At ~65GB it needs a 96GB+ Mac',
+                'Model-specific engines like Splash claim 2x on the same Mac',
               ],
             },
           },
@@ -265,20 +424,21 @@ export const lessons: Lesson[] = [
             type: 'callout',
             variant: 'tip',
             title: 'Half-life discipline',
-            md: "Any local-model recommendation, this lesson included, decays in about six months. Put a quarterly reminder on your calendar: spend 20 minutes on [lmarena.ai](https://lmarena.ai) (a public leaderboard where humans vote on model quality in blind matchups) and the [Ollama library](https://ollama.com/library), refresh your shortlist, and move on with your life.",
+            md: "Any local-model recommendation, this lesson included, decays in about six months. This lesson's own table changed almost completely between July and September 2026. Put a quarterly reminder on your calendar: spend 20 minutes on [lmarena.ai](https://lmarena.ai) (a public leaderboard where humans vote on model quality in blind matchups), the [Artificial Analysis open-weights page](https://artificialanalysis.ai/models/open-source), and the [Ollama library](https://ollama.com/library), refresh your shortlist, and move on with your life.",
           },
         ],
       },
     ],
     lab: {
       title: 'Size YOUR Mac',
-      intro: "Turn the theory into a concrete shortlist. You'll find your RAM tier, run the fit arithmetic yourself, and pick three models that genuinely run on your machine with room to spare.",
+      intro: "Turn the theory into a concrete shortlist. You'll find your RAM tier, run the fit arithmetic yourself, pick three models that genuinely run on your machine with room to spare, and then see how much the engine changes the speed.",
       steps: [
-        'Find your RAM: run `system_profiler SPHardwareDataType | grep Memory` (or Apple menu > About This Mac).',
+        'Find your RAM and chip: run `system_profiler SPHardwareDataType | grep -E "Chip|Memory"` (or Apple menu > About This Mac).',
         'Compute your usable budget: total RAM minus 8-12GB for macOS and your normal apps.',
-        'Pick 3 candidate models from the who-is-who table for your tier and estimate each one: parameters x 0.55 GB per billion, plus 20% for KV cache. Write the numbers down.',
+        'Pick 3 candidate models from the first who-is-who table and estimate each one: parameters x 0.55 GB per billion, plus 20% for KV cache. Write the numbers down.',
         'Cross-check against reality: open [ollama.com/library](https://ollama.com/library) and confirm the actual Q4 download size for each candidate.',
         'Create `~/ai-notes/local-models.md` listing your 3 finalists with size, license, and one line on why each made the cut.',
+        'If your Mac is an M3 or newer with 36GB+ of memory: install Splash, serve Qwen3.8-27B, and give it the same prompt you give the Ollama build of Qwen3.8-27B. Note both tokens-per-second numbers in your notes file.',
         'Bookmark [lmarena.ai](https://lmarena.ai) and set a quarterly calendar reminder to redo this exercise.',
       ],
       checklist: [
@@ -286,64 +446,66 @@ export const lessons: Lesson[] = [
         'I computed estimated RAM for at least 3 models and checked against real download sizes',
         'My shortlist has 3 models that fit with at least 15% headroom',
         'I noted the license of every shortlisted model',
+        'I measured one model on two engines (or noted why my Mac cannot run Splash)',
         'A quarterly leaderboard-check reminder exists on my calendar',
       ],
     },
     checkQuiz: [
       {
-        q: 'On a 64GB Mac, which is a realistic ceiling at Q4?',
+        q: 'Which of these will NOT run properly on a 64GB Mac?',
         options: [
-          'Qwen 3 235B-A22B, since MoE means only the 22B active parameters need RAM',
-          'A 70B dense model, or gpt-oss 120B thanks to its MoE layout',
-          'Nothing above 30B, because the OS reserves half of unified memory for graphics',
-          'Any model at all, since llama.cpp streams weights from the SSD at full speed',
-        ],
-        answer: 1,
-        explain:
-          'A 70B dense model at Q4 comes to roughly 38-42GB of weights plus KV cache, which fits inside 64GB with headroom. gpt-oss 120B squeezes into the same envelope because its MoE design and aggressive quantization keep the resident size down. The 235B-A22B still needs about 132GB loaded at once, so it stays out of reach.',
-      },
-      {
-        q: 'Why does the KV cache add a variable 10-30% on top of weight RAM?',
-        options: [
-          'It grows with context length, because attention stores keys and values for every token in the window',
-          'It mirrors the model weights at higher precision for numerical stability',
-          'It caches disk reads and shrinks as the model warms up',
-          'It is a fixed 30% that Apple reserves inside unified memory',
-        ],
-        answer: 0,
-        explain:
-          'The KV cache is per-token bookkeeping: every token in the conversation adds an entry the model consults when generating the next word. A short chat costs almost nothing. A long agent transcript at 32k+ tokens can eat several extra gigabytes, which is why the estimate is a range instead of a number.',
-      },
-      {
-        q: 'What makes Gemma 3 27B distinctive in the mid-2026 lineup?',
-        options: [
-          'It is the only MIT-licensed model that fits a 16GB Mac',
-          'It is a MoE with 3B active parameters, giving the fastest generation',
-          'It accepts images as input (it is multimodal) while still fitting a 32GB Mac',
-          'It was distilled from DeepSeek R1 for reasoning tasks',
-        ],
-        answer: 2,
-        explain:
-          'Gemma 3 27B is the practical local vision model. You can hand it a screenshot or photo along with your question, and its dense 27B design still fits a 32GB Mac at Q4. Most other vision-capable options either live behind an API or need a much bigger machine.',
-      },
-      {
-        q: 'Given a roughly 6-month model half-life, what is the right operating posture?',
-        options: [
-          'Standardize on one model per year to amortize prompt tuning',
-          'Only adopt models older than a year, once the dust settles',
-          'Ignore leaderboards, since benchmark scores never transfer to real work',
-          'Re-check leaderboards and your shortlist quarterly, and treat model choice as a rolling decision',
+          'Qwen3.8-27B at Q8 (about 27GB)',
+          'Qwen3.8-27B and Qwen3.6-35B-A3B loaded side by side at Q4',
+          'Qwen3-Coder-Next 80B-A3B at Q4 (about 45GB)',
+          'gpt-oss 120B (about 65GB)',
         ],
         answer: 3,
         explain:
-          'The open-model leaders flipped multiple times across 2025-26: Llama gave way to Qwen and DeepSeek, then GLM and gpt-oss joined the front row. A 20-minute quarterly review keeps you current without constant churn or regret.',
+          "gpt-oss 120B's file is about 65GB, which is bigger than the entire machine before macOS takes its 8-12GB. It loads on a 96-128GB Mac. The other three all fit inside the roughly 44-54GB a 64GB Mac leaves for models, which is why guides that put gpt-oss 120B on the 64GB rung are wrong.",
+      },
+      {
+        q: 'Plain decoding math says Qwen3.8-27B should write about 13-16 tokens per second on an M5 Pro. How can Splash report 74?',
+        options: [
+          'It quantizes the model down to 1 bit per weight, so each read is 16 times smaller',
+          'A small draft model guesses several tokens ahead, and the big model checks all of them in one read of its weights, keeping the ones it agrees with',
+          'It skips the vision layers and half the attention layers to save time',
+          'It streams the weights from the SSD, which is faster than unified memory',
+        ],
+        answer: 1,
+        explain:
+          'Bandwidth caps how many times per second the big model can read its weights. Speculative decoding makes each read produce several tokens instead of one: the draft guesses, the big model verifies the whole batch in a single pass, and every accepted guess is a free token. The output is identical to what the big model would have written alone.',
+      },
+      {
+        q: 'On the same Mac, Qwen3.6-35B-A3B generates about 3-4x faster than a dense 27B model. Why?',
+        options: [
+          'It reads only its ~3B active parameters per token, while the dense 27B reads all 27B for every token',
+          'It uses a smaller vocabulary, so each token is cheaper to produce',
+          'It has fewer total parameters than the 27B model',
+          'MoE models run on the Neural Engine, which is faster than the GPU',
+        ],
+        answer: 0,
+        explain:
+          'Speed follows how many bytes the chip reads per token. The MoE keeps all 35B in RAM, but the router only wakes about 3B worth of experts per token, so each token needs a fraction of the reading a dense 27B needs. That is the MoE bargain: pay memory for the total, pay speed for the active.',
+      },
+      {
+        q: 'Which piece of advice is stale in September 2026?',
+        options: [
+          'Quantize to roughly 4 bits for the best size and quality trade-off',
+          'Leave RAM headroom for the operating system when sizing a local model',
+          'Check each model license before you build a product on it',
+          'Gemma models come with restrictive custom terms, so prefer Apache-licensed alternatives',
+        ],
+        answer: 3,
+        explain:
+          'Gemma 4, released in April 2026, moved to Apache 2.0, the same permissive license as Qwen3.8-27B. The other three pieces of advice have aged fine. License-checking matters more than ever, since the biggest releases (GLM-5.3, Qwen3.8-Max, Kimi K3) now carry custom terms.',
       },
     ],
     resources: [
-      { label: 'Qwen 3 235B-A22B model card', url: 'https://huggingface.co/Qwen/Qwen3-235B-A22B', kind: 'repo' },
-      { label: 'DeepSeek R1 model card (MIT)', url: 'https://huggingface.co/deepseek-ai/DeepSeek-R1', kind: 'repo' },
-      { label: 'Gemma 3 27B model card', url: 'https://huggingface.co/google/gemma-3-27b-it', kind: 'repo' },
-      { label: 'gpt-oss on Ollama', url: 'https://ollama.com/library/gpt-oss', kind: 'docs' },
+      { label: 'Qwen3.8-27B model card', url: 'https://huggingface.co/Qwen/Qwen3.8-27B', kind: 'repo' },
+      { label: 'Qwen3.6-35B-A3B model card', url: 'https://huggingface.co/Qwen/Qwen3.6-35B-A3B', kind: 'repo' },
+      { label: 'Splash launch post (Inco AI)', url: 'https://inco.ai/blog/splash/', kind: 'article' },
+      { label: 'Gemma 4: how to run locally (Unsloth)', url: 'https://unsloth.ai/docs/models/gemma-4', kind: 'docs' },
+      { label: "GLM-5.3's new license, explained (The New Stack)", url: 'https://thenewstack.io/zai-glm-weights-license/', kind: 'article' },
       { label: 'LMArena leaderboard (quarterly check)', url: 'https://lmarena.ai', kind: 'article' },
       { label: 'Artificial Analysis: open-weights comparison', url: 'https://artificialanalysis.ai/models/open-source', kind: 'article' },
     ],
