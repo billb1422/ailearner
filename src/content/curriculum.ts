@@ -12,6 +12,7 @@ import { lessons as m7Lessons } from './modules/m7'
 import { lessons as m8Lessons } from './modules/m8'
 import { lessons as m9Lessons } from './modules/m9'
 import { lessons as m10Lessons } from './modules/m10'
+import { lessons as m11Lessons } from './modules/m11'
 
 export const MODULES: Module[] = [
   {
@@ -274,6 +275,33 @@ export const MODULES: Module[] = [
       ],
       xp: 300,
       badgeId: 'boss-m10',
+    },
+  },
+  {
+    id: 'm11',
+    title: 'Bonus: Decision Models (Jev)',
+    emoji: '🎯',
+    color: '#e879f9',
+    tagline: 'Jev and System One models: typed, calibrated decisions in 100 ms, the four places they belong in software, how to ask them well, and how to fence them inside a harness',
+    days: 'Bonus · after Day 22',
+    bonus: true,
+    lessons: m11Lessons,
+    boss: {
+      title: 'Put a Decision Layer in Charge of One Thing',
+      description:
+        'Sweep something you run for Jev-shaped problems and pick the best one. Take that small, repeated judgment, prove on your own data that a System One model can make it, then wire it in behind a host that builds the menu, re-checks every pick, owns the fallback, and writes down what happened. The deliverable is a working decision with numbers attached, plus an honest verdict on whether the extra call earned its place.',
+      requirements: [
+        'Three candidate decisions written as a state plus typed questions, each priced on Jev and on the LLM you would otherwise use',
+        'A shadow eval of at least 100 held-out labeled examples, with accuracy overall and inside confidence buckets',
+        'One question decomposed into narrow signal questions, with the before-and-after accuracy and cost recorded',
+        'Laya running locally on your Mac and answering through the same question format',
+        'The four things written down: the one decision, the exact menu and who builds it, the abstain behavior, and how you judge the outcome',
+        'A host wrapper that builds the menu from live state, re-checks the pick before acting, and records fallbacks separately from selector wins',
+        'A decision log replayed against one change, with a keep-or-revert call made by you and the numbers that justified it',
+        'An agent-run sweep of a real project, with every candidate decision labeled by placement and the winner chosen with the expensive-queue test',
+      ],
+      xp: 300,
+      badgeId: 'boss-m11',
     },
   },
 ]
