@@ -632,13 +632,14 @@ sampled weekly; three bad weeks triggers a charter review)`,
     id: 'm8-l2',
     title: 'Hands-On: Grok Bot',
     day: 22,
-    minutes: 45,
+    minutes: 55,
     xp: 100,
     objectives: [
       'Describe what Grok Bot is, what it costs, and where it sits relative to Claude Code on the harness map',
       'Name the six product primitives (job description, connections, cloud computer, routines, skills, handoffs) and map each one onto a concept you already built by hand',
       'Walk the setup path: context interview, templates, charters, connections, and the first routine',
       'Say what a marketplace template carries and what it leaves behind, in both directions: installing somebody else\'s config, and exposing your own when you publish',
+      'Tell a Team Bot from a template, say which of its four parts are shared and which stay private to each person, and size its credentials so it cannot hand anyone access they lack',
       'Explain what "god mode" login access actually grants, and apply hard rules for what never gets it',
       'Name the beta limitations and the risks (UI drift, prompt injection, spam-at-scale) an operator must design around',
       'Decide, with reasons, whether the subscription earns its keep for a given practice or stays on the watchlist',
@@ -669,16 +670,16 @@ sampled weekly; three bad weeks triggers a charter review)`,
           'The capability jump the threads celebrate is authenticated action: the bot signs in as you and completes the workflow (send the email, update the CRM, book the call) rather than handing you a draft. That capability is where the payoff lives, and precisely where the risk lives, which is why the boundaries section of this lesson exists.',
       },
       {
-        q: 'Grok Bot pricing in mid-2026 runs roughly:',
+        q: 'What does Grok Bot cost as of September 2026?',
         options: [
-          '$20/month flat, matching frontier chat plans',
+          '$120-300/month, sold only with premium plans',
           'Free during beta',
-          '$120-300/month depending on tier, which is the number a value calculation has to beat',
+          'It comes with ordinary plans from about $20-30/month, with a weekly usage pool of unpublished size; past the pool, extra work bills by the token with no spend cap yet',
           '$0.10 per completed task',
         ],
         answer: 2,
         explain:
-          'The tiers span roughly $120 to $300 a month, several times a chat subscription. The comparison that makes it look cheap is a part-time human assistant; the comparison that makes it look expensive is your existing Claude setup plus scheduled tasks. The honest evaluation prices YOUR delegable hours, which is what the lab does.',
+          'The $120-300 range was the launch price on August 11, when only premium plans included it. On August 26 xAI folded it into every paid Cursor plan (from $20) and every SuperGrok plan (from $30). The entry fee got cheap and the meter got important: bots that run all day burn tokens all day, the weekly pool size is not published, and overage has no cap. The honest evaluation prices YOUR delegable hours against the plan plus the usage, which is what the lab does.',
       },
       {
         q: 'Which beta limitation do operators report most consistently?',
@@ -711,7 +712,7 @@ sampled weekly; three bad weeks triggers a charter review)`,
         blocks: [
           {
             type: 'text',
-            md: "Four of the loudest threads of August 2026 are about one product, so let's look at it squarely. **Grok Bot** is [xAI](https://x.ai)'s agent-workforce offering: persistent agents that live in xAI's cloud, run around the clock, connect to your actual tools, and execute multi-step workflows without you in the loop. Pricing runs roughly **$120 to $300 a month** by tier, and the whole thing carries a **beta** label that should stay in the front of your mind for everything that follows.\n\nPlace it on the harness map you have been building all course. Claude Code is an interactive harness: you drive, it works, sessions end. A Grok Bot agent is closer to the managed deep agent anatomy from [Agents, Harnesses & Loops · Graph Engineering](lesson:m2-l10): instructions, skills, tools, memory, schedules, and channels, hosted and always on. Nothing conceptually new is inside the box. What the product adds is packaging (templates, a consumer-grade setup flow) and one genuinely spicy capability we'll treat separately: authenticated access to your web apps.\n\nA disclosure before the tour: this lesson is pinned to August 2026 reporting from operators, because the product is moving fast and beta products change under you. Treat every specific below the way the half-life discipline taught you to treat model rankings: verify against the vendor's current docs before acting, and expect this page of the course to age faster than any other.",
+            md: "Four of the loudest threads of August 2026 are about one product, so let's look at it squarely. **Grok Bot** is [xAI](https://x.ai)'s agent-workforce offering: persistent agents that live in xAI's cloud, run around the clock, connect to your actual tools, and execute multi-step workflows without you in the loop. It launched on August 11 behind premium plans only, at $120 to $300 a month. Two weeks later xAI folded it into much cheaper ones: it now comes with every paid [Cursor](https://cursor.com) plan from **$20 a month** and every SuperGrok plan from **$30**. The catch sits in the usage. Each plan includes a weekly pool of bot work whose size isn't published, and past that pool, extra work bills by the token with no spend cap yet. So budget for the meter, because the sticker price now tells you very little about what a busy roster costs. The whole thing also carries a **beta** label that should stay in the front of your mind for everything that follows.\n\nPlace it on the harness map you have been building all course. Claude Code is an interactive harness: you drive, it works, sessions end. A Grok Bot agent is closer to the managed deep agent anatomy from [Agents, Harnesses & Loops · Graph Engineering](lesson:m2-l10): instructions, skills, tools, memory, schedules, and channels, hosted and always on. Nothing conceptually new is inside the box. What the product adds is packaging (templates, a consumer-grade setup flow) and one genuinely spicy capability we'll treat separately: authenticated access to your web apps.\n\nA disclosure before the tour: this lesson is pinned to August 2026 reporting from operators (pricing refreshed in late September 2026), because the product is moving fast and beta products change under you. Treat every specific below the way the half-life discipline taught you to treat model rankings: verify against the vendor's current docs before acting, and expect this page of the course to age faster than any other.",
           },
           {
             type: 'table',
@@ -722,7 +723,7 @@ sampled weekly; three bad weeks triggers a charter review)`,
               ['Strength', 'Deep work with you in the loop: code, analysis, writing', 'Volume ops without you: triage, research, outreach, logging'],
               ['Access model', 'Your filesystem + MCP tools you configure', 'Signs into web apps with real credentials; saved browser profiles'],
               ['Trust posture', 'You watch it work', 'You audit its outputs; monitoring is the job'],
-              ['Cost', 'Plan you already pay for', '$120-300/month on top'],
+              ['Cost', 'Plan you already pay for', 'Included from $20-30/month, then metered usage past a weekly pool, with no spend cap yet'],
             ],
           },
         ],
@@ -842,6 +843,128 @@ HANDOFFS
         ],
       },
       {
+        heading: 'Team Bots: one bot, a whole team talking to it',
+        blocks: [
+          {
+            type: 'text',
+            md: "Three weeks after the marketplace, on September 28, 2026, xAI shipped the other half of sharing. A template hands everyone their own copy. A **Team Bot** is one bot that a whole team works with at the same time. The [launch post](https://x.com/bot/status/2104661562715967548) calls them \"shared AI teammates that learn as your team works with them,\" and the [announcement](https://x.ai/news/team-bots) fills in the shape: you give the bot a role, then the skills, plugins, and credentials that role needs, and people work with it inside Grok Bot or in [Slack](https://slack.com), where it gets its own handle and can be invited into channels.\n\nHere's why the difference matters. When Priya installs your template, she gets a snapshot of your bot on the day she pressed Add. If you fix a bad skill next week, her copy never hears about it. With a Team Bot, Priya, Marcus, and you all talk to the same bot, so a fix to its shared skills reaches everyone on their next message. That's the move from handing out copies of a recipe to hiring one cook the whole office orders from.\n\nIt shipped as a public beta on the Teams and Enterprise plans. On [Cursor's pricing page](https://cursor.com/pricing) that means Teams at $40 a seat per month (a Premium tier runs about $120 a seat), Enterprise priced by quote, and a weekly bot usage pool with each seat. For a ten-person team on Standard that's $400 a month before any overage, which is the figure to carry into the verdict math later in this lesson.",
+          },
+          {
+            type: 'diagram',
+            caption: 'Left: a template copies the bot, and every copy drifts on its own. Right: a Team Bot keeps one shared layer that everybody draws on, with each person\'s conversations and memories walled off underneath it.',
+            svg: `<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect width="700" height="300" fill="#18181b" rx="8"/>
+
+  <text x="170" y="26" fill="#e4e4e7" font-size="13" font-weight="bold" text-anchor="middle">TEMPLATE (Sept 4): copies</text>
+  <rect x="95" y="40" width="150" height="40" fill="#27272a" stroke="#52525b" stroke-width="1.5" rx="8"/>
+  <text x="170" y="65" fill="#e4e4e7" font-size="11" text-anchor="middle">Author's bot</text>
+  <line x1="130" y1="80" x2="62" y2="120" stroke="#52525b" stroke-width="2"/>
+  <line x1="170" y1="80" x2="170" y2="120" stroke="#52525b" stroke-width="2"/>
+  <line x1="210" y1="80" x2="278" y2="120" stroke="#52525b" stroke-width="2"/>
+  <rect x="16" y="120" width="92" height="62" fill="#1f1f23" stroke="#3f3f46" stroke-width="1.5" rx="6"/>
+  <text x="62" y="140" fill="#e4e4e7" font-size="10" text-anchor="middle">Copy: you</text>
+  <text x="62" y="156" fill="#a1a1aa" font-size="9" text-anchor="middle">own skills</text>
+  <text x="62" y="170" fill="#a1a1aa" font-size="9" text-anchor="middle">own memory</text>
+  <rect x="124" y="120" width="92" height="62" fill="#1f1f23" stroke="#3f3f46" stroke-width="1.5" rx="6"/>
+  <text x="170" y="140" fill="#e4e4e7" font-size="10" text-anchor="middle">Copy: Priya</text>
+  <text x="170" y="156" fill="#a1a1aa" font-size="9" text-anchor="middle">own skills</text>
+  <text x="170" y="170" fill="#a1a1aa" font-size="9" text-anchor="middle">own memory</text>
+  <rect x="232" y="120" width="92" height="62" fill="#1f1f23" stroke="#3f3f46" stroke-width="1.5" rx="6"/>
+  <text x="278" y="140" fill="#e4e4e7" font-size="10" text-anchor="middle">Copy: Marcus</text>
+  <text x="278" y="156" fill="#a1a1aa" font-size="9" text-anchor="middle">own skills</text>
+  <text x="278" y="170" fill="#a1a1aa" font-size="9" text-anchor="middle">own memory</text>
+  <rect x="16" y="206" width="308" height="44" fill="#3f2a2a" stroke="#f87171" stroke-width="1" rx="6"/>
+  <text x="170" y="224" fill="#f87171" font-size="10" text-anchor="middle">A fix in one copy stays in that copy.</text>
+  <text x="170" y="240" fill="#f87171" font-size="10" text-anchor="middle">Three weeks later you have three different bots.</text>
+
+  <line x1="350" y1="20" x2="350" y2="280" stroke="#3f3f46" stroke-width="1" stroke-dasharray="4 4"/>
+
+  <text x="525" y="26" fill="#e4e4e7" font-size="13" font-weight="bold" text-anchor="middle">TEAM BOT (Sept 28): one bot</text>
+  <rect x="440" y="38" width="170" height="24" fill="#27272a" stroke="#52525b" stroke-width="1.5" rx="12"/>
+  <text x="525" y="54" fill="#a1a1aa" font-size="10" text-anchor="middle">Slack: #sales  @team-bot</text>
+  <line x1="525" y1="62" x2="525" y2="76" stroke="#52525b" stroke-width="2"/>
+  <rect x="376" y="76" width="298" height="70" fill="#27272a" stroke="#818cf8" stroke-width="2" rx="8"/>
+  <text x="525" y="96" fill="#818cf8" font-size="12" font-weight="bold" text-anchor="middle">SHARED LAYER (everyone draws on it)</text>
+  <text x="525" y="114" fill="#e4e4e7" font-size="10" text-anchor="middle">context: files, instructions, skills</text>
+  <text x="525" y="132" fill="#e4e4e7" font-size="10" text-anchor="middle">team-wide plugins and credentials</text>
+  <line x1="426" y1="146" x2="426" y2="166" stroke="#52525b" stroke-width="2"/>
+  <line x1="525" y1="146" x2="525" y2="166" stroke="#52525b" stroke-width="2"/>
+  <line x1="624" y1="146" x2="624" y2="166" stroke="#52525b" stroke-width="2"/>
+  <rect x="378" y="166" width="96" height="62" fill="#1f1f23" stroke="#3f3f46" stroke-width="1.5" rx="6"/>
+  <text x="426" y="186" fill="#e4e4e7" font-size="10" text-anchor="middle">You</text>
+  <text x="426" y="202" fill="#a1a1aa" font-size="9" text-anchor="middle">private chats</text>
+  <text x="426" y="216" fill="#a1a1aa" font-size="9" text-anchor="middle">private memory</text>
+  <rect x="477" y="166" width="96" height="62" fill="#1f1f23" stroke="#3f3f46" stroke-width="1.5" rx="6"/>
+  <text x="525" y="186" fill="#e4e4e7" font-size="10" text-anchor="middle">Priya</text>
+  <text x="525" y="202" fill="#a1a1aa" font-size="9" text-anchor="middle">private chats</text>
+  <text x="525" y="216" fill="#a1a1aa" font-size="9" text-anchor="middle">private memory</text>
+  <rect x="576" y="166" width="96" height="62" fill="#1f1f23" stroke="#3f3f46" stroke-width="1.5" rx="6"/>
+  <text x="624" y="186" fill="#e4e4e7" font-size="10" text-anchor="middle">Marcus</text>
+  <text x="624" y="202" fill="#a1a1aa" font-size="9" text-anchor="middle">private chats</text>
+  <text x="624" y="216" fill="#a1a1aa" font-size="9" text-anchor="middle">private memory</text>
+  <rect x="376" y="238" width="298" height="44" fill="#1f2a24" stroke="#4ade80" stroke-width="1" rx="6"/>
+  <text x="525" y="256" fill="#4ade80" font-size="10" text-anchor="middle">Fix a shared skill once and everyone gets it.</text>
+  <text x="525" y="272" fill="#4ade80" font-size="10" text-anchor="middle">A fix that lands in one person's memory does not travel.</text>
+</svg>`,
+          },
+          {
+            type: 'text',
+            md: "The announcement names four parts every Team Bot carries. Three of them you've met already in this lesson. The new question for each one is who it belongs to: the whole team, or the one person typing.",
+          },
+          {
+            type: 'table',
+            headers: ['Part', 'What goes in it', 'Shared or per person?', 'The decision you own'],
+            rows: [
+              ['Context', 'Files, instructions, and skills: brand guides, internal docs, the recorded playbooks', 'Shared. This is the team\'s common brain', 'What the team agrees is true. A wrong file here misleads everyone at once'],
+              ['Plugins', 'Connections to tools like Salesforce, Notion, and GitHub', 'Your choice: each person connects their own, or one team-wide connection', 'Whose account the bot uses when it reads or acts. The callout below is about this row'],
+              ['Credentials', 'API keys for apps with no plugin, entered through a masked secret request', 'Usually team-wide', 'How much power the key carries. Size it to the least trusted person who can talk to the bot'],
+              ['Memories', 'What it picks up while working: preferences, corrections, summaries of past work', 'Per person, and private', 'Which lessons deserve promoting into shared context, because memory alone will not spread them'],
+            ],
+          },
+          {
+            type: 'text',
+            md: "That last row hides a puzzle, and working through it will teach you how this product actually learns. The launch line promises a bot that \"learns as your team works with it.\" The same announcement also says the bot \"keeps separate context and memories for each user while drawing on the skills shared across the team.\" Both can be true, but only if the team-level learning travels through the shared skills and context. Memory stays with the person who taught it.\n\nWalk it through with the Data Bot, one of the four pre-built Team Bots. It answers data questions by querying the company's [data warehouse](https://en.wikipedia.org/wiki/Data_warehouse) (the central database where a company's analytics numbers live). On Monday, Priya asks for weekly active users and spots a mistake: the count includes the company's own test accounts. She corrects it, and the bot saves that correction to memory. On Tuesday, Marcus asks the same question from his own account. Going by the privacy statement, Marcus's memory holds nothing about test accounts, so he gets Monday's wrong number, stated with full confidence.\n\nThe announcement muddies this by saying the Data Bot \"retains query corrections to improve answers across the team,\" and the docs at launch don't say which mechanism wins. So don't guess; test it. Have one person correct the bot on something small and checkable, then have a colleague ask the same question from their own account the next day. If the colleague gets the corrected answer, corrections spread. If not, somebody has to own a weekly chore: read what the bot got corrected on, and promote the keepers into a shared skill or context file. That's the same climb as the ladder from the setup path (corrected task, then saved skill), with one extra rung for teams: a correction only counts for the team once it leaves one person's memory.\n\nThe docs add a warning worth taping to the monitor: stored memory \"can become stale and should not replace checking authoritative sources.\" A bot that remembers last quarter's pricing will quote it happily this quarter.",
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'A shared bot can become a way around permissions',
+            md: "Security people have a name for this failure: the [confused deputy](https://en.wikipedia.org/wiki/Confused_deputy_problem), a program holding more power than the person asking it for help, which then uses that power on the asker's behalf. Team Bots make it easy to build one by accident.\n\nHere's the walked version. A sales manager connects the Sales Bot's Salesforce plugin team-wide, using their own account, which can see every deal and every discount. The bot lives in the #sales channel. A new hire who isn't cleared to see discount approvals types \"what did we give Acme on renewal?\" The bot answers, because the manager's login can see it, and nothing in the question looked unusual.\n\nThree rules keep this from happening. Size every team-wide plugin and credential to the least trusted person who can reach the bot, including everyone in every channel you invite it to. Where access genuinely differs between people, have each person connect their own account so the bot inherits their permissions and nothing more. And copy the vendor's own Data Bot, which reaches the warehouse with **read-only** credentials, so the worst question anyone can ask still can't change a single row. One older rule still applies too: each member's bots share one cloud computer, so any login sitting on your computer is available to every bot you run, Team Bots included.",
+          },
+          {
+            type: 'text',
+            md: "The admin controls that make a shared bot governable come in two tiers, and the gap between them is worth knowing before you pitch this to a client. On self-serve Teams, everyone gets access by default and the controls are thin. The ones a security review will ask about are Enterprise-only: **audit logs** (a record of admin and security events), **Action Recording** (a record of what the bots actually did, and it ships switched off), **Enforce Auto-review** (so members can't turn off the approval step for risky actions), **network controls** (which sites the bot's computer may reach), and **Team Secrets** (encrypted keys that only setup scripts can read, so the bots never see them, capped at 100 per team). A five-person agency can live without those. A client with a compliance team can't, and that decides the plan before any feature does.",
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'Run the headline audit on the launch numbers',
+            md: "The launch post's proof points get the same three questions you ran on Haggle Bot. xAI says a five-person team coordinated hundreds of cloud coding agents and shipped more than 100 PRs (pull requests, the unit of a code change) a day while building Team Bots. A customer, Harper Insurance, is quoted automating policy reinstatements and \"saving our customers over $120,000 from hundreds of policies.\"\n\nRecurring or one-time? The insurance figure reads like a backlog cleared once. Measured by whom? The vendor, in its own launch post. And is the unit even the right one? A PR count measures activity, and a day of 100 small PRs can ship less than a day of three good ones. The capability underneath is believable: one shared bot coordinating many coding agents is the Loops pattern from the next section, scaled up. Treat the numbers as a demo and your own run log as the evidence.",
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'Share a template when',
+              items: [
+                'Each person should shape the bot around their own work',
+                'People sit in different companies, like handing a client or a peer your setup',
+                'Drift between copies is fine, or even the point',
+                'Nobody should inherit anybody else\'s connected accounts',
+              ],
+            },
+            right: {
+              title: 'Stand up a Team Bot when',
+              items: [
+                'A team does the same job and needs one agreed version of the facts',
+                'Fixes should reach everyone the moment you make them',
+                'Someone will own the weekly chore of promoting corrections into shared skills',
+                'You can size its plugins and credentials to the least trusted person who can reach it',
+              ],
+            },
+          },
+        ],
+      },
+      {
         heading: 'Eight templates, and the pattern under each one',
         blocks: [
           {
@@ -949,7 +1072,7 @@ HANDOFFS
         blocks: [
           {
             type: 'text',
-            md: "Does the subscription earn its keep? Run the same honest arithmetic you ran on the Mac-mini pitch in [Local Models · The Hardware Ladder & the Install Business](lesson:m4-l4), because the shape of the decision is identical: a seductive monthly number versus your actual workload.\n\nPrice your delegable hours first. List the back-stage work you would hand a competent part-time assistant, estimate the weekly hours, multiply by what your time bills at. A fractional CTO with six genuinely delegable hours a week clears the $300 tier several times over, IF the workforce actually absorbs those hours at acceptable quality, which is what the first month has to prove with the ClickUp log and the charter metrics rather than with vibes. Someone whose back-stage runs two hours a week of miscellaneous odds and ends will lose money on any tier and should stay with scheduled Claude tasks, which already cover the morning-brief class of routine for a plan they pay for anyway.\n\nAnd keep the through-line straight, because it outlives this product: the patterns are the durable asset, the vendor is an implementation detail. Charters, shared knowledge, routines, escalation rules, one metric per agent: those transfer to whatever platform wins, including one assembled from Claude Code parts. The feature-validation heuristic from the next lesson applies to the whole category: when multiple major labs ship native agent-workforce products, the primitive is durable even if any single product is not. You are learning the org design either way; the subscription is just one place to run it.",
+            md: "Does the subscription earn its keep? Run the same honest arithmetic you ran on the Mac-mini pitch in [Local Models · The Hardware Ladder & the Install Business](lesson:m4-l4), because the shape of the decision is identical: a seductive monthly number versus your actual workload.\n\nPrice your delegable hours first. List the back-stage work you would hand a competent part-time assistant, estimate the weekly hours, multiply by what your time bills at. Say you're a fractional CTO with six genuinely delegable hours a week, billing $150 an hour. That's about $3,900 a month of work you could hand off (6 hours × 4.33 weeks × $150). Against that, a $20 plan is a rounding error, which means the entry fee no longer decides anything.\n\nUsage decides it. Always-on bots burn tokens around the clock, one early tester reported using more tokens in a single month than in the five years before it, and the weekly pool's size is unpublished while overage has no cap. So month one has to track three numbers: hours the workforce actually absorbed at acceptable quality (the ClickUp log and the charter metrics, never vibes), on-demand spend past the weekly pool, and minutes you spent monitoring. If the overage line creeps toward what the hours are worth, the roster is doing low-value work or doing it wastefully, and the field manual's quota lessons (batch your syncs, don't re-fire a slow publish) are where to look first.\n\nSomeone whose back-stage runs two hours a week of odds and ends can now afford to try it, since the entry plan costs less than a lunch out. They should still expect scheduled Claude tasks to cover the same morning-brief class of routine on a plan they already pay for.\n\nAnd keep the through-line straight, because it outlives this product: the patterns are the durable asset, the vendor is an implementation detail. Charters, shared knowledge, routines, escalation rules, one metric per agent: those transfer to whatever platform wins, including one assembled from Claude Code parts. The feature-validation heuristic from the next lesson applies to the whole category: when multiple major labs ship native agent-workforce products, the primitive is durable even if any single product is not. You are learning the org design either way; the subscription is just one place to run it.",
           },
           {
             type: 'callout',
@@ -990,14 +1113,14 @@ HANDOFFS
         'Both paths: pick the ONE agent from your workforce design (previous lab) with the cleanest math, and finalize its charter.',
         'Path A (trial): set it up. Run the context interview, customize the template with your charter, connect the minimum tools, start ONE scheduled routine in draft-for-approval mode. Log every run and its quality for a week.',
         'Path B (shadow): implement the same routine with what you have: a scheduled Claude task reading your knowledge/ folder, producing the same deliverable on the same schedule. Log every run and its quality for a week.',
-        'Both paths: grade the week against the charter metric. Count: runs completed, outputs you actually used, outputs you had to fix, and minutes of monitoring spent.',
-        'Write the verdict: does the $120-300/month tier beat your bar, beat the shadow version, and survive the boundary rules? Subscribe, keep shadowing, or shelve with a re-check date. One paragraph, with the numbers in it.',
+        'Both paths: grade the week against the charter metric. Count: runs completed, outputs you actually used, outputs you had to fix, and minutes of monitoring spent. Path A also records usage: how much of the weekly pool the routine ate, and any on-demand charges past it.',
+        'Write the verdict: does the plan price plus a month of usage (the week\'s usage times 4.33) beat your bar, beat the shadow version, and survive the boundary rules? Subscribe, keep shadowing, or shelve with a re-check date. One paragraph, with the numbers in it.',
       ],
       checklist: [
         'Delegable-hours math exists: tasks, hours, rate, monthly value',
         'One charter finalized for the first-hire agent',
         'One routine ran on a schedule for a week (product or shadow), in draft/approval mode where outbound',
-        'Run log exists: completed, used, fixed, minutes monitored',
+        'Run log exists: completed, used, fixed, minutes monitored, and usage consumed',
         'Written verdict with numbers, a decision, and a re-check date',
       ],
     },
@@ -1039,7 +1162,7 @@ HANDOFFS
           'Screen-driving inherits the fragility of screens: the workflow encodes where things WERE. An API contract is versioned and errors are explicit, so failures surface in logs instead of as quietly wrong output. Teach-by-demonstration stays valuable for the long tail of tools without connectors; use it as the fallback, never the default.',
       },
       {
-        q: 'A colleague asks whether to spend $300/month on this. Per the lesson, your first question back is:',
+        q: 'A colleague asks whether to switch Grok Bot on, since it now comes with their $20 Cursor plan. Per the lesson, your first question back is:',
         options: [
           '"Which model does it run under the hood?"',
           '"What are your documented, delegable back-stage hours worth per month, and would this beat a scheduled-Claude shadow version of the same routines?"',
@@ -1048,7 +1171,7 @@ HANDOFFS
         ],
         answer: 1,
         explain:
-          'The evaluation is a bar to clear, and the bar is personal: the priced value of hours they can genuinely hand off, compared against both the subscription and the near-free shadow alternative they can run today. The posted week-one dashboards belong in the marketing pile; their own run log from a one-agent trial is the only number that decides anything.',
+          'The evaluation is a bar to clear, and the bar is personal: the priced value of hours they can genuinely hand off, compared against both the plan plus its metered usage and the near-free shadow alternative they can run today. A cheap entry fee changes none of that, because the usage meter is where an always-on roster spends money. The posted week-one dashboards belong in the marketing pile; their own run log from a one-agent trial is the only number that decides anything.',
       },
     ],
     resources: [
@@ -1068,6 +1191,9 @@ HANDOFFS
       { label: 'The Bot Marketplace: public templates, sorted by category', url: 'https://x.ai/bot/marketplace', kind: 'docs' },
       { label: 'Eight templates from an xAI engineer, with the outer-loop coding bot (Matt Palmer, Sept 1 2026)', url: 'https://x.com/mattyp/status/2094833468400447618', kind: 'thread' },
       { label: 'Haggle Bot: the vendor running procurement on itself, permission tiers printed', url: 'https://x.ai/news/grok-bot-procurement', kind: 'article' },
+      { label: 'The Team Bots launch post (Grok Bot, Sept 28 2026)', url: 'https://x.com/bot/status/2104661562715967548', kind: 'thread' },
+      { label: 'Team Bots announcement: the four parts, the four pre-built bots, and the privacy line', url: 'https://x.ai/news/team-bots', kind: 'article' },
+      { label: 'Grok Bot for teams and enterprises: admin controls, Team Secrets, and which ones are Enterprise-only', url: 'https://docs.x.ai/grok-bot/teams-and-enterprises', kind: 'docs' },
     ],
   },
 
