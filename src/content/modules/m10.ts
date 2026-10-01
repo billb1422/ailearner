@@ -1868,4 +1868,408 @@ forbidden:
       { label: 'From Agent Behaviour to Agent-Friendly Documentation (what agents actually read)', url: 'https://arxiv.org/abs/2608.20195', kind: 'article' },
     ],
   },
+  // ────────────────────────────────────────────────────────────
+  // m10-l5: Prompting Fable 5.1 (goals over scripts) + the cross-vendor picture
+  // ────────────────────────────────────────────────────────────
+  {
+    id: 'm10-l5',
+    title: 'Goals Over Scripts: Prompting Fable and the New Frontier Models',
+    day: 24,
+    minutes: 60,
+    xp: 130,
+    objectives: [
+      'Check the four claims in "Fable is 2.5x Opus, runs for minutes, and hates prescriptive prompts" against the official guidance',
+      'Explain why a more capable model can produce worse work from a more detailed prompt, with the mechanism in plain English',
+      'Rewrite a step-by-step prompt into goal, context, constraints, and a definition of done, and say what happened to every deleted line',
+      'Compare what Anthropic, OpenAI, Google, and xAI each say about prompting their newest reasoning models, including where they disagree',
+      'Name the cases where prescriptive prompting still wins, and run a de-prescribing pass as an A/B test instead of a leap of faith',
+    ],
+    skipQuiz: [
+      {
+        q: 'As of October 2026, Claude Fable 5.1 costs $10 per million input tokens and $50 per million output. How does that compare to Claude Opus 5.5?',
+        options: [
+          'About the same; Fable is a rename of Opus',
+          'Exactly 2.5x, because Opus 5.5 runs $4 in and $20 out',
+          'Exactly 2x, because Opus 5.5 runs $5 in and $25 out',
+          '10x, because Opus 5.5 runs $1 in and $5 out',
+        ],
+        answer: 1,
+        explain:
+          'Opus 5.5 dropped to $4/$20, so Fable 5.1 at $10/$50 is 2.5x on both sides. Against the older Opus 5 ($5/$25) the gap was 2x, which is why you will see both numbers quoted.',
+      },
+      {
+        q: 'Anthropic says prompts written for earlier models often reduce Fable 5.1\'s output quality. The main reason:',
+        options: [
+          'Fable has a smaller context window, so long prompts get truncated',
+          'Fable ignores system prompts longer than a page',
+          'Fable follows instructions closely and literally, so a hand-written step list replaces its own plan, which is usually better',
+          'Older prompts use a deprecated message format',
+        ],
+        answer: 2,
+        explain:
+          'The model does what the script says, including the parts that were only there to prop up a weaker model. Its own plan for the task is usually better than the author\'s, so a rigid script drags quality down toward the script.',
+      },
+      {
+        q: 'You are cutting a long prompt down for Fable. Which line should definitely survive?',
+        options: [
+          '"Think step by step before answering."',
+          '"IMPORTANT: Be thorough. Do not be lazy. Do not stop early."',
+          '"Our readers are hospital pharmacists, so flag any dose where the unit is ambiguous."',
+          '"STEP 1: Read the whole document. STEP 2: Read it again."',
+        ],
+        answer: 2,
+        explain:
+          'The pharmacist line is context only you know: who the audience is and what failure would hurt them. The other three are method or pressure that the model already handles on its own.',
+      },
+      {
+        q: 'What should replace "think step by step" in a prompt sent to Fable 5.1?',
+        options: [
+          'Nothing in the prompt. Thinking is always on, and the effort setting controls how deep it goes',
+          'A <scratchpad> tag the model fills before answering',
+          'The phrase "take a deep breath and think harder"',
+          'A required "Reasoning:" section in the output',
+        ],
+        answer: 0,
+        explain:
+          'Fable thinks on every request, and you control depth through the `effort` parameter (low through max). Asking for visible reasoning in the output can even trip a refusal on the newest Claude models.',
+      },
+      {
+        q: 'Where does a detailed, prescriptive prompt still beat a goal-style prompt?',
+        options: [
+          'Open-ended design work on a frontier model',
+          'A strict output format that your code parses, or a small local model like a 27B Qwen',
+          'Anywhere the task is important',
+          'Nowhere; prescriptive prompting is obsolete everywhere',
+        ],
+        answer: 1,
+        explain:
+          'Contracts that code depends on (exact JSON fields, a return block an orchestrator reads) stay exact. Smaller models also still benefit from more scaffolding, because the "its own plan is better" assumption gets weaker as the model gets smaller.',
+      },
+    ],
+    sections: [
+      {
+        heading: 'The claim you heard, checked line by line',
+        blocks: [
+          {
+            type: 'text',
+            md: "Someone told you: Fable 5.1 is the top tier, it costs $10/$50, that's 2.5x Opus, single turns can run for many minutes, and prompts written for earlier models often make its output worse because they're too prescriptive. Every one of those claims traces back to Anthropic's own model guidance, so before learning *why*, confirm *what*.\n\nTwo quick definitions first. **Prescriptive** means the prompt tells the model *how* to do the work (do step 1, then step 2, never do X) instead of *what* the work is for and what counts as done. A **turn** is one request to the model and its one response; in an agent, a single turn can include dozens of tool calls before the model hands control back.",
+          },
+          {
+            type: 'table',
+            headers: ['Claim', 'Verdict', 'What the source says'],
+            rows: [
+              ['Fable 5.1 is the top tier', '**True**', "Anthropic's most capable widely released model, aimed at the hardest reasoning and long-horizon agent work. Opus 5.5 stays the default for everyday use."],
+              ['$10 in / $50 out per million tokens', '**True**', 'Same price as Fable 5. Same 1M-token context window, up to 128K output tokens per request.'],
+              ['2.5x Opus', '**True for Opus 5.5**', 'Opus 5.5 is $4/$20, so the ratio is exactly 2.5x. Against the older Opus 5 ($5/$25) it was 2x.'],
+              ['Single turns run many minutes', '**True**', 'A 15-minute single request is described as normal when the task involves gathering context, building, and checking its own work. Plan timeouts, streaming, and progress indicators.'],
+              ['Old prompts reduce its quality', '**True, and stated directly**', 'Prompts and skills written for prior models are often too prescriptive and *reduce* output quality. The advice: A/B test with the old step-by-step scaffolding removed, and state goals and constraints instead of steps.'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'The one-sentence version',
+            md: "Anthropic's migration guide boils it down to this: prefer stating the goal and constraints over enumerating the steps. The rest of this lesson unpacks why that works, what it looks like on a real prompt, and where it stops being true.",
+          },
+        ],
+      },
+      {
+        heading: 'Why more instructions can make a smarter model worse',
+        blocks: [
+          {
+            type: 'text',
+            md: "This feels backwards at first. More detail should help, right? It did, for years, and that history explains the problem.\n\nEarly models were weak planners and loose instruction-followers. If you wanted a careful code review, you had to spell out the steps, shout the important parts in capitals, and add lines like 'be thorough, do not stop early' because the model genuinely would cut corners. That scaffolding was load-bearing. It propped up skills the model didn't have.\n\nTwo things changed. First, the newest models plan well on their own. Fable 5.1 thinks before every answer (thinking is always on and can't be switched off), so it already works out a method for your task. Second, current models follow instructions **closely and literally**. Anthropic's prompt-audit guidance says it plainly: specific outdated instructions left over from older models actively degrade behavior, on top of wasting tokens.\n\nPut those together and you get the failure. Your seven-step script collides with the model's own plan, and the model obeys the script, because obeying instructions is what it was trained hardest to do. You've swapped a good plan for an older, cruder one.",
+          },
+          {
+            type: 'table',
+            headers: ['Old habit', 'Why it was added', 'What it does to Fable'],
+            rows: [
+              ['`STEP 1 ... STEP 7` for a judgment task', 'Old models planned poorly', "Replaces the model's plan with yours. Quality falls toward the script."],
+              ['`CRITICAL: You MUST...` on many rules', 'Old models under-weighted instructions', 'Over-triggering and rigid behavior. When nine rules are all critical, the word stops carrying information.'],
+              ['"Be thorough. Do not be lazy."', 'Old models quit early', 'Nudges it to over-deliver: extra sections, extra tests, unrequested cleanup.'],
+              ['"Think step by step"', 'Old models had no thinking mode', 'Redundant. Thinking is always on; the `effort` setting controls depth.'],
+              ['Long lists of "never do X"', 'Each one patched one incident', "Can anchor the model toward the very failure it names, and it was never going to make most of them."],
+              ['One perfect example output', 'Old models needed a template', 'The model copies its length, tone, and structure, freezing an old style into the new model.'],
+            ],
+          },
+          {
+            type: 'diagram',
+            svg: `<svg viewBox="0 0 700 330" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif"><text x="350" y="26" fill="#e4e4e7" font-size="16" font-weight="bold" text-anchor="middle">How much scaffolding helps depends on the model</text><line x1="80" y1="270" x2="640" y2="270" stroke="#71717a" stroke-width="1.5"/><line x1="80" y1="270" x2="80" y2="50" stroke="#71717a" stroke-width="1.5"/><text x="360" y="300" fill="#a1a1aa" font-size="13" text-anchor="middle">How prescriptive the prompt is: goal only → full step-by-step script</text><text x="40" y="160" fill="#a1a1aa" font-size="13" text-anchor="middle" transform="rotate(-90 40 160)">Output quality</text><path d="M 90 240 C 250 200 420 140 630 100" fill="none" stroke="#fbbf24" stroke-width="3"/><text x="630" y="62" fill="#fbbf24" font-size="13" font-weight="bold" text-anchor="end">small or older model</text><text x="630" y="80" fill="#fbbf24" font-size="12" text-anchor="end">keeps gaining from steps</text><path d="M 90 120 C 200 70 300 70 380 95 C 470 125 560 175 630 205" fill="none" stroke="#a78bfa" stroke-width="3"/><text x="240" y="62" fill="#a78bfa" font-size="13" font-weight="bold" text-anchor="middle">frontier model (Fable 5.1)</text><circle cx="270" cy="72" r="6" fill="#34d399"/><line x1="270" y1="78" x2="250" y2="138" stroke="#34d399" stroke-width="1" stroke-dasharray="3 3"/><text x="250" y="154" fill="#34d399" font-size="12" text-anchor="middle">sweet spot: goal, context,</text><text x="250" y="170" fill="#34d399" font-size="12" text-anchor="middle">constraints, definition of done</text><text x="560" y="230" fill="#a78bfa" font-size="12" text-anchor="middle">past here, the script beats its plan</text></svg>`,
+            caption: 'An illustrative shape, not measured data. The frontier model peaks early and declines as the script takes over; a small model keeps benefiting from more structure.',
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'An analogy that holds up',
+            md: "Hand a junior contractor a seven-page checklist and you'll get better work than if you'd said 'fix the bathroom.' Hand the same checklist to a master electrician and you'll get worse work, because now they're following your wiring order instead of theirs. What the master needs from you is everything they *can't* know: the budget, who lives there, that the toddler opens every cabinet, and what 'finished' looks like.",
+          },
+        ],
+      },
+      {
+        heading: 'A walked example: de-prescribing a code-review prompt',
+        blocks: [
+          {
+            type: 'text',
+            md: "Here's a prompt in the style most of us wrote in 2024 and 2025. Read it, then look at the rewrite, then walk through what happened to each line.",
+          },
+          {
+            type: 'code',
+            lang: 'text',
+            code: `You are an expert code reviewer. IMPORTANT: You MUST follow
+these steps EXACTLY.
+STEP 1: Read every file in the diff carefully.
+STEP 2: Think step by step about each function.
+STEP 3: List ALL possible bugs.
+STEP 4: Rate each bug's severity from 1 to 10.
+STEP 5: NEVER comment on style.
+STEP 6: Be thorough. Do not be lazy. Do not stop early.
+STEP 7: Output a numbered list.`,
+            caption: 'Before: written for a model that needed propping up.',
+          },
+          {
+            type: 'code',
+            lang: 'text',
+            code: `Review this diff before it merges into our payments service.
+Two people own this code, and the risk that keeps them up at night
+is money moving twice or not at all, so correctness and idempotency
+(running the same request twice has the same effect as once) matter
+far more than anything else.
+
+Report bugs that would change behavior in production, most severe
+first. For each one give the file and line and an input that would
+trigger it. Skip style and naming; our linter already covers those.
+If you find nothing serious, say so in one line.`,
+            caption: 'After: about the same length. The words moved from method to context.',
+          },
+          {
+            type: 'table',
+            headers: ['Original line', 'What happened', 'Why'],
+            rows: [
+              ['MUST follow these steps EXACTLY', 'Deleted', 'Pressure language. It tells the model to prefer your script over its judgment, which is the exact trade you don\'t want.'],
+              ['STEP 1: Read every file', 'Deleted', 'It reads the diff anyway. Telling it to is noise.'],
+              ['STEP 2: Think step by step', 'Deleted', 'Thinking is always on. If reviews come back shallow, raise `effort` instead of adding prose.'],
+              ['STEP 3: List ALL possible bugs', 'Rewritten as a quality bar', 'Read literally, "all possible" invites speculative padding. "Bugs that would change behavior in production" says what counts.'],
+              ['STEP 4: Severity 1 to 10', 'Rewritten as an ordering', 'A 1-10 score is fake precision the model has to invent. "Most severe first" gets you the useful part.'],
+              ['STEP 5: NEVER comment on style', 'Kept, with the reason', 'A real constraint. Adding "the linter covers those" lets the model handle the gray areas sensibly.'],
+              ['STEP 6: Be thorough, not lazy', 'Deleted', 'Current models are proactive by default. This line pushes toward over-delivery.'],
+              ['STEP 7: Numbered list', 'Kept as a loose format', 'Fine to keep. If code parses the output, use structured outputs (a JSON schema the API enforces) instead.'],
+              ['(nothing)', 'Added: payments, two owners, idempotency, the linter', 'Context the model could never guess. This is the part that actually changes the review.'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'De-prescribing is a different job from shortening',
+            md: "The rewrite above is roughly as long as the original. A naive 'make it shorter' pass would have deleted the payments context, which is the most valuable sentence in the prompt. Anthropic's audit guidance frames the test as *could the model already know this?* Keep everything only you know (audience, product, environment, quality bar, reasons behind constraints). Test and cut the rest.",
+          },
+          {
+            type: 'diagram',
+            svg: `<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif"><defs><marker id="m10l5arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#a1a1aa"/></marker></defs><text x="350" y="26" fill="#e4e4e7" font-size="16" font-weight="bold" text-anchor="middle">Sorting one line of a prompt</text><rect x="240" y="44" width="220" height="40" rx="8" fill="#27272a" stroke="#52525b"/><text x="350" y="69" fill="#e4e4e7" font-size="13" text-anchor="middle">a line from your prompt</text><line x1="350" y1="84" x2="350" y2="108" stroke="#a1a1aa" stroke-width="2" marker-end="url(#m10l5arr)"/><rect x="190" y="110" width="320" height="44" rx="8" fill="#27272a" stroke="#38bdf8" stroke-width="2"/><text x="350" y="137" fill="#38bdf8" font-size="13" font-weight="bold" text-anchor="middle">Could the model already know this?</text><line x1="270" y1="154" x2="150" y2="190" stroke="#a1a1aa" stroke-width="2" marker-end="url(#m10l5arr)"/><line x1="430" y1="154" x2="550" y2="190" stroke="#a1a1aa" stroke-width="2" marker-end="url(#m10l5arr)"/><text x="190" y="178" fill="#a1a1aa" font-size="12" text-anchor="end">no</text><text x="510" y="178" fill="#a1a1aa" font-size="12">yes</text><rect x="30" y="194" width="250" height="90" rx="8" fill="#27272a" stroke="#34d399" stroke-width="2"/><text x="155" y="218" fill="#34d399" font-size="14" font-weight="bold" text-anchor="middle">KEEP</text><text x="155" y="240" fill="#e4e4e7" font-size="12" text-anchor="middle">audience, product, environment,</text><text x="155" y="258" fill="#e4e4e7" font-size="12" text-anchor="middle">quality bar, reasons, contracts</text><text x="155" y="276" fill="#a1a1aa" font-size="12" text-anchor="middle">that code depends on</text><rect x="420" y="194" width="250" height="90" rx="8" fill="#27272a" stroke="#f472b6" stroke-width="2"/><text x="545" y="218" fill="#f472b6" font-size="14" font-weight="bold" text-anchor="middle">TEST, THEN CUT</text><text x="545" y="240" fill="#e4e4e7" font-size="12" text-anchor="middle">step choreography, CAPS emphasis,</text><text x="545" y="258" fill="#e4e4e7" font-size="12" text-anchor="middle">"think step by step", "be thorough",</text><text x="545" y="276" fill="#a1a1aa" font-size="12" text-anchor="middle">strategy tips, generic virtues</text></svg>`,
+            caption: "One question sorts most lines. The right-hand pile gets removed one block at a time and re-tested, never all at once.",
+          },
+        ],
+      },
+      {
+        heading: 'What to write instead',
+        blocks: [
+          {
+            type: 'text',
+            md: "If you took [Mental Models · Prompting That Actually Works](lesson:m0-l3), the skeleton there still holds: role, context, constraints, and acceptance criteria you can check. What changes on Fable is the balance. Spend your words on the parts the model can't supply and almost none on method.\n\nAnthropic's guidance for Fable adds one move that pays off more than any other: **give the reason, not just the request**. The model does better when it knows the larger task and who the output is for, because it can connect your request to relevant information instead of guessing at your intent. Their suggested shape is short enough to memorize.",
+          },
+          {
+            type: 'code',
+            lang: 'text',
+            code: `I'm working on [the larger task] for [who it's for].
+They need [what the output enables].
+With that in mind: [request].`,
+            caption: "Anthropic's \"give the reason\" template for Fable 5.1, lightly trimmed.",
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'Spend words here',
+              items: [
+                'The goal and who the output serves',
+                'Facts about your environment it cannot see',
+                'The one or two constraints that really matter, each with its reason',
+                'What done looks like, in terms you could check',
+                'What it should NOT touch (boundaries)',
+              ],
+            },
+            right: {
+              title: 'Stop spending words here',
+              items: [
+                'Numbered steps for judgment work',
+                'Capital letters and "CRITICAL" markers',
+                'Exhortations: thorough, careful, not lazy',
+                '"Think step by step" and scratchpad tags',
+                'Tips on how you would approach it',
+              ],
+            },
+          },
+          {
+            type: 'text',
+            md: "That last item on the left deserves its own paragraph. Fable sometimes takes actions that are adjacent to what you asked but not requested: saving an email straight to drafts, creating a backup git branch, tidying code near the bug it fixed. Anthropic's fix is to state boundaries explicitly. A useful line from their guidance: when you're describing a problem or thinking out loud rather than asking for a change, the deliverable is its assessment, so it should report and stop. Boundaries are one of the few places where a plain 'don't' still belongs in the prompt, because they describe *your* system, which the model can't infer.",
+          },
+        ],
+      },
+      {
+        heading: 'Fable-specific habits worth knowing',
+        blocks: [
+          {
+            type: 'text',
+            md: "Beyond the general shift, Anthropic's migration notes for Fable 5.1 list behaviors that show up in practice. None of them break anything; each is a small prompt or settings adjustment. The pattern underneath them is consistent: describe the behavior you want, briefly, and let the model handle the method.",
+          },
+          {
+            type: 'table',
+            headers: ['What you will notice', 'What to do'],
+            rows: [
+              ['Turns that run 5 to 15 minutes', 'Stream the response, raise timeouts, show progress, and design callers to check in on runs instead of blocking.'],
+              ['High cost on routine work', 'Lower `effort`. Anthropic reports that Fable at `low` often beats earlier models running at their top settings. Start at `high`, step down where quality holds.'],
+              ['Extra refactoring or features you did not ask for', 'One short line: no features, refactors, or abstractions beyond what the task needs.'],
+              ['Confident progress reports on long runs', 'Ask it to check each claim against a tool result before reporting, and to say plainly what isn\'t verified yet.'],
+              ['Stopping at "Next, I\'ll run X" without running it', 'For unattended runs, say the user is not watching and reversible steps that follow from the request should just happen.'],
+              ['Fewer bullets and less bold than older models', 'Delete old anti-formatting rules ("no bullet points") that were written to tame earlier models.'],
+              ['Rewriting a whole file for a one-line fix', 'Ask for surgical edits when that gives the same result.'],
+              ['Dense prose late in long sessions', 'Ask for a final summary written for a reader who saw none of the work: outcome first, plain terms.'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'Notice the irony',
+            md: "Some of Anthropic's own suggested snippets for Fable run a full paragraph. That squares with everything above, because those paragraphs describe a *behavior and its reason* (\"the user is not watching, so asking 'Shall I...?' blocks the work\") rather than a sequence of steps. What those paragraphs leave out is choreography: no numbered steps, no fixed order of work.",
+          },
+        ],
+      },
+      {
+        heading: 'Does this hold for OpenAI, Google, and xAI too?',
+        blocks: [
+          {
+            type: 'text',
+            md: "Mostly yes, with real differences in emphasis. The three big Western labs now give strikingly similar advice for their reasoning models, and the fourth (xAI) mostly stays quiet on prose and talks about settings instead. Here's what each one's official docs say as of early October 2026.\n\n**OpenAI** is the most outspoken. Its reasoning-model guide says asking for step-by-step thinking is unnecessary and to avoid chain-of-thought prompts (**chain-of-thought** means telling the model to write out its reasoning before answering). The GPT-5 guide adds the sharpest warning of any vendor: because GPT-5 follows instructions with what OpenAI calls surgical precision, contradictory or vague instructions do *more* damage than before, and the old 'maximize thoroughness' language became counterproductive. The GPT-5.5 guidance puts the whole idea in five words: \"Describe the destination rather than every step.\" It also says legacy prompts often over-specify the process, and suggests decision rules instead of ALWAYS/NEVER for judgment calls. The GPT-6 family (Astra, Sol, Luna, released in September) now appears on the same guidance page.\n\n**Google** says Gemini 3 responds best to direct, clear instructions and may over-analyze the elaborate prompting techniques written for older models. Its prompting page asks you to state your goal clearly and concisely and to skip persuasive language. Google also strongly recommends leaving temperature at its default of 1.0 and setting depth with a `thinking_level` parameter. One difference: Google still says a short 'think very hard' nudge can help, at the cost of more thinking tokens.\n\n**xAI** has the thinnest guidance. Grok 4.7's reasoning can't be turned off, depth comes from a `reasoning_effort` setting that defaults to high, and some older sampling parameters now return errors. Its earlier prompt guide for its coding model leaned toward *more* explicitness (hand it the relevant code, set clear goals, mark sections with tags), and that page now returns a 404. No current xAI page argues against capital letters or step lists the way OpenAI and Anthropic do.\n\n**Open-weight models** like Qwen still officially recommend step-by-step phrasing and fixed answer templates for math and multiple choice. That's the small-model end of the curve from earlier in this lesson, written into a model card.",
+          },
+          {
+            type: 'table',
+            headers: ['Vendor', 'Prompting advice', 'Where depth is set', 'Notable difference'],
+            rows: [
+              ["Anthropic (Fable 5.1, Opus 5.5)", "Goals and constraints over steps; give the reason; dial back aggressive language", "`effort` (low to max); thinking always on for Fable", "Pairs \"less prescriptive\" with \"more explicit about intent\"; advice varies most model to model"],
+              ["OpenAI (GPT-5.x, GPT-6)", "Describe the destination; no hand-written chain-of-thought; avoid contradictions", "`reasoning_effort` plus a `verbosity` setting for answer length", "Most explicit that contradictions hurt more; still uses capitals for hard scope limits"],
+              ["Google (Gemini 3.x)", "Be concise and direct; drop elaborate old techniques", "`thinking_level`; keep temperature at 1.0", "Still allows a brief \"think very hard\" nudge"],
+              ["xAI (Grok 4.7)", "Little prose guidance; older coding guide favored explicit context", "`reasoning_effort`, default high; reasoning cannot be disabled", "Thinnest docs; mostly about parameters"],
+              ["Open-weight (Qwen and similar)", "Step-by-step phrasing and fixed answer templates still recommended", "Sampling settings in the model card", "The scaffolding still pays off at this size"],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'The cross-vendor rule',
+            md: "Across all four labs, the reasoning moved out of your prompt and into a setting. You choose how hard the model thinks with an effort or thinking-level parameter, and you spend your words on the goal, the context, and the constraints. What got *more* important is consistency: a model that follows instructions literally will faithfully act out a contradiction in your prompt, so one clear sentence beats three overlapping rules.",
+          },
+        ],
+      },
+      {
+        heading: 'Where prescriptive still wins',
+        blocks: [
+          {
+            type: 'text',
+            md: "Goals over scripts is a default, and defaults have edges. Keep the detailed version in these five cases.\n\n**Contracts that code reads.** If an orchestrator parses the model's return block, or a downstream script expects exact JSON fields, that format is a contract and stays exact. Better still, move it out of prose into **structured outputs** (you hand the API a JSON schema and it guarantees the response matches). Prose instructions like 'output ONLY valid JSON' are the old way of doing this.\n\n**Order that truly matters.** 'Commit the failing test before the code' is a numbered step for a reason: the order *is* the requirement. Keep steps where swapping them would break the result.\n\n**Safety boundaries.** 'Never run commands outside the worktree' and 'nothing financial without approval' describe hard limits of your system. State them plainly, with the reason, and back them with a hook or permission rule where you can (see [Claude Code Mastery · Hooks: Deterministic Control](lesson:m1-l5)).\n\n**Smaller and local models.** The 'its own plan is better' argument weakens as the model gets smaller. A 27B open-weight model on your Mac mini still gains from explicit steps and a worked example, which is why the curve for small models in the diagram keeps climbing.\n\n**Anything your evals say helps.** If removing a line makes measured results worse, the line stays, whatever the guidance says. The guidance is a starting hypothesis for your workload.",
+          },
+        ],
+      },
+      {
+        heading: 'Migrating a prompt without guessing',
+        blocks: [
+          {
+            type: 'text',
+            md: "Anthropic's advice is phrased as an experiment for a reason: *A/B the workload with the old scaffolding removed.* An **A/B test** here means running the same set of real tasks through both versions of the prompt and comparing results, instead of trusting that the new one feels better. Here's the loop.\n\n- **Collect 5 to 10 real tasks** the prompt handles, with what a good result looks like for each.\n- **Run the current prompt** on all of them and record results, time, and cost.\n- **Sort every line** with the 'could the model already know this?' question from the diagram above.\n- **Remove one block at a time** from the test-then-cut pile, re-run, and keep the removal only if results hold or improve.\n- **Add the context you were missing** (audience, reasons, boundaries) and re-run once more.\n- **Sweep `effort`** last, since a de-prescribed prompt often does as well at a lower setting, which is where the money comes back.\n\nIf you'd rather start from a report than a blank page, the Claude API skill in Claude Code ships an audit command (`/claude-api prompt-audit`). It inventories your prompts, skills, and agent files, flags dated patterns with file and line, and proposes a diff without applying it. Treat its output the same way you'd treat any config you didn't write ([Bonus: Field Notes · Borrowed Setups: Harvesting Configs You Did Not Write](lesson:m10-l3)): read every line before accepting.",
+          },
+        ],
+      },
+    ],
+    lab: {
+      title: 'De-prescribe one forge agent and measure it',
+      intro:
+        "Forge, your spec-driven delivery plugin, is a good test bed: its agents are long numbered procedures with exact return formats, written in the Opus era. Some of that is load-bearing contract and some is method. Sort them, cut the method, and see whether a real spec comes out better, worse, or the same.",
+      steps: [
+        'Pick one forge agent that does judgment work, for example `plugins/forge/agents/peer-reviewer.md` or `architect.md`. Copy it to a scratch branch.',
+        "Highlight every line in one of three colors: **contract** (the orchestrator parses it, or order truly matters, like commit-the-failing-test-first), **context** (facts about the project or the reason behind a rule), and **method** (how to think or what order to look at things).",
+        'Count each color and write the three numbers down before changing anything.',
+        "Rewrite only the method lines: replace each run of steps with one or two sentences stating the goal, the quality bar, and what done looks like. Leave every contract line byte-for-byte. Keep every context line.",
+        'Run the original and the rewrite on the same two or three closed specs from forge\'s retro ledger, on the same model and effort.',
+        "Compare the outputs side by side: findings caught, false alarms, length, wall-clock time, and token cost. Note anything the rewrite did that you didn't ask for.",
+        "Optional: run `/claude-api prompt-audit` on the original file and compare its findings to your own sort. Where did you disagree, and who was right?",
+        'Keep the rewrite only if it held or improved on every spec; otherwise restore the lines that mattered and record which ones they were.',
+      ],
+      checklist: [
+        'Every line of one agent file sorted into contract, context, or method, with the counts recorded',
+        'Contract lines left untouched in the rewrite',
+        'Both versions run on the same specs, same model, same effort',
+        'A side-by-side comparison written down covering quality, length, time, and cost',
+        'A keep-or-revert decision made from the comparison, with at least one sentence on why',
+      ],
+    },
+    checkQuiz: [
+      {
+        q: 'You move a working prompt from an older model to Fable 5.1 and the output gets worse. What should you try first?',
+        options: [
+          'Add more steps so the model knows exactly what to do',
+          'Put the key rules in capital letters',
+          'Remove the old step-by-step scaffolding one block at a time and re-run the same tasks, keeping each removal only if results hold',
+          'Switch back to the older model permanently',
+        ],
+        answer: 2,
+        explain:
+          "That's Anthropic's own recommendation: A/B the workload with prior-model scaffolding removed. One block at a time tells you which lines were load-bearing and which were dragging the model toward an older plan.",
+      },
+      {
+        q: 'A system prompt marks nine different rules as "CRITICAL: You MUST." What happens on a current frontier model?',
+        options: [
+          'Nothing; models ignore capital letters',
+          'The markers stop carrying information, and the rules tend to over-trigger, making behavior rigid in gray areas',
+          'The model refuses to answer',
+          'Only the first critical rule is followed',
+        ],
+        answer: 1,
+        explain:
+          'Current models are highly responsive to the system prompt, so emphasis that once compensated for weak instruction-following now over-applies. When everything is critical, nothing stands out, and the prompt\'s anxious register leaks into the output.',
+      },
+      {
+        q: 'Your Fable 5.1 agent request takes 12 minutes and your HTTP client times out. What is the right response?',
+        options: [
+          'Add "respond quickly" to the prompt',
+          'Stream the response, raise timeouts, design callers to check in asynchronously, and lower effort if the task is routine',
+          'Disable thinking for that request',
+          'Split the prompt into 12 one-minute prompts',
+        ],
+        answer: 1,
+        explain:
+          "Long single turns are expected behavior on hard tasks. Thinking can't be disabled on Fable 5.1, and prose doesn't control speed well. Infrastructure (streaming, timeouts, async) handles the wait, and `effort` controls how much work it does.",
+      },
+      {
+        q: 'Which statement about cross-vendor prompting guidance is accurate?',
+        options: [
+          'Only Anthropic recommends less prescriptive prompts; OpenAI wants more detail',
+          'All four labs say prompts no longer matter',
+          'The labs broadly agree to drop hand-written chain-of-thought and shouting for reasoning models, while still asking for clear goals, context, and constraints, and they warn that contradictions hurt more now',
+          'Google requires a step-by-step format for Gemini',
+        ],
+        answer: 2,
+        explain:
+          'The common thread is: let the model reason on its own, and spend your words on clarity of goal and constraints. Several vendors stress that precise instruction-following makes contradictory or sloppy instructions more costly than before.',
+      },
+    ],
+    resources: [
+      { label: 'Anthropic docs: Prompting best practices (dial back aggressive language, general over prescriptive)', url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices', kind: 'docs' },
+      { label: 'Anthropic docs: Prompting Claude Fable (skills for prior models are often too prescriptive)', url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5', kind: 'docs' },
+      { label: 'Anthropic docs: Models overview and pricing', url: 'https://platform.claude.com/docs/en/about-claude/models/overview', kind: 'docs' },
+      { label: 'Anthropic engineering: Effective context engineering for AI agents', url: 'https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents', kind: 'article' },
+      { label: "OpenAI: Reasoning best practices", url: "https://developers.openai.com/api/docs/guides/reasoning-best-practices", kind: 'docs' },
+      { label: "OpenAI Cookbook: GPT-5 prompting guide (surgical precision, contradictions)", url: "https://developers.openai.com/cookbook/examples/gpt-5/gpt-5_prompting_guide", kind: 'docs' },
+      { label: "OpenAI: Prompt guidance for GPT-5.5 and later (describe the destination)", url: "https://developers.openai.com/api/docs/guides/prompt-guidance?model=gpt-5.5", kind: 'docs' },
+      { label: "Google: Gemini 3 developer guide (concise prompts, temperature 1.0, thinking_level)", url: "https://ai.google.dev/gemini-api/docs/gemini-3", kind: 'docs' },
+      { label: "Google: Gemini prompting strategies", url: "https://ai.google.dev/gemini-api/docs/prompting-strategies", kind: 'docs' },
+      { label: "xAI: Reasoning models (reasoning_effort, unsupported parameters)", url: "https://docs.x.ai/developers/model-capabilities/text/reasoning", kind: 'docs' },
+    ],
+  },
 ]
