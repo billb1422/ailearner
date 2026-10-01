@@ -282,7 +282,7 @@ export const MODULES: Module[] = [
     title: 'Bonus: Decision Models (Jev)',
     emoji: '🎯',
     color: '#e879f9',
-    tagline: 'Jev and System One models: typed, calibrated decisions in 100 ms, the four places they belong in software, how to ask them well, and how to fence them inside a harness',
+    tagline: 'Jev and System One models: typed, calibrated decisions in 100 ms, the four places they belong in software, how to ask them well, how to fence them inside a harness, and four uses in your own coding loop',
     days: 'Bonus · after Day 22',
     bonus: true,
     lessons: m11Lessons,

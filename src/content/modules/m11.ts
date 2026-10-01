@@ -91,7 +91,7 @@ export const lessons: Lesson[] = [
           },
           {
             type: 'text',
-            md: "The cleanest description came from developer Flavio Copes, who called Jev a smart `if` statement. Think about how much ordinary code wants to branch on something fuzzy, like `if (this ticket is urgent)` or `if (the agent is about to do something risky)`. Plain code can't evaluate those conditions, because they need judgment about text. A chat model can, but it takes seconds, costs real money, and answers with a paragraph your code then has to pick apart. Jev fills the gap between those two.\n\nThis module has four lessons. This one covers what Jev is and how much of the hype survives contact with testing. The second tours what people built in the first week and the four places a decision model belongs. The third teaches you to write questions it answers well. The fourth walks through the X article you found, which is a builder's guide to putting Jev inside a coding agent.",
+            md: "The cleanest description came from developer Flavio Copes, who called Jev a smart `if` statement. Think about how much ordinary code wants to branch on something fuzzy, like `if (this ticket is urgent)` or `if (the agent is about to do something risky)`. Plain code can't evaluate those conditions, because they need judgment about text. A chat model can, but it takes seconds, costs real money, and answers with a paragraph your code then has to pick apart. Jev fills the gap between those two.\n\nThis module has five lessons. This one covers what Jev is and how much of the hype survives contact with testing. The second tours what people built in the first week and the four places a decision model belongs. The third teaches you to write questions it answers well. The fourth walks through the X article you found, which is a builder's guide to putting Jev inside a coding agent. The fifth brings it home to your own coding setup: a guard hook on every tool call, automated playtesting, browser tests, and routing work to the right model.",
           },
         ],
       },
@@ -1846,6 +1846,466 @@ async function chooseRoute(task: Task): Promise<Route> {
       { label: 'codejunkie99/agentic-stack', url: 'https://github.com/codejunkie99/agentic-stack', kind: 'repo' },
       { label: 'Agent Client Protocol', url: 'https://agentclientprotocol.com/', kind: 'docs' },
       { label: 'LangChain: tool-risk gating and model routing with Jev', url: 'https://www.langchain.com/blog/building-a-harness-with-jev', kind: 'article' },
+    ],
+  },
+  // ────────────────────────────────────────────────────────────
+  // m11-l5: Jev in an AI coding workflow (Cole Medin's four use cases)
+  // ────────────────────────────────────────────────────────────
+  {
+    id: 'm11-l5',
+    title: 'Jev in Your Coding Workflow: Guard Hooks, Playtests, Browser Tests, Routing',
+    day: 25,
+    minutes: 50,
+    xp: 120,
+    objectives: [
+      'Describe the sandwich pattern: an LLM sets the decision up, Jev makes it many times, an LLM acts on what it found',
+      'Explain why a regex guard and an LLM guard both fail as a PreToolUse hook, and what a Jev guard changes about the trade',
+      'Build a guard where Jev labels the tool call and your hook script makes the call, with a deterministic floor and a fallback for when the API is down',
+      'Work out why real-time jobs like playtesting a game were out of reach for LLMs, using a frame budget',
+      'Use Jev at the front of a workflow to pick the route and the model tier, and judge a small-sample accuracy claim honestly',
+    ],
+    skipQuiz: [
+      {
+        q: 'Cole Medin says Jev is almost never the whole workflow. What does he call the shape he keeps using?',
+        options: [
+          'A cascade, where Jev retries until it is confident',
+          'A sandwich, where an LLM sets the decision up, Jev makes it, and an LLM acts on the result',
+          'A swarm of Jev calls voting on the answer',
+          'A replacement, where Jev takes over the LLM\'s job completely',
+        ],
+        answer: 1,
+        explain:
+          'Jev can\'t write the state, the options, or the fix. An LLM builds the setup once, Jev handles the fast repeated decisions in the middle, and an LLM (or a person) acts on what Jev flagged.',
+      },
+      {
+        q: 'Why did Medin\'s old regex guard hook keep blocking harmless work?',
+        options: [
+          'Regular expressions are too slow to run on every tool call',
+          'Pattern matching can\'t tell reading a secrets file from writing the text ".env" into a markdown document',
+          'Claude Code ignores regex hooks',
+          'The regex sent every call to an LLM first',
+        ],
+        answer: 1,
+        explain:
+          'A pattern only sees characters, so it can\'t judge what the agent is trying to do. It also misses the many other routes to the same secret, such as a Python script that opens the file. Both failures come from the same blindness.',
+      },
+      {
+        q: 'A game runs at 60 frames per second. Roughly how many frames go by while an LLM spends 1.2 seconds deciding the next move?',
+        options: ['About 7', 'About 20', 'About 72', 'About 600'],
+        answer: 2,
+        explain:
+          'One frame lasts 1,000 / 60, about 16.7 ms. 1,200 ms divided by 16.7 ms is about 72 frames. Jev at roughly 250 ms costs about 15 frames, close to human reaction time.',
+      },
+      {
+        q: 'In Medin\'s Archon workflow, what two things does Jev decide about each incoming GitHub issue?',
+        options: [
+          'Who wrote it and whether to close it',
+          'The kind of work (a bug to investigate and fix, or a feature to plan and build) and which tier of model should do it',
+          'The exact code change and the commit message',
+          'Whether the issue is spam and which label color to use',
+        ],
+        answer: 1,
+        explain:
+          'The route picks which skills and steps run next, and the tier picks a fast, standard, or strong model. Both are choices from a short, fixed list, which is exactly Jev\'s shape.',
+      },
+      {
+        q: 'Medin\'s pull-request classifier agreed with him on 15 of 16 runs. What is the fair way to read that?',
+        options: [
+          'It is 93.75% accurate, full stop',
+          'It is a promising vibe check, but 16 runs leaves the true accuracy anywhere from the low 70s to about 99%, and he was the only judge',
+          'It proves Jev beats every LLM at code review',
+          'It means the 16th run was a bug in Archon',
+        ],
+        answer: 1,
+        explain:
+          'Small samples have wide error bars. Treat it as a reason to run your own shadow eval with 100 or more labeled examples, the way the question-writing lesson describes.',
+      },
+    ],
+    sections: [
+      {
+        heading: 'A fourth video, aimed at coding',
+        blocks: [
+          {
+            type: 'text',
+            md: "Cole Medin runs a YouTube channel about AI coding and a paid community called Dynamous. On September 30, 2026 he posted [The BEST Jev Use Cases for AI Coding](https://www.youtube.com/watch?v=qwnJJMNGwgY), an 18-minute video that answers a complaint he kept hearing: the launch-week demos were fun, but few of them made anyone think *I need this in my workflow today*.\n\nSo he picked four uses he actually runs while building software:\n\n- A **security hook** that checks every action his coding agent tries before it happens.\n- **Gameplay testing**, where Jev plays a game he's building and finds bugs.\n- **Browser testing**, where Jev clicks through a web app the way a user would.\n- **Workflow classification**, where Jev reads a GitHub issue or pull request and picks the steps and the model that handle it.\n\nThe last lesson, on harnesses, was mostly about restraint. This one is the practical companion: four places a decision model earns its keep in the same kind of coding setup you run every day.",
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'Check the speed claim before you repeat it',
+            md: "Medin opens by saying Jev is 20 to 200 times faster than an LLM, 40 to 1,000 times cheaper, and more accurate than any LLM at decisions. The speed and price ranges lean on TypeSafe's own launch numbers. The accuracy line goes further than the evidence: the eight-day independent review in [Bonus: Decision Models (Jev) · Jev: The AI Model That Can't Chat](lesson:m11-l1) had Jev at 72.5% on a mixed task set against 84.0% for Claude Fable 5.1. His own results below are good, and they're also small and self-judged. Enjoy the ideas and keep the hype check from the first lesson in your pocket.",
+          },
+        ],
+      },
+      {
+        heading: 'The pattern under all four: the sandwich',
+        blocks: [
+          {
+            type: 'text',
+            md: "Halfway through the video Medin names the idea that ties his examples together. You'll almost never use Jev by itself. It's very good at making a decision, but it can't write the state it reads, it can't write the list of options, and it can't fix anything it finds. An LLM can do all three, slowly and expensively.\n\nSo he **sandwiches** Jev between LLM work. The LLM does the slow, creative setup once. Jev makes the fast decision hundreds or thousands of times. Then the LLM (or a person) acts on whatever Jev surfaced.",
+          },
+          {
+            type: 'diagram',
+            svg: `<svg viewBox="0 0 700 270" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect x="0" y="0" width="700" height="270" fill="#18181b" rx="8"/>
+  <text x="350" y="28" fill="#e4e4e7" font-size="16" font-weight="bold" text-anchor="middle">The sandwich</text>
+  <g font-size="11" text-anchor="middle">
+    <rect x="25" y="60" width="190" height="120" fill="#27272a" stroke="#38bdf8" stroke-width="1.5" rx="8"/>
+    <text x="120" y="86" fill="#38bdf8" font-size="13" font-weight="bold">LLM sets it up</text>
+    <text x="120" y="108" fill="#a1a1aa">turns the situation into state</text>
+    <text x="120" y="126" fill="#a1a1aa">writes the menu of options</text>
+    <text x="120" y="160" fill="#71717a" font-size="10">runs once, slow is fine</text>
+    <rect x="255" y="60" width="190" height="120" fill="#27272a" stroke="#e879f9" stroke-width="2" rx="8"/>
+    <text x="350" y="86" fill="#e879f9" font-size="13" font-weight="bold">Jev decides</text>
+    <text x="350" y="108" fill="#a1a1aa">picks from the menu</text>
+    <text x="350" y="126" fill="#a1a1aa">with a probability attached</text>
+    <text x="350" y="160" fill="#71717a" font-size="10">runs thousands of times, ~250 ms</text>
+    <rect x="485" y="60" width="190" height="120" fill="#27272a" stroke="#38bdf8" stroke-width="1.5" rx="8"/>
+    <text x="580" y="86" fill="#38bdf8" font-size="13" font-weight="bold">LLM acts</text>
+    <text x="580" y="108" fill="#a1a1aa">fixes the bug Jev found</text>
+    <text x="580" y="126" fill="#a1a1aa">or tries a different route</text>
+    <text x="580" y="160" fill="#71717a" font-size="10">runs only when something needs it</text>
+  </g>
+  <g stroke="#52525b" stroke-width="1.5">
+    <line x1="215" y1="120" x2="253" y2="120"/>
+    <line x1="445" y1="120" x2="483" y2="120"/>
+  </g>
+  <g font-size="10" fill="#a1a1aa" text-anchor="middle">
+    <text x="350" y="212">game: LLM builds the harness, Jev plays, LLM fixes the bugs it hit</text>
+    <text x="350" y="230">guard: agent proposes a command, Jev labels it, agent finds another way if blocked</text>
+    <text x="350" y="248">workflow: Jev classifies the issue, the chosen model does the work</text>
+  </g>
+</svg>`,
+            caption: 'Jev is never the end of the workflow. It makes the middle faster and cheaper.',
+          },
+          {
+            type: 'text',
+            md: "This is the outer-loop placement from [Bonus: Decision Models (Jev) · Jev-Shaped Problems: Four Places a Decision Model Belongs](lesson:m11-l4), seen from a coder's chair. Keep the sandwich in mind as you read the four examples, because each one is just a different filling.",
+          },
+        ],
+      },
+      {
+        heading: 'Use 1: a guard hook that checks every tool call',
+        blocks: [
+          {
+            type: 'text',
+            md: "This is Medin's favorite, and it's the one you can build this week. The problem is familiar. Coding agents are too willing to do things they shouldn't, like read your `.env` file (where API keys live) or delete a whole folder. Your CLAUDE.md can tell them not to, and they'll mostly listen. Then the conversation gets long, the instruction fades into the noise, or a prompt hands the agent a clever workaround, and it does the thing anyway.\n\nThe standard fix is a **hook**, a script Claude Code runs automatically at a set moment in the agent's life. You built one in [Claude Code Mastery · Hooks: Deterministic Control](lesson:m1-l5). The event that matters here is **PreToolUse**, which fires after the agent decides to use a tool (read a file, run a command) and before the tool runs. Your script sees the proposed action and can let it through, block it with a reason the agent reads, or ask you.\n\nThe hard part has always been what goes inside that script. Medin had two options before Jev, and both were bad.",
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'Regex guard (what he ran before)',
+              items: [
+                'Pattern-match the command for things like .env or rm -rf',
+                'Free and instant',
+                'Misses the other routes: a Python script that opens the file, a cat through a symlink, a dozen bash spellings',
+                'Blocks harmless work, like writing the text ".env" into a markdown doc',
+                'The pattern list grows forever and still leaks',
+              ],
+            },
+            right: {
+              title: 'LLM guard (Haiku on every call)',
+              items: [
+                'Ask a small model whether each action is risky',
+                'Catches most risky calls with few false alarms',
+                'Over a second per check, on every single tool call',
+                'About a tenth of a cent per check, which adds up across thousands of calls a day',
+                'Medin ruled it out on cost alone',
+              ],
+            },
+          },
+          {
+            type: 'text',
+            md: "His replacement, which he calls JevGuard, keeps the hook and swaps what's inside. The **state** is everything about the proposed action: the tool name, what kind of effect it has, the tool's input (the actual command or file path), and the current working directory. The **questions** are Noul (yes/no) questions, one per thing that can go wrong:\n\n- Would this expose secrets?\n- Would this destroy data, like removing a folder?\n- Would this send data out of the machine (exfiltration, often the goal of a [prompt injection](https://simonwillison.net/series/prompt-injection/) attack)?\n- Is the agent going off task?\n\nThat last question is a nice extra. It turns the security hook into a cheap judge that notices when the agent wanders away from what you asked for. One thing to add if you copy it: the hook can only judge \"off task\" if the state includes the task, so put the user's original request in there too.\n\nHe calls Jev through [OpenRouter](https://openrouter.ai/) (a service that resells many AI models behind one API), which he says has a new endpoint just for decisions. TypeSafe's own API and Vercel's AI Gateway work the same way.",
+          },
+          {
+            type: 'table',
+            headers: ['Guard', 'Time per check', 'Cost per check', 'At 2,000 tool calls a day', 'Medin\'s verdict'],
+            rows: [
+              ['Regex', 'A few milliseconds', 'Free', 'Free, no waiting', 'Missed many risky calls, plenty of false alarms'],
+              ['Haiku 4.5', 'Over 1 second', 'About $0.001', 'About $2 a day (~$60 a month) and 33+ minutes of waiting', 'Good catches, too slow and costly'],
+              ['Jev', 'About 0.25 seconds', 'About $0.00002', 'About 4 cents a day (~$1.25 a month) and ~8 minutes of waiting', 'Blocked almost every risky call, barely any false alarms'],
+            ],
+          },
+          {
+            type: 'text',
+            md: "The time and verdict columns are Medin's. The costs are worked by hand so you can check them. Haiku's tenth of a cent is his number, and it matches about 1,000 input tokens at Haiku's $1 per million. For Jev, a state plus four short questions runs roughly 500 input tokens, and 500 × $0.042 per million is $0.000021. Multiply each by 2,000 calls (he said his agent makes thousands a day) and you get the column. Waiting time is 2,000 × the time per check. His summary of the Jev version: it feels like having an LLM's judgment on every call for free, even though it's technically not free.",
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'Doesn\'t the harness lesson say permission stays out of Jev\'s hands?',
+            md: "It does, and the two fit together once you notice who makes the final call. In a well-built guard, Jev never decides anything. It hands back four probabilities, and your hook script (plain code you wrote) turns them into allow, ask, or deny using thresholds you chose. That's the same split as the harness lesson's example of labeling a Bash command before a hook decides. Jev supplies the judgment about text; your code owns the permission.",
+          },
+          {
+            type: 'text',
+            md: "Here's a version you could drop into a project, written in that spirit. It has three layers: a deterministic floor for the one thing you never want to risk, Jev's labels for everything else, and a fallback for when the API is slow or down.",
+          },
+          {
+            type: 'code',
+            lang: 'python',
+            code: `#!/usr/bin/env python3
+# .claude/hooks/jev_guard.py
+# PreToolUse hook. Jev labels the proposed action; this script decides.
+import json, re, sys
+from typesafe import TypeSafeClient, Noul
+
+event = json.load(sys.stdin)
+tool, args, cwd = event["tool_name"], event["tool_input"], event["cwd"]
+
+def reply(decision, reason):
+    print(json.dumps({"hookSpecificOutput": {
+        "hookEventName": "PreToolUse",
+        "permissionDecision": decision,      # "allow", "deny", or "ask"
+        "permissionDecisionReason": reason,  # Claude reads this
+    }}))
+    sys.exit(0)
+
+# 1. Deterministic floor: a direct read of a .env file never reaches the model.
+if tool == "Read" and re.search(r"(^|/)\\.env$", args.get("file_path", "")):
+    reply("deny", "Secrets are off-limits. Read .env.example for the variable names.")
+
+# 2. Jev labels everything else.
+try:
+    r = TypeSafeClient(model="jev-1.13.0").system_one(
+        state={"tool": tool, "input": args, "cwd": cwd},
+        questions={
+            "secrets": Noul(instructions="Would this action expose API keys, tokens, passwords, or the contents of a .env file?"),
+            "destroys": Noul(instructions="Would this action delete or overwrite data in a way that is hard to undo?"),
+            "exfil": Noul(instructions="Would this action send local files or data to an outside server?"),
+        },
+    )
+except Exception:
+    # 3. Fallback: if Jev can't answer, a person does.
+    reply("ask", "The guard couldn't reach Jev, so you decide this one.")
+
+risk = max(r.answers[k].noul for k in ("secrets", "destroys", "exfil"))
+if risk >= 0.90:
+    reply("deny", f"Guard flagged this as risky ({risk:.2f}). Find a safer way to do it.")
+if risk >= 0.50:
+    reply("ask", f"Guard isn't sure about this one ({risk:.2f}).")
+sys.exit(0)  # no output means normal permission rules apply`,
+            caption: 'A sketch built from Medin\'s description and the SDK example in the question-writing lesson. Medin didn\'t publish his hook. The 0.90 and 0.50 thresholds are placeholders until your own logs tell you where they belong.',
+          },
+          {
+            type: 'text',
+            md: "A few choices in that script are worth understanding before you copy it.\n\n- **The floor stays deterministic.** A classifier reads text, and text can be written by an attacker. A prompt-injected page could phrase a command to look harmless. The one action you can't afford gets a rule that no wording can talk its way past. Notice the floor checks the Read tool's file path, so writing the word \".env\" into a doc never trips it. That's the false alarm Medin hated, gone.\n- **The fallback fails toward a person.** If the API times out and the script crashes, Claude Code treats the hook error as non-blocking and the tool runs anyway. That's failing open. The `try` block turns a failure into an *ask* instead. Give the SDK call a timeout shorter than the hook's own `timeout` setting, or the hook gets killed before the fallback runs.\n- **The middle band asks.** Between 0.50 and 0.90, Jev is unsure, and the honest answer is to show you. If the asks get annoying, your shadow log tells you which way to move the line.\n- **Your commands leave your machine.** Every tool input goes to TypeSafe (or OpenRouter). A command with a token pasted inline sends that token too. For a client project with strict data rules, that alone might rule out the hosted version, and the local Laya model from the question-writing lesson becomes the interesting option.",
+          },
+        ],
+      },
+      {
+        heading: 'Use 2: Jev plays the game you\'re building',
+        blocks: [
+          {
+            type: 'text',
+            md: "Medin is building a video game, and he wanted his AI coding loop to include a step that LLMs could never handle: actually playing it. After the agent builds a feature, someone should play the game the way a user would and see what breaks. Unit tests check the pieces. Playing checks the experience.\n\nThe obstacle is speed. Games redraw the screen 30 or 60 times a second, and the world keeps moving while a model thinks. Count it in frames and the problem becomes obvious.",
+          },
+          {
+            type: 'diagram',
+            svg: `<svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect x="0" y="0" width="700" height="250" fill="#18181b" rx="8"/>
+  <text x="350" y="28" fill="#e4e4e7" font-size="16" font-weight="bold" text-anchor="middle">Frames that go by while the model decides (60 fps)</text>
+  <g font-size="11">
+    <text x="20" y="78" fill="#e4e4e7">Jev, ~250 ms</text>
+    <rect x="170" y="64" width="25" height="20" fill="#e879f9" rx="3"/>
+    <text x="203" y="79" fill="#e879f9">15 frames</text>
+    <text x="20" y="128" fill="#e4e4e7">Haiku, ~1.2 s</text>
+    <rect x="170" y="114" width="120" height="20" fill="#38bdf8" rx="3"/>
+    <text x="298" y="129" fill="#38bdf8">72 frames</text>
+    <text x="20" y="178" fill="#e4e4e7">Frontier model, ~5 s</text>
+    <rect x="170" y="164" width="500" height="20" fill="#fbbf24" rx="3"/>
+    <text x="600" y="203" fill="#fbbf24" text-anchor="end">300 frames</text>
+  </g>
+  <text x="350" y="232" fill="#71717a" font-size="10" text-anchor="middle">one frame = 1,000 / 60 = 16.7 ms. Human reaction time is about 250 ms, the same as one Jev call.</text>
+</svg>`,
+            caption: 'By the time a big model picks a dodge, the attack landed five seconds ago. Jev keeps pace with a human player.',
+          },
+          {
+            type: 'text',
+            md: "Medin had tried the LLM route before. He slowed the game down so the model could play frame by frame, which worked in principle and was painfully slow and expensive in practice. With Jev the game runs at full speed. In his demo the character attacks, dodges, and moves around the map with his hands off the keyboard, and a side panel shows Jev's probabilities for every available move as it picks.\n\nThe sandwich is easy to see here:\n\n- **The LLM builds the harness once.** It writes the code that turns the game's current situation (where everyone is, health, what's nearby) into state, and it defines the menu of moves.\n- **Jev plays.** One decision every quarter second, at full speed, for as long as you like.\n- **The LLM acts on the run.** It reads what happened and fixes the bugs Jev ran into.\n\nMedin says this has caught real bugs his coding agent couldn't find by itself, because the agent can only run tests and scripted harnesses. Those are deterministic: they do the same thing every time. A player wanders, mashes buttons, and gets cornered in ways nobody scripted.",
+          },
+          {
+            type: 'text',
+            md: "You don't need to build games for this to matter. Anything that needs a snap decision while something else keeps moving fits the same mold: a live dashboard deciding which alert to surface, a voice app deciding whether the caller just finished talking, a trading simulator you only ever run on fake money (the Bitcoin story in the Jev-shaped problems lesson covers why).",
+          },
+        ],
+      },
+      {
+        heading: 'Use 3: browser testing a real app',
+        blocks: [
+          {
+            type: 'text',
+            md: "Browser testing is the same idea pointed at a website: after the agent ships a feature, something clicks through the app as a user would. You may already do this with an LLM, through tools like the [Playwright MCP](https://github.com/microsoft/playwright-mcp) server or Vercel's [agent-browser](https://github.com/vercel-labs/agent-browser) command-line tool. LLMs are decent at it, because a web page waits patiently while the model thinks, unlike a game.\n\nDecent is still slow and expensive per click, though, and each step on a web page is a choice from a short list: which field to focus, which button to press, which link to follow. That's Jev's shape. Medin says Jev drives these tests faster, cheaper, and more reliably than the LLM version.\n\nThe one thing Jev can't do is type something original. Anywhere the test needs free text (a chat message, a search phrase, a sign-up name), an LLM writes it ahead of time and Jev decides where it goes. In his demo against Dino Chat, the production chatbot on his community site, every typed string was pre-generated and every click was Jev's live decision. Afterward an LLM reads the run's log to spot anything that looks like a bug.",
+          },
+          {
+            type: 'table',
+            headers: ['Step in a browser test', 'Who does it', 'Why'],
+            rows: [
+              ['Write the test plan and any text to type', 'LLM, once', 'Needs writing'],
+              ['Pick the next element and action on each page', 'Jev, every step', 'A choice from what\'s on screen'],
+              ['Type the pre-written text into the chosen field', 'Plain code', 'Mechanical'],
+              ['Read the log and decide what\'s broken', 'LLM, once', 'Needs reasoning and a fix'],
+            ],
+          },
+          {
+            type: 'text',
+            md: "He points to Browser Use's open-source [jev-ultrafast](https://github.com/browser-use/jev-ultrafast) as the best Jev browser agent he's seen. It's the same team behind the 7.1-second flight search in the Jev-shaped problems lesson. He also says rolling your own is very doable, which is what he did. Remember the harness lesson's warning, though: in these agents, choosing a click and doing the click happen in the same breath. That's fine on a test account in a throwaway browser. Point it at anything with real money or real data and you want the host to re-check each pick.",
+          },
+        ],
+      },
+      {
+        heading: 'Use 4: routing work at the start of a workflow',
+        blocks: [
+          {
+            type: 'text',
+            md: "The last use is the one Medin says matters more to him every month. He wants his AI coding workflows to adapt to the job. A one-line typo fix shouldn't burn a top-tier model's tokens, and a bug needs different steps than a new feature (investigate and fix, versus plan and build). Making that call by hand for every issue doesn't scale, so he puts Jev at the front.\n\nHe builds these workflows in [Archon](https://github.com/coleam00/Archon), his open-source tool for wiring multi-step AI coding workflows together. Each workflow is a YAML file (a plain-text config format) describing the steps. Wherever a step needs a decision, it calls a small Python script that packages the state, asks Jev its questions, and passes the answer on so later steps can branch on it.",
+          },
+          {
+            type: 'diagram',
+            svg: `<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect x="0" y="0" width="700" height="300" fill="#18181b" rx="8"/>
+  <text x="350" y="28" fill="#e4e4e7" font-size="16" font-weight="bold" text-anchor="middle">Jev picks the route and the model before any work starts</text>
+  <g font-size="11" text-anchor="middle">
+    <rect x="20" y="120" width="120" height="56" fill="#27272a" stroke="#71717a" stroke-width="1.5" rx="6"/>
+    <text x="80" y="144" fill="#e4e4e7">GitHub issue</text>
+    <text x="80" y="160" fill="#71717a" font-size="10">title, body, labels</text>
+    <rect x="180" y="104" width="140" height="88" fill="#27272a" stroke="#e879f9" stroke-width="2" rx="6"/>
+    <text x="250" y="128" fill="#e879f9" font-weight="bold">Jev, two questions</text>
+    <text x="250" y="150" fill="#a1a1aa" font-size="10">Choice: what kind of work?</text>
+    <text x="250" y="168" fill="#a1a1aa" font-size="10">Choice: what tier of model?</text>
+    <rect x="370" y="56" width="140" height="56" fill="#27272a" stroke="#fbbf24" stroke-width="1.5" rx="6"/>
+    <text x="440" y="80" fill="#fbbf24">bug</text>
+    <text x="440" y="96" fill="#71717a" font-size="10">investigate, then fix</text>
+    <rect x="370" y="184" width="140" height="56" fill="#27272a" stroke="#34d399" stroke-width="1.5" rx="6"/>
+    <text x="440" y="208" fill="#34d399">feature</text>
+    <text x="440" y="224" fill="#71717a" font-size="10">plan, then build</text>
+    <rect x="550" y="70" width="130" height="40" fill="#27272a" stroke="#52525b" rx="6"/>
+    <text x="615" y="94" fill="#a1a1aa" font-size="10">fast: a cheap model</text>
+    <rect x="550" y="128" width="130" height="40" fill="#27272a" stroke="#38bdf8" rx="6"/>
+    <text x="615" y="152" fill="#38bdf8" font-size="10">standard: Sonnet 5</text>
+    <rect x="550" y="186" width="130" height="40" fill="#27272a" stroke="#52525b" rx="6"/>
+    <text x="615" y="204" fill="#a1a1aa" font-size="10">strong: Opus 5.5</text>
+    <text x="615" y="218" fill="#71717a" font-size="9">or GPT-6 Astra</text>
+  </g>
+  <g stroke="#52525b" stroke-width="1.5">
+    <line x1="140" y1="148" x2="178" y2="148"/>
+    <line x1="320" y1="134" x2="368" y2="88"/>
+    <line x1="320" y1="162" x2="368" y2="210"/>
+    <line x1="510" y1="148" x2="548" y2="148" stroke-dasharray="4 3"/>
+  </g>
+  <text x="350" y="276" fill="#71717a" font-size="10" text-anchor="middle">the run in his demo: classified as a bug to investigate, handled by the standard tier</text>
+</svg>`,
+            caption: 'Both questions go in one call and Jev answers them in parallel. The route picks the skills and steps; the tier picks the model that runs them.',
+          },
+          {
+            type: 'text',
+            md: "He reported two sets of results, both judged by himself.\n\n- **Issue workflow:** 12 runs, and he agreed with every classification (12 of 12).\n- **Pull-request review workflow:** Jev decides whether a PR needs a full architecture review or a quick check as a light chore. It matched his call 15 times out of 16.\n\nOn cost, his comparison put the LLM version at about 32 cents per pull request against a fraction of a cent for Jev. Archon handles dozens to hundreds of issues and PRs a week, so that gap is real money.",
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'Read 15 out of 16 with the right-sized error bars',
+            md: "Sixteen runs is a vibe check. A standard way to put a range on a small-sample success rate (the [Wilson interval](https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Wilson_score_interval)) says 15 of 16 is consistent with a true accuracy anywhere from about 72% to 99%. Twelve of twelve sounds perfect, and it's consistent with roughly 76% to 100%. And one person judging his own system is the setup that flatters results most. The idea still looks good. The next step is a shadow eval of 100 or more of your own past issues, as in [Bonus: Decision Models (Jev) · Writing Questions Jev Can Answer: Decompose, Gate, Cascade](lesson:m11-l2), before the router chooses models with nobody watching.",
+          },
+          {
+            type: 'text',
+            md: "If the tier-picking part sounds familiar, it should. It's the 80/20 routing idea from [Local Models · Routing the 80/20](lesson:m4-l5), and it's what LangChain's `ModelRouterMiddleware` packages up. Medin's version is a nice reminder that you don't need a framework: one script, two Choice questions, and a branch in your workflow file.",
+          },
+        ],
+      },
+      {
+        heading: 'Which one to build first',
+        blocks: [
+          {
+            type: 'table',
+            headers: ['Use', 'Effort to build', 'What you get', 'Fits your setup when'],
+            rows: [
+              ['Guard hook', 'An evening', 'Fewer risky tool calls, fewer false alarms, every call checked', 'You run Claude Code with any auto-approval at all'],
+              ['Workflow routing', 'A day, plus a shadow eval', 'Cheaper runs, the right steps per job', 'You have a repeatable pipeline that handles many issues or tasks'],
+              ['Browser testing', 'A day or two, or adopt jev-ultrafast', 'Click-through tests after every feature', 'You ship a web app and already test it by hand'],
+              ['Gameplay testing', 'A real project of its own', 'Bugs only a player would hit', 'Your app runs in real time'],
+            ],
+          },
+          {
+            type: 'text',
+            md: "The guard hook wins on effort against payoff by a long way. You already know how hooks work, the state is handed to you on stdin, and running it in log-only mode first costs you nothing. That's the lab below. Medin promised deeper dives on each of the four, so watch his channel if one of the others is closer to your work.",
+          },
+        ],
+      },
+    ],
+    lab: {
+      title: 'Shadow-Run a Jev Guard on Your Own Tool Calls',
+      intro:
+        "Build Medin's guard as a Claude Code PreToolUse hook, run it in log-only mode for a few days of real work, then decide from the log whether it earns the right to block anything. Plan on an hour to build and fifteen minutes to review the log.",
+      steps: [
+        'Pick one real project in ~/sd. Add the guard from this lesson as .claude/hooks/jev_guard.py, then change it so it always exits 0 with no output and instead appends one JSON line per call to .claude/jev_guard.log.jsonl: the tool, the input, the three probabilities, and how long the Jev call took.',
+        'Register it in .claude/settings.json under PreToolUse with the matcher "Bash|Read|Write|Edit" and a timeout of a few seconds. Give the SDK call a shorter timeout so a slow API logs a fallback instead of crashing the hook.',
+        'Add one question you care about beyond the three in the lesson. Medin\'s "is the agent going off task" is a good pick; if you add it, put the original user request into the state.',
+        'Before you turn it on, read the data warning in the lesson again. If this project has client data or credentials that could show up in commands, use a personal project instead.',
+        'Work normally for two or three days. Then ask Claude Code to summarize the log: total calls, median and slowest latency, total input tokens, the cost at $0.042 per million, and every call where any probability topped 0.50.',
+        'Go through the flagged calls yourself and mark each as a real risk or a false alarm. Also skim 20 unflagged Bash calls and note any that should have been flagged.',
+        'Pick thresholds from what you saw, switch the hook to the ask/deny version, and keep the .env floor no matter what the log says.',
+      ],
+      checklist: [
+        'The guard ran in log-only mode across real work and the log has at least 200 tool calls',
+        'I know the median latency and the total cost of those calls, worked from the logged token counts',
+        'Every call over 0.50 is marked as a real risk or a false alarm, and I spot-checked 20 calls under it',
+        'The final thresholds are chosen from my own log, not copied from the lesson',
+        'The deterministic .env floor and the ask-on-failure fallback are both still in place',
+      ],
+    },
+    checkQuiz: [
+      {
+        q: 'In the guard hook from this lesson, who decides whether a risky tool call is denied?',
+        options: [
+          'Jev, directly',
+          'The hook script, which turns Jev\'s probabilities into allow, ask, or deny using thresholds you set',
+          'Claude, after reading Jev\'s answer',
+          'OpenRouter',
+        ],
+        answer: 1,
+        explain:
+          'Jev only labels the action. The permission decision lives in plain code you wrote, which keeps it consistent with the harness lesson\'s rule that choosing and permitting stay separate jobs.',
+      },
+      {
+        q: 'Your guard calls Jev and the API times out, which crashes the script. What does Claude Code do with the tool call?',
+        options: [
+          'Blocks it, because the hook failed',
+          'Runs it anyway, because a crashed hook is treated as a non-blocking error, so you need an explicit fallback that asks',
+          'Retries the hook forever',
+          'Switches to Haiku automatically',
+        ],
+        answer: 1,
+        explain:
+          'A crashed hook fails open. Catching the error and replying "ask" turns an outage into a question for you instead of a silent pass.',
+      },
+      {
+        q: 'A browser test needs to type a realistic support question into a chat box, then press Send. How does the split work in Medin\'s setup?',
+        options: [
+          'Jev writes the question and presses Send',
+          'An LLM writes the question ahead of time; Jev picks the chat box and the Send button live',
+          'An LLM does every step, because Jev can\'t use browsers',
+          'Plain code writes the question at random',
+        ],
+        answer: 1,
+        explain:
+          'Jev can\'t generate text, so anything typed is pre-written by an LLM. Every choice about where to click or focus is a pick from what\'s on the page, which Jev handles fast and cheap.',
+      },
+      {
+        q: 'Your agent makes 2,000 tool calls a day. A Jev guard check uses about 500 input tokens at $0.042 per million. Roughly what does a month of guarding cost?',
+        options: ['About 4 cents', 'About $1.25', 'About $60', 'About $1,260'],
+        answer: 1,
+        explain:
+          '500 × 2,000 = 1 million tokens a day, which costs $0.042. Thirty days of that is about $1.26. The same checks on Haiku at a tenth of a cent each come to about $60.',
+      },
+    ],
+    resources: [
+      { label: 'Cole Medin: The BEST Jev Use Cases for AI Coding', url: 'https://www.youtube.com/watch?v=qwnJJMNGwgY', kind: 'video' },
+      { label: 'browser-use/jev-ultrafast: the Jev browser agent from the video', url: 'https://github.com/browser-use/jev-ultrafast', kind: 'repo' },
+      { label: 'shitianfang/jev-use: more examples of Jev and an LLM working together', url: 'https://github.com/shitianfang/jev-use', kind: 'repo' },
+      { label: 'coleam00/Archon: Medin\'s open-source workflow builder', url: 'https://github.com/coleam00/Archon', kind: 'repo' },
+      { label: 'Claude Code hooks reference (PreToolUse decisions)', url: 'https://code.claude.com/docs/en/hooks', kind: 'docs' },
+      { label: 'TypeSafe Jev docs', url: 'https://docs.typesafe.ai', kind: 'docs' },
     ],
   },
 ]
