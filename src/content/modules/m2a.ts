@@ -655,13 +655,15 @@ export const lessons: Lesson[] = [
     id: 'm2-l3',
     title: 'Loop Engineering',
     day: 10,
-    minutes: 50,
+    minutes: 80,
     xp: 100,
     objectives: [
-      'Write a loop program that re-prompts an agent until a real check passes',
-      'Diagnose the three loop failure modes when you see a broken setup',
-      'Fire an agent from a spec.md task list instead of babysitting it prompt by prompt',
-      'Cap loop cost with a max-iteration guard and per-iteration cost awareness',
+      'Explain what a loop is, where the idea came from, and why everyone started talking about it in June 2026',
+      'Decide whether a task deserves a loop at all, using a four-question test',
+      'Write a loop program that re-prompts an agent until a real check passes, then run the same job with /goal',
+      'Pick between a shell loop, /goal, /loop, and a Stop hook for a given job',
+      'Scale one loop into a feature factory where the agent that builds never grades its own work',
+      'Diagnose the three loop failure modes and cap loop cost before you walk away',
     ],
     skipQuiz: [
       {
@@ -686,19 +688,14 @@ export const lessons: Lesson[] = [
         ],
         answer: 1,
         explain:
-          'Five parts: prompt the agent, read the output, check it against real criteria, decide done or not, and re-prompt with what is still missing. The check is the part that separates a loop from a plain retry wrapper.',
+          'Five parts: prompt the agent, read the output, check it against real criteria, decide done or not, and re-prompt with what is still missing. The check is the part that separates a loop from a plain retry wrapper or a cron job.',
       },
       {
-        q: 'Loops are ideally fired once from:',
-        options: [
-          'An interactive chat session',
-          'A spec.md or PRD.md task list',
-          'A Slack thread',
-          'The model system prompt',
-        ],
+        q: 'In Claude Code, which command keeps the session working until a condition you wrote is met?',
+        options: ['/loop', '/goal', '/schedule', '/batch'],
         answer: 1,
         explain:
-          "Write the spec, fire the loop, walk away. The task list in spec.md or PRD.md (PRD stands for product requirements document) is the loop's input, and once it exists your attention stops being the bottleneck.",
+          '/goal is the loop-engineering command: after every turn a small, fast model checks your condition and starts another turn if it is not met yet. /loop re-runs a prompt on a timer, which suits polling. The names trip up almost everyone the first time.',
       },
       {
         q: 'Which loop failure mode "bills you in your sleep"?',
@@ -733,11 +730,103 @@ export const lessons: Lesson[] = [
             type: 'callout',
             variant: 'quote',
             title: 'Boris Cherny, creator of Claude Code',
-            md: '"I don\'t prompt Claude anymore. I have loops... My job is to write loops."',
+            md: '"I don\'t prompt Claude anymore. I have loops that are running... My job is to write loops."',
           },
           {
             type: 'text',
-            md: "Boris Cherny built Claude Code, and that quote is how he describes his own job now. Sit with it for a second: the person with the most reps on the tool says he doesn't prompt anymore.\n\nSo what's a loop? A loop is a small program with five parts. It **prompts** an agent, **reads** the output, **checks** the result against real criteria (a test suite, a compiler, a linter: something with an exit code), **decides** whether the work is done, and if it isn't, it **re-prompts** with what's still missing. You write the task list once, in a spec.md or PRD.md file (PRD stands for product requirements document), fire the loop, and walk away.\n\nWhy this matters: when you prompt by hand, your attention is the bottleneck. You read every response, judge it, and type the follow-up. A loop moves that judgment into a check that runs without you. Checks scale in a way attention never will.",
+            md: "Boris Cherny built Claude Code, and that quote is how he describes his own job now. Sit with it for a second: the person with the most reps on the tool says he doesn't prompt anymore.\n\nHe wasn't the only one saying it. On June 7, 2026, Peter Steinberger, the developer behind the open-source personal agent OpenClaw, posted a short \"monthly reminder\" on X: \"You should be designing loops that prompt your agents.\" The post spread fast. Within a day Addy Osmani, an engineering lead at Google, published an essay called [Loop Engineering](https://addyosmani.com/blog/loop-engineering/) that gave the idea a name and a parts list, and within a few weeks every AI channel on YouTube had a loop engineering video. This lesson draws on five of them, linked at the bottom.\n\nHere's the plain-English version. Think about how you build with an agent today. You type a prompt, the agent works, it stops, and you look at what it did. If it's wrong, you type another prompt. **You're already in a loop. You're the part of the loop that checks the work and writes the next prompt.** Loop engineering means moving that checking job into the system so the loop can go around without you.",
+          },
+          {
+            type: 'text',
+            md: "So what does a loop look like as a program? It has five parts. It **prompts** an agent, **reads** the output, **checks** the result against real criteria (a test suite, a compiler, a linter: something with an exit code), **decides** whether the work is done, and if it isn't, it **re-prompts** with what's still missing. You write the task list once, in a spec.md or PRD.md file (PRD stands for product requirements document), fire the loop, and walk away.\n\nWhy this matters: when you prompt by hand, your attention is the bottleneck. You read every response, judge it, and type the follow-up. A loop moves that judgment into a check that runs without you. Checks scale in a way attention never will.\n\nWhy now, and why not a year ago? Stamina. Earlier models lost the thread after a few dozen steps, so an unattended loop mostly produced confident garbage. Current frontier models can hold a task for hours, which finally makes it worth taking yourself out of the middle.",
+          },
+        ],
+      },
+      {
+        heading: 'Is this new? A short family tree',
+        blocks: [
+          {
+            type: 'text',
+            md: "Fair question, and the [Prompt Engineering](https://www.youtube.com/watch?v=7BrxIBkX3mg) channel asks it directly. The loop is an old idea that keeps getting rebuilt with better parts. Each generation fixed the biggest problem of the one before it, and seeing the line helps you recognize the failure modes when they show up in your own setup.",
+          },
+          {
+            type: 'table',
+            headers: ['Year', 'Version', 'What it added', 'What went wrong'],
+            rows: [
+              [
+                '2022',
+                'The [ReAct paper](https://arxiv.org/abs/2210.03629) (short for Reason + Act)',
+                'A model that reasons, calls a tool, reads the result, and repeats. This is the inner loop from [Agents, Harnesses & Loops · Anatomy of the Agent Loop](lesson:m2-l2)',
+                'It lived inside one task. Nothing outside the model decided whether the work was actually good',
+              ],
+              [
+                '2023',
+                '[AutoGPT](https://github.com/Significant-Gravitas/AutoGPT)',
+                'Gave the loop a goal and let the model write its own next prompt',
+                'Famous for running in circles for hours, burning tokens, and shipping nothing. No real check and no stop condition',
+              ],
+              [
+                '2025',
+                'The [Ralph loop](https://ghuntley.com/ralph/) (Geoffrey Huntley)',
+                'A tiny bash loop that feeds the same instructions every pass, with a **fresh context** each time and memory kept in files',
+                'Works well, but you build the check and the guard yourself',
+              ],
+              [
+                '2026',
+                '/goal in Claude Code, goal mode in OpenAI Codex',
+                'The loop ships in the tool: a separate model judges your stop condition after every turn',
+                'The judge only sees the conversation, and everything runs in one session whose context keeps growing',
+              ],
+            ],
+          },
+          {
+            type: 'text',
+            md: "The sharpest pushback you'll hear: \"isn't this a cron job with a new name?\" (Cron is the old Unix scheduler that runs a fixed command at set times, like every night at 2am.) That critique is half right. The trigger often is a timer. What cron never had is the middle. A cron job runs the same script every time, no matter what happened last time. A loop runs a model that looks at the current state, decides what to do next, does it, checks it, and decides whether to keep going. **Cron plus a decision-maker in the body** is a decent one-line definition.",
+          },
+        ],
+      },
+      {
+        heading: 'Should this be a loop?',
+        blocks: [
+          {
+            type: 'text',
+            md: "Before you build anything, check whether the job deserves a loop. Austin Marchese, who spent years as COO of a tech startup before making AI videos, runs every candidate through [four questions](https://www.youtube.com/watch?v=YAS4ojuhbW4). A loop only makes sense when all four come back yes.",
+          },
+          {
+            type: 'table',
+            headers: ['Question', 'Why it matters', 'If the answer is no'],
+            rows: [
+              [
+                'Does the task repeat, or take a lot of back-and-forth?',
+                'A loop is setup work. It pays off when it saves you many rounds of re-prompting',
+                'Just prompt. A one-shot task is faster by hand',
+              ],
+              [
+                'Is there a clear definition of done that something can check?',
+                'The check is the whole loop. Without it, the loop has no way to stop for the right reason',
+                'Write the definition of done first, or keep a human as the checker',
+              ],
+              [
+                'Can you afford to be wasteful?',
+                'A loop re-prompts until it passes, and every pass costs tokens',
+                'Cap it tight, or work by hand when you keep hitting usage limits',
+              ],
+              [
+                'Does the loop have every tool it needs to check its own work?',
+                'A website loop that can\'t load the live page or take a screenshot can\'t verify anything',
+                'Give it the tool first (a CLI, an MCP server, a screenshot script)',
+              ],
+            ],
+          },
+          {
+            type: 'text',
+            md: "The [AI LABS](https://www.youtube.com/watch?v=PLyRe6Zk--8) walkthrough adds a handy smell test for the first question: if a job usually takes you a lot of back-and-forth with the agent, it's a loop candidate. Their example was a landing page. A plain landing page is one prompt and a fix, so a loop would cost more than the page. A landing page with heavy scroll animations is different: dozens of moving parts, each one easy to get subtly wrong, and you'd normally spend an hour saying \"no, the logo should fade in after the headline\". That one earned a loop.",
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: "Don't loop the first version",
+            md: "The same walkthrough built its first version by hand, on purpose. That first version is the **MVP** (minimum viable product: the roughest build that does the main thing and nothing else). To loop something, you have to define done before the agent starts. At the MVP stage you don't know where the product is going yet, so working out a definition of done takes longer than building the thing. Prompt your way to the MVP, then loop the features that come after it.",
           },
         ],
       },
@@ -768,7 +857,7 @@ exit 1`,
           },
           {
             type: 'text',
-            md: "Twenty lines, and three of the decisions carry all the weight. First, **check.sh is binary and external**: it exits 0 or it doesn't, and the model can't argue with an exit code the way it can argue with \"does this look done to you?\". Second, **notes.md carries memory between iterations**: each pass reads what earlier passes tried and appends its own attempt, so iteration 3 knows that iterations 1 and 2 already ruled out the caching theory. Third, **MAX=5 caps the bill**: if five attempts can't satisfy the check, the loop exits with a failure code and a human takes over. Everything else in loop engineering is elaboration on these three moves.",
+            md: "Twenty lines, and three of the decisions carry all the weight. First, **check.sh is binary and external**: it exits 0 or it doesn't, and the model can't argue with an exit code the way it can argue with \"does this look done to you?\". Second, **notes.md carries memory between iterations**: each pass reads what earlier passes tried and appends its own attempt, so iteration 3 knows that iterations 1 and 2 already ruled out the caching theory. Third, **MAX=5 caps the bill**: if five attempts can't satisfy the check, the loop exits with a failure code and a human takes over. Everything else in loop engineering is elaboration on these three moves.\n\nOne more detail worth noticing: every pass calls `claude -p` fresh. Each iteration starts with a clean context window and learns the history only from notes.md. That's the Ralph pattern from the family tree, and it matters later when we compare this script to /goal.",
           },
           {
             type: 'diagram',
@@ -811,6 +900,305 @@ exit 1`,
             caption:
               'The guarded loop as a flowchart. The check decides, the notes file remembers, and MAX turns the worst case into a bounded bill.',
           },
+          {
+            type: 'text',
+            md: "Marchese describes the same anatomy as **four building blocks**, and his version is useful once your loops grow past one script. The table maps each block onto the twenty lines above and onto the bigger systems you'll build later.",
+          },
+          {
+            type: 'table',
+            headers: ['Building block', 'In loop.sh', 'In a bigger system'],
+            rows: [
+              [
+                '**Trigger**: what starts the loop',
+                'You run ./loop.sh',
+                'A /loop timer, a /schedule cloud routine, a GitHub event, or a skill you type like /check-weather-loop',
+              ],
+              [
+                '**Execution skills**: what does the work',
+                'The prompt passed to claude -p',
+                'Battle-tested skills that already know how you want the job done',
+              ],
+              [
+                '**Goal + verification**: what done means and who proves it',
+                'check.sh',
+                'Tests, a build, or a reviewer agent that returns APPROVED or NOT APPROVED',
+              ],
+              [
+                '**Output + memory**: what the loop leaves behind',
+                'Code changes plus notes.md',
+                'Pull requests, a run-history file, and a lessons-learned file the next run reads',
+              ],
+            ],
+          },
+          {
+            type: 'text',
+            md: "Marchese calls the second block the most important, and his reasoning is worth hearing. He only builds loops on top of skills he's already used by hand many times. His example: a morning loop that checks the weather against his calendar. Without his workout skill, the agent sees rain and says \"cancel your run\". With the skill, it knows he likes running in the rain. The loop is only as smart as the instructions it calls, and a loop repeats a bad instruction just as faithfully as a good one. (Skills get their own lesson in [Claude Code Mastery · Agent Skills Deep Dive](lesson:m1-l3).)",
+          },
+        ],
+      },
+      {
+        heading: 'Three built-in ways to run a loop',
+        blocks: [
+          {
+            type: 'text',
+            md: "Claude Code now ships loop machinery of its own, and the naming confuses everyone the first time they open the slash menu. **/loop** sounds like the loop-engineering command, but all it does is re-run a prompt on a timer. The command that keeps working until your condition is met is **/goal**. Here's how the options line up next to the shell script you just saw, using the descriptions from the [Claude Code docs](https://code.claude.com/docs/en/goal).",
+          },
+          {
+            type: 'table',
+            headers: ['Option', 'Next pass starts when', 'Stops when', 'Reach for it when'],
+            rows: [
+              [
+                'Shell loop around `claude -p`',
+                'Your script sees check.sh fail',
+                'check.sh exits 0, or MAX is hit',
+                'You want a hard, external check and a fresh context every pass',
+              ],
+              [
+                '`/goal <condition>`',
+                'The previous turn finishes',
+                'A small, fast model judges the condition met or impossible, an error you must fix ends it, or you type `/goal clear`',
+                'Substantial work with a checkable end state, inside one session',
+              ],
+              [
+                '`/loop [interval] <prompt>`',
+                'A timer fires (or Claude picks a delay between 1 minute and 1 hour)',
+                'You cancel it, Claude ends a self-paced loop, or 7 days pass',
+                'Polling: babysitting a pull request, watching a deploy, checking CI (continuous integration)',
+              ],
+              [
+                'Stop hook',
+                'The previous turn finishes',
+                'Your own script says the work passes',
+                'A deterministic gate you want on every session, covered in [Claude Code Mastery · Hooks: Deterministic Control](lesson:m1-l5)',
+              ],
+            ],
+          },
+          {
+            type: 'code',
+            lang: 'text',
+            caption: 'A well-formed /goal: one measurable end state, a stated check, a constraint, and a turn limit.',
+            code: `/goal all tests in test/auth pass (npm test -- test/auth exits 0),
+npx tsc --noEmit exits 0, and no file outside src/auth is modified.
+Or stop after 20 turns.
+
+# headless, same idea, one command:
+claude -p "/goal CHANGELOG.md has an entry for every PR merged this week"`,
+          },
+          {
+            type: 'text',
+            md: "How /goal works under the hood: after every turn, Claude Code sends your condition plus the conversation so far to a small, fast model (Haiku by default). That model returns one of three verdicts with a short reason. **Not yet met** starts another turn, and the reason becomes guidance for it. **Met** clears the goal. **Impossible** also clears it and records why. Typing `/goal` with no arguments shows how many turns have run and how many tokens they cost.\n\nThe detail that trips people up: **the judge has no tools.** It can't run your tests or open your files. It only reads what Claude has already printed into the conversation. So write the condition as something Claude's own output can prove: \"npm test exits 0\" works because Claude runs npm test and the result lands in the transcript. \"The code is clean\" gives the judge nothing to read. Also, a goal doesn't change your permission mode. To let it run unattended, start it in auto mode, or it will stop and ask before each command your settings don't already allow.",
+          },
+          {
+            type: 'compare',
+            left: {
+              title: 'Shell loop around claude -p',
+              items: [
+                'Fresh context every pass; memory lives in notes.md',
+                'check.sh runs the real command, so the verdict is an exit code',
+                'You write the guard (MAX) yourself',
+                'Better for long, overnight, many-pass jobs',
+              ],
+            },
+            right: {
+              title: '/goal',
+              items: [
+                'One session; context keeps growing until auto-compaction',
+                'A model reads the transcript and judges the condition',
+                'Turn limit goes in the condition text ("or stop after 20 turns")',
+                'Better for medium jobs while you are nearby',
+              ],
+            },
+          },
+          {
+            type: 'text',
+            md: "Neither is wrong. /goal is the fastest way to get a loop running, and it's great for a task that fits in one session. The shell loop wins when the job is long enough that one growing conversation would bury the model, which is exactly the complaint Cole Medin raises later in this lesson. The judge's optimism is also a real limit: [Agents, Harnesses & Loops · Verification: the #1 Quality Lever](lesson:m2-l4) puts /goal on the second rung of a four-rung ladder for that reason.",
+          },
+        ],
+      },
+      {
+        heading: 'The parts around a serious loop',
+        blocks: [
+          {
+            type: 'text',
+            md: "A single loop on a single task needs only the three moves from the anatomy section. A loop that runs your project for a week needs more around it. Osmani's essay lists **five components**, and the [KodeKloud](https://www.youtube.com/watch?v=yvP_AAirOQc) explainer walks through each one. Every component maps onto a Claude Code feature you've already met.",
+          },
+          {
+            type: 'table',
+            headers: ['Component', 'Its job in a loop', 'Claude Code piece', 'Learn it in'],
+            rows: [
+              [
+                'Automations',
+                'Find work on a schedule (yesterday\'s CI failures, new GitHub issues) and drop it into a to-do list, no human needed',
+                '/loop, /schedule cloud routines, desktop scheduled tasks',
+                '[Claude Code Mastery · Power Features](lesson:m1-l8)',
+              ],
+              [
+                'Worktrees',
+                'Give each agent its own copy of the repo on its own branch so two agents never edit the same files at once',
+                'git worktree, `claude --worktree`',
+                '[Claude Code Mastery · Landing Parallel Work](lesson:m1-l11)',
+              ],
+              [
+                'Skills',
+                'Write down project know-how (conventions, build steps) so the agent stops guessing every run',
+                'SKILL.md files',
+                '[Claude Code Mastery · Agent Skills Deep Dive](lesson:m1-l3)',
+              ],
+              [
+                'Plugins and connectors',
+                'Reach outside systems: open a pull request, update a ticket, query a database',
+                'MCP servers and plugins',
+                '[Claude Code Mastery · MCP & Plugins](lesson:m1-l7)',
+              ],
+              [
+                'Subagents',
+                'Split the maker from the checker so nothing grades its own work',
+                'Subagents with their own context',
+                '[Claude Code Mastery · Subagents & Context Isolation](lesson:m1-l6)',
+              ],
+            ],
+          },
+          {
+            type: 'text',
+            md: "Two terms in that table deserve a plain definition. A **worktree** is a second (or third, or tenth) working folder attached to the same git repository, each checked out to a different branch. Agents in different worktrees can't trip over each other's half-finished edits. **MCP** stands for [Model Context Protocol](https://modelcontextprotocol.io), the standard plug format that lets an agent talk to outside tools like GitHub, Slack, or a database.\n\nMost people add a sixth part: **memory on disk**. The model forgets everything between runs, so the loop needs a file (or a ticket board) that records what's done, what failed, and what's next. Marchese credits Osmani with the line that sums it up: \"The agent forgets, the repo doesn't.\" [Agents, Harnesses & Loops · Agent Memory & State](lesson:m2-l7) goes deep on how to structure that file.",
+          },
+        ],
+      },
+      {
+        heading: 'From one loop to a factory',
+        blocks: [
+          {
+            type: 'text',
+            md: "The AI LABS walkthrough is the most concrete build in the source videos. They took a hand-built salon booking app (customers pick a stylist and a time, a receptionist approves bookings) and grew it through three levels of looping. Each level hands one more job to the system.",
+          },
+          {
+            type: 'table',
+            headers: ['Level', 'What the loop does', 'What you still do'],
+            rows: [
+              [
+                '1. One loop, one goal',
+                'Builds one feature (their animated landing page) against a spec that doubles as a checklist. It scored itself against the checklist pass after pass and stopped after 38 minutes',
+                'Write the spec and the check, then give it a final look',
+              ],
+              [
+                '2. The software factory',
+                'Works through a queue of features overnight. A builder subagent works on a branch, a separate reviewer hunts for bugs, and each finished feature arrives as a pull request with screenshots',
+                'Plan the features, then approve or reject each pull request',
+              ],
+              [
+                '3. Off the laptop',
+                'The same factory, driven from your phone through Claude Code Remote Control or a phone app that connects to your machine',
+                'Plan and approve from anywhere',
+              ],
+            ],
+          },
+          {
+            type: 'text',
+            md: "Level 2 is where the interesting design lives, so walk through it once. You plan a batch of features and list them in a queue file, a single table where each row is a feature with a status: **todo**, **building**, or **done**. You start one /goal whose condition is \"no row in queue.md is todo or building\". The main agent, called the **orchestrator** because it coordinates the others, picks the next todo row and hands it to a builder subagent working on its own branch.\n\nThen comes the rule both AI LABS and Osmani treat as non-negotiable: **the agent that does the work never verifies it.** A builder that checks its own work shares all of its own blind spots. So the orchestrator hands the branch to a second subagent with a fresh context and an **adversarial** brief, meaning it's told to assume the work contains bugs and go find them. If the reviewer finds problems, the findings go back to the builder and the pair loops again. When the reviewer passes it, the orchestrator opens a pull request (a request to merge the branch into the main code) with screenshots attached, marks the row done, and picks the next one.",
+          },
+          {
+            type: 'diagram',
+            svg: `<svg viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <rect x="0" y="0" width="700" height="400" rx="8" fill="#18181b"/>
+  <text x="350" y="30" text-anchor="middle" fill="#e4e4e7" font-size="14" font-weight="bold">THE FEATURE FACTORY (LEVEL 2)</text>
+  <rect x="30" y="56" width="170" height="104" rx="8" fill="#27272a" stroke="#52525b" stroke-width="2"/>
+  <text x="115" y="78" text-anchor="middle" fill="#e4e4e7" font-size="12" font-weight="bold">queue.md</text>
+  <text x="44" y="100" fill="#34d399" font-size="9">services ........ done</text>
+  <text x="44" y="118" fill="#fbbf24" font-size="9">reviews ......... building</text>
+  <text x="44" y="136" fill="#a1a1aa" font-size="9">customer login .. todo</text>
+  <line x1="200" y1="96" x2="252" y2="96" stroke="#71717a" stroke-width="1.5"/>
+  <polygon points="250,92 250,100 258,96" fill="#71717a"/>
+  <text x="228" y="88" text-anchor="middle" fill="#a1a1aa" font-size="9">read</text>
+  <rect x="260" y="66" width="170" height="60" rx="8" fill="#27272a" stroke="#a78bfa" stroke-width="2"/>
+  <text x="345" y="91" text-anchor="middle" fill="#e4e4e7" font-size="12" font-weight="bold">Orchestrator</text>
+  <text x="345" y="109" text-anchor="middle" fill="#a1a1aa" font-size="9">one /goal, picks next todo row</text>
+  <line x1="430" y1="96" x2="482" y2="96" stroke="#71717a" stroke-width="1.5"/>
+  <polygon points="480,92 480,100 488,96" fill="#71717a"/>
+  <text x="458" y="88" text-anchor="middle" fill="#a1a1aa" font-size="9">dispatch</text>
+  <rect x="490" y="66" width="180" height="60" rx="8" fill="#27272a" stroke="#38bdf8" stroke-width="2"/>
+  <text x="580" y="91" text-anchor="middle" fill="#e4e4e7" font-size="12" font-weight="bold">Builder subagent</text>
+  <text x="580" y="109" text-anchor="middle" fill="#a1a1aa" font-size="9">works on its own branch</text>
+  <line x1="545" y1="126" x2="545" y2="184" stroke="#71717a" stroke-width="1.5"/>
+  <polygon points="541,182 549,182 545,190" fill="#71717a"/>
+  <text x="537" y="160" text-anchor="end" fill="#a1a1aa" font-size="9">branch</text>
+  <rect x="490" y="190" width="180" height="64" rx="8" fill="#27272a" stroke="#f472b6" stroke-width="2"/>
+  <text x="580" y="215" text-anchor="middle" fill="#e4e4e7" font-size="12" font-weight="bold">Adversarial reviewer</text>
+  <text x="580" y="233" text-anchor="middle" fill="#a1a1aa" font-size="9">fresh context, assumes bugs</text>
+  <line x1="625" y1="190" x2="625" y2="134" stroke="#fbbf24" stroke-width="1.5"/>
+  <polygon points="621,136 629,136 625,128" fill="#fbbf24"/>
+  <text x="633" y="164" fill="#fbbf24" font-size="9">fail: findings</text>
+  <rect x="490" y="300" width="180" height="50" rx="8" fill="#27272a" stroke="#52525b" stroke-width="2" stroke-dasharray="4 3"/>
+  <text x="580" y="321" text-anchor="middle" fill="#e4e4e7" font-size="11" font-weight="bold">mock.html prototype</text>
+  <text x="580" y="338" text-anchor="middle" fill="#a1a1aa" font-size="9">the answer key</text>
+  <line x1="580" y1="300" x2="580" y2="262" stroke="#71717a" stroke-width="1.5"/>
+  <polygon points="576,264 584,264 580,256" fill="#71717a"/>
+  <line x1="490" y1="222" x2="438" y2="222" stroke="#34d399" stroke-width="1.5"/>
+  <polygon points="440,218 440,226 432,222" fill="#34d399"/>
+  <text x="464" y="214" text-anchor="middle" fill="#34d399" font-size="9">pass</text>
+  <rect x="260" y="190" width="170" height="64" rx="8" fill="#27272a" stroke="#34d399" stroke-width="2"/>
+  <text x="345" y="215" text-anchor="middle" fill="#e4e4e7" font-size="12" font-weight="bold">Pull request</text>
+  <text x="345" y="233" text-anchor="middle" fill="#a1a1aa" font-size="9">summary + screenshots</text>
+  <line x1="345" y1="254" x2="345" y2="296" stroke="#71717a" stroke-width="1.5"/>
+  <polygon points="341,294 349,294 345,302" fill="#71717a"/>
+  <rect x="260" y="302" width="170" height="48" rx="8" fill="#27272a" stroke="#e4e4e7" stroke-width="2"/>
+  <text x="345" y="331" text-anchor="middle" fill="#e4e4e7" font-size="12" font-weight="bold">You: review + merge</text>
+  <line x1="260" y1="326" x2="115" y2="326" stroke="#71717a" stroke-width="1.5"/>
+  <line x1="115" y1="326" x2="115" y2="168" stroke="#71717a" stroke-width="1.5"/>
+  <polygon points="111,170 119,170 115,162" fill="#71717a"/>
+  <text x="122" y="300" fill="#a1a1aa" font-size="9">mark done, next row</text>
+  <rect x="30" y="190" width="170" height="56" rx="8" fill="#27272a" stroke="#f472b6" stroke-width="2"/>
+  <text x="115" y="213" text-anchor="middle" fill="#f472b6" font-size="11" font-weight="bold">STOP</text>
+  <text x="115" y="231" text-anchor="middle" fill="#a1a1aa" font-size="9">no row is todo or building</text>
+  <text x="350" y="385" text-anchor="middle" fill="#a1a1aa" font-size="10">The builder never grades its own work. The human gate sits at the merge.</text>
+</svg>`,
+            caption:
+              'Level 2 as a flowchart. The queue is the memory, the reviewer is the check, the prototype is the answer key, and the merge button stays yours.',
+          },
+          {
+            type: 'text',
+            md: "One more trick from that build: **make a clickable prototype before the loop starts.** For each feature they generated a mock.html file, a fake version of the screen you can click through even though nothing behind it works. It does two jobs. First, you click it yourself and find out whether the feature you imagined is the feature you want, before a single token goes into building it. Second, it becomes the answer key: the reviewer compares the real build against the mock and flags anything that doesn't match. A prototype turns \"build a services page\" into something a machine can check.\n\nThe Level 2 run took about three hours for two features. Your job shrank to the two ends of the pipe: deciding what to build, and deciding whether it ships.",
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'Every check has a blind spot',
+            md: "The Level 1 landing page came back after 38 minutes with exactly one bug: a mascot that blinked wrong. The loop's visual check took screenshots, and a screenshot captures one instant. A blink happens between two screenshots, so the check could never see it. One correction prompt fixed it. The lesson generalizes: before you trust a loop, ask what its check physically can't observe. Animation timing, performance under load, and \"does this feel right\" all slip past a screenshot. Those are the spots where you keep a human look.",
+          },
+        ],
+      },
+      {
+        heading: 'Making fuzzy goals checkable',
+        blocks: [
+          {
+            type: 'text',
+            md: "Code loops have it easy: tests pass or they don't. What about a goal like \"write good replies to my email\" or \"make this lesson read well\"? Marchese's answer is to **build a bridge from the fuzzy goal to a verdict a machine can read.** You write (or already have) a reviewer skill whose output always ends in a fixed form: APPROVED or NOT APPROVED, or a score from 1 to 10 with a passing line. The quality judgment stays fuzzy, but the loop only needs the last word, and the last word is binary.\n\nHe adds a pro tip that echoes the factory rule: let a different model do the reviewing when you can. A second model (Codex reviewing Claude's work, say) doesn't share the first model's habits, so its verdict is less biased. A subagent with a fresh context is the cheaper version of the same idea.",
+          },
+          {
+            type: 'table',
+            headers: ['Fuzzy goal', 'Bridge to a checkable verdict'],
+            rows: [
+              [
+                'The code is good',
+                'An /engineer-review skill reads the diff and ends with APPROVED or NOT APPROVED plus reasons',
+              ],
+              [
+                'Every unread email has a good reply',
+                'Every unread thread has a draft, and each draft passed a voice-check reviewer and a fact-check reviewer',
+              ],
+              [
+                'The landing page matches the design',
+                'A vision reviewer compares screenshots against mock.html and scores each checklist item',
+              ],
+              [
+                'This lesson follows the style guide',
+                'A grep for em dashes in the file finds zero, and a style reviewer returns APPROVED',
+              ],
+            ],
+          },
+          {
+            type: 'text',
+            md: "For goals that stay stubbornly fuzzy, Marchese's rule of thumb is to **break the loop into smaller goals with human checkpoints at the forks.** His example is planning a company party. Hand an intern \"plan the party\" and you could get anything. The decisions that shape everything else are the date, the venue, and the theme, so those are where you want to look before the work continues. Ask the same of any loop: at which points would a wrong turn ruin everything after it? Put a human checkpoint there and let the loop run free in between.\n\nHe also recommends what he calls **loop training mode**: for the first few runs of any new loop, have it pause before each step and wait for your approval (\"Quick check before I burn the tokens...\"). You learn what the loop actually does, you catch a bad step before it repeats twenty times, and once you trust it you switch training mode off.",
+          },
         ],
       },
       {
@@ -828,7 +1216,7 @@ exit 1`,
               [
                 'No subagent split',
                 'One context does the research, the coding, and the review, and quality sags as the window fills with all three',
-                'Isolate the phases: a research pass writes its findings to a file, then a fresh context implements from that file',
+                'Isolate the phases: a research pass writes its findings to a file, then a fresh context implements from that file, and a separate reviewer checks the result',
               ],
               [
                 'No stop condition',
@@ -846,17 +1234,34 @@ exit 1`,
         ],
       },
       {
+        heading: 'The honest costs',
+        blocks: [
+          {
+            type: 'text',
+            md: "Not every source is a fan. Cole Medin opens [his video](https://www.youtube.com/watch?v=UztrFXaSWv0) by saying he isn't sold, and his objections are the ones you'll hit in your own setup, so they're worth taking seriously.\n\n**Cost.** In a loop where an orchestrator plans, splits work across workers, reads their results, and plans the next round, every round means more reasoning and more context passed around. Medin's dashboard clocked one run at over a million tokens to build a fairly simple app. Part of the waste: built-in loops tend to use one model for every step, so you pay top-tier prices even for trivial decisions like \"is this issue a bug or a feature?\"\n\n**Context bloat.** /loop and /goal keep working inside one session. Run them long enough and the context window fills with old work, and the model's attention degrades with it.\n\n**Reliability.** Let a loop run for a day with no checkpoints and, he says, you often come back to junk.",
+          },
+          {
+            type: 'text',
+            md: "His fixes are all ways of taking decisions **away** from the model wherever you already know the answer:\n\n- **Fix the process in a workflow file.** The steps (classify, research, implement, validate, open PR) are written down and always run in order. The model writes code; it doesn't get to decide which tests count.\n- **Pick a model per step.** A cheap, small model handles classification and context loading; the expensive model only does the implementation and review.\n- **Run each step in its own session** and pass results forward through markdown files, so no single context gets overloaded.\n- **Store run state in a database** so a crash or a closed laptop resumes from the exact step it stopped on.\n- **Put human-approval pauses** inside the workflow wherever a wrong turn would be costly.\n\nIf that list sounds familiar, it should. It's the harness and graph thinking from [Agents, Harnesses & Loops · Graph Engineering](lesson:m2-l10) and the budget discipline from [Agents, Harnesses & Loops · Cost-Aware Agents & Guardrails](lesson:m2-l9). Medin's own conclusion is that loop engineering belongs under harness engineering more than it deserves its own buzzword.",
+          },
+          {
+            type: 'text',
+            md: "The Prompt Engineering channel names two more costs that no tool removes.\n\nThe **orchestration tax**: you can launch a hundred parallel loops, but you still have to review, understand, and merge what they produce. Your review bandwidth sets the real number of loops you can run, whatever the tool allows.\n\n**Comprehension debt**: a loop that runs on its own shows you the final result, and the gap between what shipped and what you understand grows quietly. Loud failures get noticed. The real danger is a quiet success you stopped following hundreds of commits ago, in code you're still responsible for.\n\nAnd one cost that's really an investment: **the seed prompt matters more now.** Prompting moved to the very start of the process. A vague spec used to cost you one bad answer you could correct. In a loop, a vague spec gets guessed at confidently, in the same wrong direction, over and over. Time spent sharpening the spec, the stop condition, and the test cases before you fire is the best-paid time in the whole process.",
+          },
+        ],
+      },
+      {
         heading: 'Loops in practice',
         blocks: [
           {
             type: 'text',
-            md: 'Claude Code ships a loop primitive natively: **/loop** re-runs a prompt or slash command on an interval, or self-paced until done. It fits polling jobs and babysitting CI (continuous integration) nicely. For build loops, the shell version above serves you better, because the guard, the check, and the memory file are explicit and under your control.\n\nAnd keep perspective: **human-in-the-loop is still the strongest known setup**. Run a batch of loop iterations, review the result, correct the spec, fire again. The automation grinds through the iterations while you supply the judgment between batches.',
+            md: 'Put it together and a sensible default looks like this. Use **/loop** for polling jobs, like babysitting CI or watching a deploy. Use **/goal** for a medium-sized job with a clear end state while you\'re nearby. Use a **shell loop** (or a proper workflow harness) for long, overnight, many-pass work, because the guard, the check, and the memory file are explicit and under your control.\n\nAnd keep perspective: **human-in-the-loop is still the strongest known setup**. Run a batch of loop iterations, review the result, correct the spec, fire again. The automation grinds through the iterations while you supply the judgment between batches.',
           },
           {
             type: 'callout',
             variant: 'insight',
             title: 'This pattern has a name: the Ralph loop',
-            md: "You'll hear the exact loop you just built called a **Ralph loop** in the wild. Same parts: a scratchpad for memory, a check that runs at the end, a re-prompt when the check fails. The name stuck because the failure it fixes is so common. Left alone, a model assumes its reading of the task matches yours and declares victory early, which is why you end up typing 'keep going' over and over. The end-of-loop check is what forces a match against the real criteria before the loop is allowed to stop. Anthropic ships a Ralph-loop skill you can crib from, and plenty of people write their own. A lighter cousin you'll also see is **PIV** (Plan, Implement, Verify), which comes back in [Token Economics & AI-Native SDLC · The AI-Native SDLC](lesson:m7-l2).",
+            md: "You'll hear the exact loop you built in this lesson called a **Ralph loop** in the wild, after Geoffrey Huntley's 2025 post that named it for the Simpsons character. Same parts: a scratchpad for memory, a check that runs at the end, a re-prompt when the check fails, and one task per pass. The name stuck because the failure it fixes is so common. Left alone, a model assumes its reading of the task matches yours and declares victory early, which is why you end up typing 'keep going' over and over. The end-of-loop check is what forces a match against the real criteria before the loop is allowed to stop. Anthropic ships a Ralph-loop plugin you can crib from, and plenty of people write their own. A lighter cousin you'll also see is **PIV** (Plan, Implement, Verify), which comes back in [Token Economics & AI-Native SDLC · The AI-Native SDLC](lesson:m7-l2).",
           },
           {
             type: 'compare',
@@ -883,23 +1288,26 @@ exit 1`,
       },
     ],
     lab: {
-      title: 'Ship a guarded loop',
+      title: 'Ship a guarded loop, then race it against /goal',
       intro:
-        'Build the smallest real loop: a binary check, a memory file, and a hard cap. Then watch what the agent does when nobody is steering.',
+        'Build the smallest real loop: a binary check, a memory file, and a hard cap. Watch what the agent does when nobody is steering. Then run the same job with /goal and compare the two.',
       steps: [
-        'Pick a task with a machine-checkable outcome: a failing test, tsc exiting 0, a lint pass on a gnarly file.',
+        'Pick a task with a machine-checkable outcome: a failing test, tsc exiting 0, a lint pass on a gnarly file. Run it through the four questions first.',
         'Write check.sh so it exits 0 only when that outcome is true. Run it now, before the agent touches anything: it must fail first.',
         'Write loop.sh modeled on the lesson: max 5 iterations, each calling claude -p with a prompt that references notes.md for prior attempts.',
         'Make the prompt require the agent to append an attempt summary to notes.md every iteration. That file is the loop memory.',
         'Fire it and do not intervene, even if iteration 2 looks wrong.',
         'Afterwards read notes.md: did later iterations build on earlier ones, or repeat them?',
         'Tally the cost with /cost or the console, and write down the tokens spent per iteration.',
+        'Reset the task on a fresh branch (`git switch -c goal-run <commit before the loop>`). Open Claude Code in auto mode and run: `/goal ./check.sh exits 0. Show its output after every attempt. Or stop after 5 turns.`',
+        'When it finishes, type `/goal` with no arguments and note the turn count and token spend. Compare against the shell loop: which was cheaper, and did the /goal judge ever call it done before check.sh actually passed?',
       ],
       checklist: [
         'check.sh failed before the run and passed after (or the guard fired and exited 1)',
-        'The loop is physically incapable of running more than 5 iterations',
+        'The shell loop is physically incapable of running more than 5 iterations',
         'notes.md shows iteration-over-iteration memory, with no amnesia',
         'You know what one iteration costs in tokens and dollars',
+        'You ran the same job with /goal and can say which approach you would pick next time, and why',
       ],
     },
     checkQuiz: [
@@ -916,52 +1324,102 @@ exit 1`,
           'No notes.md means iteration N knows nothing about iterations 1 through N minus 1. You pay the full exploration cost on every pass, and dead-end theories get retried because nothing recorded that they already failed.',
       },
       {
-        q: "The fix for the 'no subagent split' failure mode:",
+        q: 'Why should a /goal condition name the exact check, like "npm test exits 0"?',
         options: [
-          'Use a bigger context window',
-          'Isolate phases: a research pass writes findings to a file, then a fresh context implements from it',
-          'Lower MAX so the context never fills',
-          'Add more detail to the system prompt',
+          'The judge runs the command itself and needs the exact syntax',
+          'The judge has no tools: it only reads what Claude has printed into the conversation, so the condition must be provable from that output',
+          'Claude Code rejects conditions that contain no commands',
+          'Naming a command switches the judge to a larger model',
         ],
         answer: 1,
         explain:
-          'One context doing research, coding, and review degrades as it fills. Split the phases: the research pass writes its findings to a file, and a fresh context implements from that file with a clean window.',
+          'After each turn a small, fast model reads your condition plus the transcript and returns not yet met, met, or impossible. It never runs tests or opens files. "npm test exits 0" works because Claude runs the tests and the result appears in the transcript.',
       },
       {
-        q: 'What does /loop do in Claude Code?',
+        q: 'In the Level 2 feature factory, who verifies the builder subagent\'s work?',
         options: [
-          'Replays your last prompt with higher effort',
-          'Re-runs a prompt or slash command on an interval, or self-paced until done',
-          'Forks the session into parallel branches',
-          'Rolls the conversation back one turn',
+          'The builder itself, with one final re-read before it reports done',
+          'A separate reviewer agent with a fresh context, briefed to assume the work has bugs',
+          'The orchestrator, since it already holds the whole plan',
+          'Nobody until the pull request reaches you',
         ],
         answer: 1,
         explain:
-          '/loop is the built-in recurrence primitive, good for polling and babysitting CI. For build loops, an explicit shell loop wins, because you control the guard and the check directly.',
+          'The agent that does the work never verifies it, because it shares its own blind spots. A fresh-context adversarial reviewer checks the branch, often against a clickable mock as the answer key, and failures go back to the builder. You still review the pull request at the end.',
       },
       {
-        q: 'The lesson calls which arrangement the strongest known setup?',
+        q: 'Why did the AI LABS walkthrough build the first version of the app (the MVP) without a loop?',
         options: [
-          'Fully autonomous overnight loops',
-          'Human-in-the-loop: loop batches with human review and spec correction between them',
-          'Two agents reviewing each other with no human',
-          'Single-shot prompting with a very detailed spec',
+          'Loops cannot create a new project from scratch',
+          'A loop needs a definition of done up front, and at the MVP stage you do not know where the product is going yet',
+          'The MVP was too large to fit in a /goal condition',
+          'Loops only work on code that already has a test suite',
         ],
         answer: 1,
         explain:
-          'The automation runs the iterations, and the human corrects the spec and the check between batches. That combination still beats either one alone.',
+          'Defining done for a product you have not figured out yet takes longer than building the rough first version by hand. Prompt your way to the MVP, then loop the features that come after it, once you can say what done looks like.',
       },
     ],
     resources: [
       {
-        label: 'Claude Code docs - /loop, headless mode, hidden features',
-        url: 'https://code.claude.com/docs',
+        label: 'Claude Code docs - Keep Claude working toward a goal (/goal)',
+        url: 'https://code.claude.com/docs/en/goal',
         kind: 'docs',
+      },
+      {
+        label: 'Claude Code docs - /loop and scheduling options',
+        url: 'https://code.claude.com/docs/en/scheduled-tasks',
+        kind: 'docs',
+      },
+      {
+        label: 'Addy Osmani - Loop Engineering (the essay that named it)',
+        url: 'https://addyosmani.com/blog/loop-engineering/',
+        kind: 'article',
+      },
+      {
+        label: 'Peter Steinberger - "designing loops that prompt your agents"',
+        url: 'https://x.com/steipete/status/2063697162748260627',
+        kind: 'thread',
       },
       {
         label: 'Boris Cherny on loops and team workflows',
         url: 'https://x.com/bcherny',
         kind: 'thread',
+      },
+      {
+        label: 'Geoffrey Huntley - Ralph Wiggum as a "software engineer"',
+        url: 'https://ghuntley.com/ralph/',
+        kind: 'article',
+      },
+      {
+        label: 'Yao et al. - ReAct: Synergizing Reasoning and Acting (2022)',
+        url: 'https://arxiv.org/abs/2210.03629',
+        kind: 'article',
+      },
+      {
+        label: 'AI LABS - Every Level of Claude Code Loop Engineering Explained (23 min)',
+        url: 'https://www.youtube.com/watch?v=PLyRe6Zk--8',
+        kind: 'video',
+      },
+      {
+        label: 'Austin Marchese - Stop Prompting Claude. Start Loop Engineering. (12 min)',
+        url: 'https://www.youtube.com/watch?v=YAS4ojuhbW4',
+        kind: 'video',
+      },
+      {
+        label: 'Prompt Engineering - Loop Engineering: Why Everyone is Talking About Agentic Loops (11 min)',
+        url: 'https://www.youtube.com/watch?v=7BrxIBkX3mg',
+        kind: 'video',
+      },
+      {
+        label: 'KodeKloud - What is Loop Engineering? (7 min)',
+        url: 'https://www.youtube.com/watch?v=yvP_AAirOQc',
+        kind: 'video',
+      },
+      {
+        label: "Cole Medin - The Creators of Claude Code and OpenClaw Don't Prompt Their Agents Anymore?! (25 min)",
+        url: 'https://www.youtube.com/watch?v=UztrFXaSWv0',
+        kind: 'video',
       },
       {
         label: 'Karpathy - From Vibe Coding to Agentic Engineering (summary)',
