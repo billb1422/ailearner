@@ -8,10 +8,11 @@ export const lessons: Lesson[] = [
     id: 'm1-l1',
     title: 'Claude Code Fundamentals & the .claude Folder',
     day: 4,
-    minutes: 50,
+    minutes: 60,
     xp: 100,
     objectives: [
       'Can name the five-plus Claude Code surfaces and pick the right one for a task',
+      'Can find any command from the / menu and knows the daily built-ins for managing context, model, and cost',
       'Can choose the correct permission mode (including auto mode and /sandbox) and explain why --dangerously-skip-permissions is obsolete',
       'Can bootstrap a project with /init and explain the purpose of every entry in .claude/',
       'Can diagnose install and config problems with /doctor',
@@ -214,6 +215,75 @@ export const lessons: Lesson[] = [
           },
         ],
       },
+      {
+        heading: 'Your daily command card',
+        blocks: [
+          {
+            type: 'text',
+            md: "You've met a handful of slash commands already. Claude Code ships with dozens, and nobody memorizes them all. You don't need to: type a single `/` and a menu of every command available to you pops up, and typing a few letters after the slash filters it down. The full list lives in the [commands reference](https://code.claude.com/docs/en/commands).\n\nTwo rules about how commands behave. First, Claude Code only recognizes a command at the very start of your message. Second, whatever you type after the command name becomes its **arguments**, the extra input the command works with. So `/compact keep the API decisions` runs `/compact` and hands it \"keep the API decisions\" as instructions.\n\nThe cards below hold the 20 or so commands worth knowing by heart, grouped by the job you're doing when you reach for them.",
+          },
+          {
+            type: 'text',
+            md: "**Card 1: managing the conversation.** Your **context window** is the model's working memory for this session: what you've typed, the files it has read, and the output of each tool it ran. It has a size limit, and these commands manage what's in it. ([Mental Models · Context Engineering](lesson:m0-l4) explains why a cluttered window makes the model worse.)",
+          },
+          {
+            type: 'table',
+            headers: ['Command', 'What it does', 'Reach for it when'],
+            rows: [
+              ['/clear', 'Starts a new conversation with an empty context window', "You're switching to an unrelated task"],
+              ['/compact [focus]', 'Summarizes the conversation so far to free up space; optional text says what the summary must keep', 'A long task is still going and the window is getting heavy'],
+              ['/context', 'Draws your context usage as a colored grid and flags what is eating space', 'Claude feels forgetful or slow and you want to see why'],
+              ['/btw [question]', 'Answers a side question without adding it to the conversation', 'You want a quick fact without cluttering the main thread'],
+              ['/rewind', 'Rolls the conversation, your code, or both back to an earlier checkpoint (also /undo)', 'A run went sideways and you want out cleanly'],
+              ['/branch', 'Splits the conversation at this point so you can try another direction; the original stays intact', 'Two approaches both look plausible and you want to explore one without losing the other'],
+              ['/resume', 'Reopens an earlier conversation by name or from a picker', 'You closed the terminal yesterday and want to pick up where you left off'],
+              ['/plan [task]', 'Drops you into plan mode, where Claude reads and plans but changes nothing', 'Anything bigger than a one-file fix'],
+              ['/diff', "Shows every change in your working tree, including Claude's edits", 'Before you commit, to see exactly what changed'],
+            ],
+          },
+          {
+            type: 'text',
+            md: '**Card 2: model, effort, and money.** These control which model runs and how much it costs you.',
+          },
+          {
+            type: 'table',
+            headers: ['Command', 'What it does', 'Reach for it when'],
+            rows: [
+              ['/model', 'Switches the model and saves it as your default; press s in the picker to switch for this session only', 'A task needs more horsepower, or a cheaper tier would do'],
+              ['/effort', 'Sets how hard the model thinks before answering, from low up to max', 'A hard design problem (raise it) or a mechanical rename (lower it)'],
+              ['/usage', 'Shows session cost, plan limits, and activity stats (also /cost)', 'You want to know what a session cost or how close you are to a limit'],
+            ],
+          },
+          {
+            type: 'text',
+            md: '**Card 3: setup and extensions.** These configure Claude Code itself and show you what\'s installed. Most of them get a full lesson later this week.',
+          },
+          {
+            type: 'table',
+            headers: ['Command', 'What it does', 'Covered in depth'],
+            rows: [
+              ['/init', 'Writes a starter CLAUDE.md for the project', 'This lesson, above'],
+              ['/memory', 'Opens your CLAUDE.md files and manages auto memory', 'CLAUDE.md & the Memory System'],
+              ['/permissions', 'Views and edits allow, ask, and deny rules', 'This lesson, above'],
+              ['/config', 'Opens settings: theme, default model, output style', 'Settings docs'],
+              ['/status', 'Shows version, model, account, and connectivity', 'Quick sanity check'],
+              ['/doctor', 'Diagnoses your install, settings, hooks, and MCP servers', 'This lesson, above'],
+              ['/skills', 'Lists every skill you can run; press t to sort by token cost', 'Agent Skills Deep Dive'],
+              ['/hooks', 'Shows which hooks are configured', 'Hooks: Deterministic Control'],
+              ['/mcp', 'Manages MCP server connections', 'MCP & Plugins'],
+              ['/plugin', 'Installs, enables, and disables plugins', 'MCP & Plugins'],
+              ['/add-dir', 'Gives this session access to a folder outside the project', 'Handy for a sibling repo'],
+              ['/help', 'Shows help and the available commands', 'When the / menu is not enough'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'insight',
+            title: 'Some commands are skills wearing a command costume',
+            md: "Look closely at the commands reference and you'll see some entries tagged **Skill**: `/doctor`, `/simplify`, `/code-review`, and `/loop` among them. A **bundled skill** ships with Claude Code but works exactly like a skill you'd write yourself: a set of instructions handed to Claude, with no special machinery behind it. A true **built-in** like `/clear` or `/model` is hard-wired into the program.\n\nWhy care about the difference? Because you can replace a bundled skill with your own. Put a skill named `code-review` in your project and typing `/code-review` runs yours from then on. [Claude Code Mastery · Agent Skills Deep Dive](lesson:m1-l3) shows you how to write one and explains the rules for who wins a name clash.",
+          },
+        ],
+      },
     ],
     lab: {
       title: 'Install, /init, and tour the brain',
@@ -225,6 +295,7 @@ export const lessons: Lesson[] = [
         'Read the generated CLAUDE.md end to end. Delete at least three lines that state the obvious.',
         'Run `ls -la .claude/` and open each file it created. Then add a `.claude/settings.json` with a `permissions` block allowing your test command.',
         'Run `/permissions` to see your current mode, switch to auto mode, then try `/sandbox` on a shell command.',
+        'Type a lone `/` and scroll the menu. Then run `/context`, `/usage`, and `/skills` once each so you know what each one shows before you need it.',
       ],
       checklist: [
         'claude --version reports 2.1 or later and claude doctor is clean',
@@ -232,6 +303,7 @@ export const lessons: Lesson[] = [
         'You can state the purpose of skills/, agents/, rules/, settings.json, and settings.local.json without looking',
         'You know which two files are git-ignored and why',
         'You ran one command in auto mode and one under /sandbox',
+        'You can say which command clears the conversation, which one shrinks it, and which one shows what is filling it',
       ],
     },
     checkQuiz: [
@@ -281,12 +353,13 @@ export const lessons: Lesson[] = [
         ],
         answer: 1,
         explain:
-          'claude --teleport hands a cloud session off to your local CLI with its full history and tool state intact. Pasting a transcript into a fresh session loses all of that state, and no /import command exists.',
+          'claude --teleport hands a cloud session off to your local CLI with its full history and tool state intact. Pasting a transcript into a fresh session loses all of that state, and /import only carries over another tool\'s config files, never a session.',
       },
     ],
     resources: [
       { label: 'Claude Code docs: overview', url: 'https://code.claude.com/docs/en/overview', kind: 'docs' },
       { label: 'Claude Code docs: settings & permissions', url: 'https://code.claude.com/docs/en/settings', kind: 'docs' },
+      { label: 'Claude Code docs: commands reference', url: 'https://code.claude.com/docs/en/commands', kind: 'docs' },
       { label: 'Claude Code in Action (free course, certificate)', url: 'https://anthropic.skilljar.com/claude-code-in-action', kind: 'course' },
       { label: 'everything-claude-code: dense config reference', url: 'https://github.com/affaanmustafa/everything-claude-code', kind: 'repo' },
     ],
@@ -549,12 +622,13 @@ export const lessons: Lesson[] = [
     id: 'm1-l3',
     title: 'Agent Skills Deep Dive',
     day: 5,
-    minutes: 55,
+    minutes: 70,
     xp: 100,
     objectives: [
       'Can author a SKILL.md with correct frontmatter and a description tuned as a trigger',
       'Can explain 3-level progressive disclosure and why it makes expertise near-free at idle',
-      'Can use $ARGUMENTS, dynamic command injection, and bundled scripts in a skill',
+      'Can use $ARGUMENTS, positional ($0, $1) and named arguments, dynamic command injection, and bundled scripts in a skill',
+      'Can choose between a personal (~/.claude/skills/) and a project skill, and predict which one runs when names clash',
       'Can place skills vs MCP vs the agent loop in the composable architecture',
     ],
     skipQuiz: [
@@ -607,16 +681,16 @@ export const lessons: Lesson[] = [
           'Only the name and description stay loaded all the time, costing a few dozen tokens. The SKILL.md body joins the context when the skill triggers, and bundled files get read only if the task actually needs them. Expertise on disk is effectively unlimited while the idle cost stays near zero.',
       },
       {
-        q: 'context: fork in skill frontmatter does what?',
+        q: 'A deploy skill exists in both ~/.claude/skills/ and the project\'s .claude/skills/. You type /deploy. Which runs?',
         options: [
-          'Runs the skill in a forked context so its heavy work never pollutes the main conversation',
-          'Duplicates the skill for A/B testing',
-          'Executes the skill on a git fork of the repo',
-          'Forks the Node process to parallelize tool calls',
+          'The project one, because it is more specific',
+          'The personal one, because personal skills outrank project skills',
+          'Both, one after the other',
+          'Neither; Claude Code asks you to pick',
         ],
-        answer: 0,
+        answer: 1,
         explain:
-          'context: fork runs the skill in an isolated copy of the conversation context. The heavy intermediate work happens there, and only the results come back, so the main conversation keeps a clean attention budget. Git worktree isolation for code is a different feature that belongs to agents.',
+          'The pecking order is enterprise, then personal, then project. Your personal skill shadows the team\'s project skill, which is why personal skills deserve names unlikely to collide. Plugin skills never enter this fight because they carry a /plugin-name: prefix.',
       },
     ],
     sections: [
@@ -664,6 +738,84 @@ export const lessons: Lesson[] = [
           {
             type: 'text',
             md: 'Now walk the example once, slowly. The description names the job (drafting a PR description; PR is short for pull request, the bundle of changes you ask teammates to review) and then lists the moments that should trigger it, including literal phrases a user would type. `$ARGUMENTS` receives whatever you type after the skill name, so `/pr-summary develop` sets the base branch to develop. And that line starting with an exclamation mark runs `git diff --stat` the instant the skill fires, splicing the real output into the prompt before the model starts thinking. More on that trick below.',
+          },
+        ],
+      },
+      {
+        heading: 'Passing arguments: all at once, by position, or by name',
+        blocks: [
+          {
+            type: 'text',
+            md: "The pr-summary example took one argument, a branch name, and `$ARGUMENTS` handled it fine. Plenty of commands need more than one input, though. Picture a skill that migrates a UI component from one framework to another: it needs the component name, the framework you're leaving, and the framework you're moving to. Stuffing all three into `$ARGUMENTS` hands the model one blob of text and leaves it guessing which word means what.\n\nSo skills give you three ways to grab arguments. Each one is a **placeholder**, a token in the SKILL.md body that Claude Code swaps for real text the moment you run the command.",
+          },
+          {
+            type: 'table',
+            headers: ['Placeholder', 'Expands to', 'Example with /migrate Button react vue'],
+            rows: [
+              ['$ARGUMENTS', 'Everything you typed after the command name, as one string', 'Button react vue'],
+              ['$0, $1, $2 ...', 'One argument by position, counting from zero', '$0 is Button, $1 is react, $2 is vue'],
+              ['$ARGUMENTS[0] ...', 'Same as $0, written out longhand', '$ARGUMENTS[1] is react'],
+              ['$name', 'A named argument you declared in the frontmatter', '$component is Button'],
+            ],
+          },
+          {
+            type: 'callout',
+            variant: 'warning',
+            title: 'Counting starts at zero',
+            md: 'If you\'ve written shell scripts, your fingers will type `$1` for the first argument. In a skill, `$1` is the **second** one. The first is `$0`. Programmers call this **zero-based indexing**, and it trips up everyone at least once.',
+          },
+          {
+            type: 'text',
+            md: "Numbered placeholders work, but `$1` tells a reader nothing about what it holds. Named arguments fix that. You list the names in an `arguments:` frontmatter key, in the order you'll type them, and each name becomes its own placeholder.",
+          },
+          {
+            type: 'code',
+            lang: 'markdown',
+            code: '---\nname: migrate\ndescription: Migrate a UI component from one framework to another. Use when the user asks to port, convert, or migrate a component.\nargument-hint: <component> <from> <to>\narguments: [component, from_lang, to_lang]\n---\n\nMigrate the $component component from $from_lang to $to_lang.\nKeep the public props identical so callers do not change.\nRun the component tests before and after.',
+            caption: '.claude/skills/migrate/SKILL.md. Three named arguments, mapped to positions in the order listed.',
+          },
+          {
+            type: 'text',
+            md: "Walk it through. You type `/migrate Button react vue`. Claude Code splits what you typed into three pieces and lines them up against the `arguments:` list in order: `$component` becomes Button, `$from_lang` becomes react, and `$to_lang` becomes vue. The model wakes up reading \"Migrate the Button component from react to vue\" with no guessing involved. The `argument-hint` line makes the autocomplete show `<component> <from> <to>` as you type, so future-you remembers the order.\n\nFour edge cases worth knowing before they bite:\n\n- **Multi-word values need quotes.** Arguments split on spaces the way a shell splits them. `/migrate \"Date Picker\" react vue` keeps Date Picker together as one argument. Leave the quotes off and Date becomes the component while Picker gets treated as the from-framework.\n- **A missing argument behaves differently by type.** A named placeholder with nothing to fill it becomes empty text. A numbered one like `$2` stays in the prompt literally as \"$2\", which the model will find confusing.\n- **Forgot the placeholder entirely?** If you type arguments but the SKILL.md has no placeholder to catch them, Claude Code tacks `ARGUMENTS: <what you typed>` onto the end of the skill, so nothing you typed gets lost.\n- **Need a literal dollar sign?** Write `\\$1.00` with a backslash in front, or Claude Code will try to swap it for your second argument.",
+          },
+        ],
+      },
+      {
+        heading: 'Where your skills live, and who wins a name clash',
+        blocks: [
+          {
+            type: 'text',
+            md: "Every example so far put the skill in the project's `.claude/skills/` folder. That's the right home for workflows tied to one codebase, like that repo's deploy steps. But some skills follow *you* rather than a project: a commit-message drafter, a \"summarize this file for me\" helper, your personal code-review checklist. Copying those into every repo would be tedious, and they'd drift out of sync.\n\nThe answer is your **personal skills folder**, `~/.claude/skills/`. (The `~` is shorthand for your home directory, so on Bill's Mac that's `/Users/billbowers/.claude/skills/`.) A skill there works as a `/name` command in every project you open on that machine. It uses the identical SKILL.md format, so you have nothing new to learn.",
+          },
+          {
+            type: 'table',
+            headers: ['Location', 'Path', 'Available in'],
+            rows: [
+              ['Enterprise', '.claude/skills/ inside your company\'s managed settings folder', 'Every user on machines the company manages'],
+              ['Personal', '~/.claude/skills/<name>/SKILL.md', 'All your projects on this machine'],
+              ['Project', '.claude/skills/<name>/SKILL.md', 'This repo; commit it and teammates get it too'],
+              ['Nested', '<subfolder>/.claude/skills/<name>/SKILL.md', 'Loads once Claude starts working on files in that subfolder'],
+              ['Plugin', '<plugin>/skills/<name>/SKILL.md', 'Wherever the plugin is enabled, typed as /plugin-name:name'],
+            ],
+          },
+          {
+            type: 'text',
+            md: "Five places means two of them can eventually hold a skill with the same name. Claude Code settles that with a fixed pecking order, shown below.",
+          },
+          {
+            type: 'diagram',
+            caption: 'Same name in two folders: the higher box wins. Plugin and nested skills sidestep the fight by carrying a prefix.',
+            svg: `<svg viewBox="0 0 700 360" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif"><rect width="700" height="360" fill="#18181b"/><text x="40" y="32" fill="#e4e4e7" font-size="14" font-weight="bold">Who runs when you type /deploy</text><rect x="40" y="50" width="360" height="56" rx="6" fill="#27272a" stroke="#f472b6"/><text x="60" y="74" fill="#f472b6" font-size="14" font-weight="bold">1. Enterprise</text><text x="60" y="94" fill="#a1a1aa" font-size="12">company-managed, beats everything</text><line x1="220" y1="106" x2="220" y2="130" stroke="#52525b" stroke-width="2"/><polygon points="214,128 226,128 220,140" fill="#52525b"/><rect x="40" y="140" width="360" height="56" rx="6" fill="#27272a" stroke="#a78bfa"/><text x="60" y="164" fill="#a78bfa" font-size="14" font-weight="bold">2. Personal  ~/.claude/skills/</text><text x="60" y="184" fill="#a1a1aa" font-size="12">beats the project copy (surprises people)</text><line x1="220" y1="196" x2="220" y2="220" stroke="#52525b" stroke-width="2"/><polygon points="214,218 226,218 220,230" fill="#52525b"/><rect x="40" y="230" width="360" height="56" rx="6" fill="#27272a" stroke="#38bdf8"/><text x="60" y="254" fill="#38bdf8" font-size="14" font-weight="bold">3. Project  .claude/skills/</text><text x="60" y="274" fill="#a1a1aa" font-size="12">beats a bundled skill and old commands/ files</text><text x="40" y="320" fill="#a1a1aa" font-size="12">Each arrow means "loses to the box above it".</text><rect x="440" y="50" width="230" height="110" rx="6" fill="#27272a" stroke="#34d399"/><text x="456" y="76" fill="#34d399" font-size="14" font-weight="bold">Plugin skills</text><text x="456" y="100" fill="#e4e4e7" font-size="12">/my-plugin:deploy</text><text x="456" y="122" fill="#a1a1aa" font-size="12">prefixed with the plugin</text><text x="456" y="140" fill="#a1a1aa" font-size="12">name, so never clash</text><rect x="440" y="176" width="230" height="110" rx="6" fill="#27272a" stroke="#fbbf24"/><text x="456" y="202" fill="#fbbf24" font-size="14" font-weight="bold">Nested skills</text><text x="456" y="226" fill="#e4e4e7" font-size="12">/apps/web:deploy</text><text x="456" y="248" fill="#a1a1aa" font-size="12">prefixed with the folder,</text><text x="456" y="266" fill="#a1a1aa" font-size="12">so both copies stay usable</text></svg>`,
+          },
+          {
+            type: 'text',
+            md: "Walk a real case. Say you keep a generic `deploy` skill in `~/.claude/skills/` for your side projects, and you open a client repo whose team committed its own `deploy` skill to `.claude/skills/`. You type `/deploy`. **Your personal one runs**, and the team's careful deploy procedure never fires. Most people guess the opposite, since the project copy feels more specific. One way to remember the rule: a repo you just cloned can't swap out a skill you rely on everywhere. The flip side is that your personal skill can silently shadow the team's skill.\n\nThe practical fix is naming. Give personal skills names that won't collide, like `my-deploy` or `bb-commit`. Run `/skills` whenever a `/name` runs something you didn't expect: it lists every skill along with where it came from.\n\nThe rest of the rules are friendlier:\n\n- **Plugins never clash.** A skill from a plugin always carries the plugin's name as a prefix, so a plugin called `deploy-tools` gives you `/deploy-tools:deploy`, and your own `/deploy` keeps working right next to it.\n- **Nested skills get a folder prefix.** In a **monorepo** (one repository holding several apps), a `deploy` skill in `apps/web/.claude/skills/` coexists with one at the root. `/deploy` runs the root copy, `/apps/web:deploy` runs the nested one, and Claude itself picks whichever matches the folder it's working in.\n- **Skills beat old command files.** If `.claude/commands/deploy.md` and a `deploy` skill both exist, the skill runs.\n- **Your skill replaces a bundled one.** A project skill named `code-review` takes over `/code-review`. The bundled alias `/review` keeps running the original, though, so typing the alias won't reach your version.",
+          },
+          {
+            type: 'callout',
+            variant: 'tip',
+            title: 'Personal or project? One question decides',
+            md: "Ask: would a teammate cloning this repo need this skill? If yes, it goes in the project's `.claude/skills/` and into git. If it's about how *you* like to work, it goes in `~/.claude/skills/`. One catch: personal skills stay on your machine, so they don't follow you into cloud sessions on claude.ai/code or into Cowork. Keep `~/.claude/skills/` in a dotfiles repo (a git repo of your personal config files) if you want them backed up and portable.",
           },
         ],
       },
@@ -716,6 +868,9 @@ export const lessons: Lesson[] = [
         'Add one dynamic-injection line (e.g. a git diff or status command) so the skill starts with live context.',
         'Test explicit invocation: /pr-summary main. Then test implicit: phrase a natural request and confirm the model fires the skill unprompted.',
         'Move any reference material (formats, examples) into reference.md in the skill folder and confirm Claude reads it only when needed.',
+        'If your skill takes more than one input, switch it to named arguments with an `arguments:` frontmatter list, then test it with a quoted multi-word value.',
+        'Build one personal skill in `~/.claude/skills/` for something you do in every repo (a commit-message drafter works well). Give it a name unlikely to collide, open a different project, and confirm it appears in the / menu there.',
+        'Run `/skills` and find both skills in the list, noting the source each one shows.',
       ],
       checklist: [
         'Skill fires via /name with argument-hint autocomplete',
@@ -723,6 +878,7 @@ export const lessons: Lesson[] = [
         'SKILL.md body is ~100 lines or less; depth lives in bundled files',
         'Injected command output appears in the skill run',
         'allowed-tools restricts the skill to what it needs',
+        'A personal skill in ~/.claude/skills/ works in a second project',
       ],
     },
     checkQuiz: [
@@ -751,11 +907,11 @@ export const lessons: Lesson[] = [
           'allowed-tools narrows the skill down to the listed tools for as long as it runs. A skill that summarizes diffs has no business writing files, and the allowlist turns that principle into a mechanical guarantee instead of a hope.',
       },
       {
-        q: 'User types /release-notes v2.3. Inside SKILL.md, "v2.3" is available as:',
-        options: ['$1 like a shell script', '$ARGUMENTS', '{{args}}', 'the ARGV environment variable'],
+        q: 'User types /release-notes v2.3 "Spring launch". Inside SKILL.md, what does $1 expand to?',
+        options: ['v2.3', 'Spring launch', 'Spring', 'v2.3 "Spring launch"'],
         answer: 1,
         explain:
-          '$ARGUMENTS carries the full text typed after the skill name, "v2.3" in this case. argument-hint only shapes what the autocomplete shows and never holds the actual value.',
+          'Positions count from zero, so $0 is v2.3 and $1 is the second argument. The quotes keep Spring launch together as one argument. $ARGUMENTS would hold the whole line. argument-hint only shapes the autocomplete and never holds a value.',
       },
       {
         q: 'In the composable architecture, connecting Claude to your Jira instance is the job of:',

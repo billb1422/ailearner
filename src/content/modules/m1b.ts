@@ -811,7 +811,7 @@ git worktree list             # audit; remove with: git worktree remove ../myapp
         blocks: [
           {
             type: 'text',
-            md: "A grab-bag of commands that earn their keep once the basics are muscle memory. Two of them lean on the checkpoint trail you met in [Claude Code Mastery · Claude Code Fundamentals & the .claude Folder](lesson:m1-l1): every tool operation leaves a breadcrumb, and these walk it.",
+            md: "A grab-bag of commands that earn their keep once the basics are muscle memory. (The everyday ones, like /clear, /compact, and /model, live on the command card in [Claude Code Mastery · Claude Code Fundamentals & the .claude Folder](lesson:m1-l1).) Two of them lean on the checkpoint trail you met in [Claude Code Mastery · Claude Code Fundamentals & the .claude Folder](lesson:m1-l1): every tool operation leaves a breadcrumb, and these walk it.",
           },
           {
             type: 'table',
